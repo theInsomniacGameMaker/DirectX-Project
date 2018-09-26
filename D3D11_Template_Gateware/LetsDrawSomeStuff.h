@@ -3,8 +3,18 @@
 // Include our DX11 middle ware
 #include "Gateware Redistribution R5d/Interface/G_Graphics/GDirectX11Surface.h"
 
+
+
 // Include DirectX11 for interface access
 #include <d3d11.h>
+#include <windows.h>
+#include <d3dcompiler.h>
+#include <directxmath.h>
+#include <directxcolors.h>
+#include <fbxsdk.h>
+#include <iostream>
+using namespace std;
+using namespace DirectX;
 
 // Simple Container class to make life easier/cleaner
 class LetsDrawSomeStuff
@@ -17,6 +27,7 @@ class LetsDrawSomeStuff
 	ID3D11DeviceContext *myContext = nullptr;
 
 	// TODO: Add your own D3D11 variables here (be sure to "Release()" them when done!)
+
 
 public:
 	// Init
