@@ -3,8 +3,33 @@
 // Include our DX11 middle ware
 #include "Gateware Redistribution R5d/Interface/G_Graphics/GDirectX11Surface.h"
 
+#pragma comment (lib, "d3d11.lib")
+
 // Include DirectX11 for interface access
+#include <Windows.h>
 #include <d3d11.h>
+#include <d3dcompiler.h>
+#include <DirectXMath.h>
+#include <DirectXColors.h>
+#include <iostream>
+#include <time.h>
+
+using namespace DirectX;
+using namespace std;
+
+#include "Trivial_VS.csh"
+#include "Trivial_PS.csh"
+
+// BEGIN PART 1
+// TODO: PART 1 STEP 1a
+
+// TODO: PART 1 STEP 1b
+
+
+struct SIMPLE_VERTEX
+{
+	XMFLOAT2 point;
+};
 
 // Simple Container class to make life easier/cleaner
 class LetsDrawSomeStuff
@@ -17,6 +42,13 @@ class LetsDrawSomeStuff
 	ID3D11DeviceContext *myContext = nullptr;
 
 	// TODO: Add your own D3D11 variables here (be sure to "Release()" them when done!)
+	ID3D11RenderTargetView* myRenderTargetView = nullptr;
+	D3D11_VIEWPORT viewport;
+	ID3D11Buffer * myVertexBuffer;
+	ID3D11VertexShader*     myVertexShader = nullptr;
+	ID3D11PixelShader*      myPixelShader = nullptr;
+
+	ID3D11InputLayout*      myVertexLayout = nullptr;
 
 public:
 	// Init
@@ -40,7 +72,53 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			mySurface->GetSwapchain((void**)&mySwapChain);
 			mySurface->GetContext((void**)&myContext);
 
-			// TODO: Create new DirectX stuff here! (Buffers, Shaders, Layouts, Views, Textures, etc...)
+			ID3D11Texture2D* myBackBuffer = nullptr;
+			mySwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(&myBackBuffer));
+			myDevice->CreateRenderTargetView(myBackBuffer, nullptr, &myRenderTargetView);
+
+			// TODO: PART 1 STEP 5
+			unsigned int width, height; 
+			attatchPoint->GetClientWidth(width);
+			attatchPoint->GetClientHeight(height);
+			viewport.TopLeftX = 0;
+			viewport.TopLeftY = 0;
+			viewport.Width = width;
+			viewport.Height = height;
+			viewport.MinDepth = 0;
+			viewport.MaxDepth = 1;
+
+			SIMPLE_VERTEX circleVerts[361];
+			for (int i = 0; i < 361; i++)
+			{
+				circleVerts[i].point.x = sin(i*3.14f / 180.0f);
+				circleVerts[i].point.y = cos(i*3.14f / 180.0f);
+			}
+
+
+			D3D11_BUFFER_DESC bd = {};
+			bd.Usage = D3D11_USAGE_DEFAULT;
+			bd.ByteWidth = sizeof(SIMPLE_VERTEX) * 361;
+			bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+			bd.CPUAccessFlags = 0;
+
+
+			D3D11_SUBRESOURCE_DATA InitData = {};
+			InitData.pSysMem = circleVerts;
+
+			myDevice->CreateBuffer(&bd, &InitData, &myVertexBuffer);
+
+			myDevice->CreateVertexShader(Trivial_VS, sizeof(Trivial_VS), nullptr, &myVertexShader);
+			myDevice->CreatePixelShader(Trivial_PS, sizeof(Trivial_PS), nullptr, &myPixelShader);
+
+			D3D11_INPUT_ELEMENT_DESC layout[] =
+			{
+				{ "POSITION", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+			};
+			UINT numElements = ARRAYSIZE(layout);
+
+			myDevice->CreateInputLayout(layout, numElements, Trivial_VS,
+				sizeof(Trivial_VS), &myVertexLayout);
+
 		}
 	}
 }
@@ -69,7 +147,7 @@ void LetsDrawSomeStuff::Render()
 	if (mySurface) // valid?
 	{
 		// this could be changed during resolution edits, get it every frame
-		ID3D11RenderTargetView *myRenderTargetView = nullptr;
+		//ID3D11RenderTargetView *myRenderTargetView = nullptr;
 		ID3D11DepthStencilView *myDepthStencilView = nullptr;
 		if (G_SUCCESS(mySurface->GetRenderTarget((void**)&myRenderTargetView)))
 		{
@@ -89,6 +167,18 @@ void LetsDrawSomeStuff::Render()
 			myContext->ClearRenderTargetView(myRenderTargetView, d_green);
 			
 			// TODO: Set your shaders, Update & Set your constant buffers, Attatch your vertex & index buffers, Set your InputLayout & Topology & Draw!
+			UINT stride = sizeof(SIMPLE_VERTEX);
+			UINT offset = 0;
+			myContext->IASetVertexBuffers(0, 1, &myVertexBuffer, &stride, &offset);
+
+			myContext->VSSetShader(myVertexShader, nullptr, 0);
+			myContext->PSSetShader(myPixelShader, nullptr, 0);
+
+			myContext->IASetInputLayout(myVertexLayout);
+
+			myContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINESTRIP);
+
+			myContext->Draw(361, 0);
 
 			// Present Backbuffer using Swapchain object
 			// Framerate is currently unlocked, we suggest "MSI Afterburner" to track your current FPS and memory usage.
