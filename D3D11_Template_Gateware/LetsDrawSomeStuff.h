@@ -66,7 +66,7 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			D3D11_VIEWPORT vp;
 			unsigned int width, height;
 			attatchPoint->GetClientWidth(width);
-			attatchPoint->GetClientWidth(height);
+			attatchPoint->GetClientHeight(height);
 			vp.Width = (FLOAT)width;
 			vp.Height = (FLOAT)height;
 			vp.MinDepth = 0.0f;
@@ -220,7 +220,7 @@ LetsDrawSomeStuff::~LetsDrawSomeStuff()
 	myContext->Release();
 
 	// TODO: "Release()" more stuff here!
-	myRenderTargetView->Release();
+	//myRenderTargetView->Release();
 	myVertexShader->Release();
 	myPixelShader->Release();
 	myVertexLayout->Release();
