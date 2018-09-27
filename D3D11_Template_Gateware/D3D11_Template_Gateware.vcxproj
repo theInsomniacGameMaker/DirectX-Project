@@ -139,6 +139,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Declarations.h" />
     <ClInclude Include="LetsDrawSomeStuff.h" />
   </ItemGroup>
   <ItemGroup>
