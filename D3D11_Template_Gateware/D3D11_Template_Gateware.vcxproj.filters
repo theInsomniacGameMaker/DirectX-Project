@@ -1,7 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="main.cpp" />
     <ClCompile Include="Gateware Redistribution R5d\Source\G_Audio\GAudio.cpp">
       <Filter>Gateware Source</Filter>
     </ClCompile>
@@ -44,10 +43,29 @@
     <ClCompile Include="Gateware Redistribution R5d\Source\G_System\GWindow.cpp">
       <Filter>Gateware Source</Filter>
     </ClCompile>
+    <ClCompile Include="FBXLoader.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="Mesh.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="LetsDrawSomeStuff.h" />
-    <ClInclude Include="Declarations.h" />
+    <ClInclude Include="Declarations.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="FBXLoader.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="LetsDrawSomeStuff.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Mesh.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Gateware Source">
@@ -55,6 +73,12 @@
     </Filter>
     <Filter Include="Shaders">
       <UniqueIdentifier>{4949adb5-4e5b-4597-9dc3-3ba29a8afac6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Headers">
+      <UniqueIdentifier>{ea8549a4-8546-42cf-b7d1-eadd19cf46f1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Sources">
+      <UniqueIdentifier>{e34c7733-ba26-4d15-be49-d823628e2db5}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

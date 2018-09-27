@@ -145,9 +145,12 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Declarations.h" />
+    <ClInclude Include="FBXLoader.h" />
     <ClInclude Include="LetsDrawSomeStuff.h" />
+    <ClInclude Include="Mesh.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="FBXLoader.cpp" />
     <ClCompile Include="Gateware Redistribution R5d\Source\G_Audio\GAudio.cpp" />
     <ClCompile Include="Gateware Redistribution R5d\Source\G_Graphics\GDirectX11Surface.cpp" />
     <ClCompile Include="Gateware Redistribution R5d\Source\G_Graphics\GOpenGLSurface.cpp" />
@@ -163,6 +166,7 @@
     <ClCompile Include="Gateware Redistribution R5d\Source\G_System\GLog.cpp" />
     <ClCompile Include="Gateware Redistribution R5d\Source\G_System\GWindow.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Mesh.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Trivial_PS.hlsl">

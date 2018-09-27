@@ -9,6 +9,7 @@
 using namespace DirectX;
 using namespace std;
 
+
 #include "Trivial_VS.csh"
 #include "Trivial_PS.csh"
 
@@ -28,12 +29,15 @@ struct ConstantBuffer
 
 // Arrays and counts for
 // FBX to DirectX data transfer
-SimpleVertex *vertices;
-int numVertices = 0;
-int *indices;
-int numIndices = 0;
-float scale = 50.0f;
 
+struct MeshStruct
+{
+	SimpleVertex *vertices;
+	int numVertices = 0;
+	int *indices;
+	int numIndices = 0;
+	float scale = 1.0f;
+};
 
 // funtime random color
 #define RAND_COLOR XMFLOAT4(rand()/float(RAND_MAX),rand()/float(RAND_MAX),rand()/float(RAND_MAX),1.0f)

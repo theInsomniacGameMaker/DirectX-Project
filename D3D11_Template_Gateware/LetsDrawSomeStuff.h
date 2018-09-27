@@ -5,9 +5,7 @@
 
 // Include DirectX11 for interface access
 #include "Declarations.h"
-
-void ProcessFbxMesh(FbxNode* Node);
-
+#include "Mesh.h"
 // Simple Container class to make life easier/cleaner
 class LetsDrawSomeStuff
 {
@@ -32,6 +30,7 @@ class LetsDrawSomeStuff
 	XMMATRIX				viewMatrix;
 	XMMATRIX				projectionMatrix;
 
+	Mesh charizard;
 public:
 	// Init
 	LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint);
@@ -92,45 +91,47 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			myContext->IASetInputLayout(myVertexLayout);
 #pragma region FBX
 
-			// Change the following filename to a suitable filename value.
-			const char* lFilename = "\\Assets\\Charizard.fbx";
+			//// Change the following filename to a suitable filename value.
+			//const char* lFilename = "\\Assets\\Charizard.fbx";
 
-			// Initialize the SDK manager. This object handles memory management.
-			FbxManager* lSdkManager = FbxManager::Create();
-			// Create the IO settings object.
-			FbxIOSettings *ios = FbxIOSettings::Create(lSdkManager, IOSROOT);
-			lSdkManager->SetIOSettings(ios);
+			//// Initialize the SDK manager. This object handles memory management.
+			//FbxManager* lSdkManager = FbxManager::Create();
+			//// Create the IO settings object.
+			//FbxIOSettings *ios = FbxIOSettings::Create(lSdkManager, IOSROOT);
+			//lSdkManager->SetIOSettings(ios);
 
-			// Create an importer using the SDK manager.
-			FbxImporter* lImporter = FbxImporter::Create(lSdkManager, "");
+			//// Create an importer using the SDK manager.
+			//FbxImporter* lImporter = FbxImporter::Create(lSdkManager, "");
 
-			// Use the first argument as the filename for the importer.
-			if (!lImporter->Initialize(lFilename, -1, lSdkManager->GetIOSettings())) {
-				//printf("Call to FbxImporter::Initialize() failed.\n");
-				//printf("Error returned: %s\n\n", lImporter->GetStatus().GetErrorString());
-				exit(-1);
-			}
+			//// Use the first argument as the filename for the importer.
+			//if (!lImporter->Initialize(lFilename, -1, lSdkManager->GetIOSettings())) {
+			//	//printf("Call to FbxImporter::Initialize() failed.\n");
+			//	//printf("Error returned: %s\n\n", lImporter->GetStatus().GetErrorString());
+			//	exit(-1);
+			//}
 
-			// Create a new scene so that it can be populated by the imported file.
-			FbxScene* lScene = FbxScene::Create(lSdkManager, "myScene");
+			//// Create a new scene so that it can be populated by the imported file.
+			//FbxScene* lScene = FbxScene::Create(lSdkManager, "myScene");
 
-			// Import the contents of the file into the scene.
-			lImporter->Import(lScene);
+			//// Import the contents of the file into the scene.
+			//lImporter->Import(lScene);
 
-			// The file is imported, so get rid of the importer.
-			lImporter->Destroy();
+			//// The file is imported, so get rid of the importer.
+			//lImporter->Destroy();
+
+			//ProcessFbxMesh(lScene->GetRootNode());
 #pragma endregion
 
-			ProcessFbxMesh(lScene->GetRootNode());
+			charizard = Mesh("Charizard.fbx");
 
 			D3D11_BUFFER_DESC bd = {};
 			bd.Usage = D3D11_USAGE_DEFAULT;
-			bd.ByteWidth = sizeof(SimpleVertex) *numVertices;
+			bd.ByteWidth = sizeof(SimpleVertex) *charizard.GetNumberOfVertices();
 			bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 			bd.CPUAccessFlags = 0;
 
 			D3D11_SUBRESOURCE_DATA InitData = {};
-			InitData.pSysMem = vertices;
+			InitData.pSysMem = charizard.GetVertices();
 			myDevice->CreateBuffer(&bd, &InitData, &myVertexBuffer);
 
 			// Set vertex buffer
@@ -139,10 +140,10 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			myContext->IASetVertexBuffers(0, 1, &myVertexBuffer, &stride, &offset);
 
 			bd.Usage = D3D11_USAGE_DEFAULT;
-			bd.ByteWidth = sizeof(int) * numIndices;        // 36 vertices needed for 12 triangles in a triangle list
+			bd.ByteWidth = sizeof(int) * charizard.GetNumberOfIndices();        // 36 vertices needed for 12 triangles in a triangle list
 			bd.BindFlags = D3D11_BIND_INDEX_BUFFER;
 			bd.CPUAccessFlags = 0;
-			InitData.pSysMem = indices;
+			InitData.pSysMem = charizard.GetIndices();
 			myDevice->CreateBuffer(&bd, &InitData, &myIndexBuffer);
 
 			// Set index buffer
@@ -254,7 +255,7 @@ void LetsDrawSomeStuff::Render()
 			myContext->VSSetShader(myVertexShader, nullptr, 0);
 			myContext->VSSetConstantBuffers(0, 1, &myConstantBuffer);
 			myContext->PSSetShader(myPixelShader, nullptr, 0);
-			myContext->DrawIndexed(numIndices, 0, 0);        // 36 vertices needed for 12 triangles in a triangle list
+			myContext->DrawIndexed(charizard.GetNumberOfIndices(), 0, 0);        // 36 vertices needed for 12 triangles in a triangle list
 
 													 // Present Backbuffer using Swapchain object
 													 // Framerate is currently unlocked, we suggest "MSI Afterburner" to track your current FPS and memory usage.
@@ -266,58 +267,58 @@ void LetsDrawSomeStuff::Render()
 	}
 }
 
-void ProcessFbxMesh(FbxNode* Node)
-{
-	// set up output console
-	AllocConsole();
-	freopen("CONOUT$", "w", stdout);
-	freopen("CONOUT$", "w", stderr);
-
-	//FBX Mesh stuff
-	int childrenCount = Node->GetChildCount();
-
-	//cout << "\nName:" << Node->GetName();
-
-	for (int i = 0; i < childrenCount; i++)
-	{
-		FbxNode *childNode = Node->GetChild(i);
-		FbxMesh *mesh = childNode->GetMesh();
-
-		if (mesh != NULL)
-		{
-			//cout << "\nMesh:" << childNode->GetName();
-
-			// Get index count from mesh
-			numVertices = mesh->GetControlPointsCount();
-			//cout << "\nVertex Count:" << numVertices;
-
-			// Create SimpleVertex array to size of this mesh
-			vertices = new SimpleVertex[numVertices];
-
-			//================= Process Vertices ===================
-			for (int j = 0; j < numVertices; j++)
-			{
-				FbxVector4 vert = mesh->GetControlPointAt(j);
-				vertices[j].Pos.x = vert.mData[0] * scale;
-				vertices[j].Pos.y = vert.mData[1] * scale;
-				vertices[j].Pos.z = vert.mData[2] * scale;
-				vertices[j].Color = RAND_COLOR;
-				//cout << "\n" << vert.mData[0] << " " << vert.mData[1] << " " << vert.mData[2];
-			}
-
-			numIndices = mesh->GetPolygonVertexCount();
-			//cout << "\nIndice Count:" << numIndices;
-
-			// No need to allocate int array, FBX does for us
-			indices = mesh->GetPolygonVertices();
-
-			//================= Process Indices ====================
-			for (int j = 0; j < numIndices; j++)
-			{
-				//cout << "\nIndice:" << indices[j];
-			}
-		}
-		// recurse on all children
-		ProcessFbxMesh(childNode);
-	}
-}
+//void ProcessFbxMesh(FbxNode* Node)
+//{
+//	// set up output console
+//	AllocConsole();
+//	freopen("CONOUT$", "w", stdout);
+//	freopen("CONOUT$", "w", stderr);
+//
+//	//FBX Mesh stuff
+//	int childrenCount = Node->GetChildCount();
+//
+//	//cout << "\nName:" << Node->GetName();
+//
+//	for (int i = 0; i < childrenCount; i++)
+//	{
+//		FbxNode *childNode = Node->GetChild(i);
+//		FbxMesh *mesh = childNode->GetMesh();
+//
+//		if (mesh != NULL)
+//		{
+//			//cout << "\nMesh:" << childNode->GetName();
+//
+//			// Get index count from mesh
+//			numVertices = mesh->GetControlPointsCount();
+//			//cout << "\nVertex Count:" << numVertices;
+//
+//			// Create SimpleVertex array to size of this mesh
+//			vertices = new SimpleVertex[numVertices];
+//
+//			//================= Process Vertices ===================
+//			for (int j = 0; j < numVertices; j++)
+//			{
+//				FbxVector4 vert = mesh->GetControlPointAt(j);
+//				vertices[j].Pos.x = vert.mData[0] * scale;
+//				vertices[j].Pos.y = vert.mData[1] * scale;
+//				vertices[j].Pos.z = vert.mData[2] * scale;
+//				vertices[j].Color = RAND_COLOR;
+//				//cout << "\n" << vert.mData[0] << " " << vert.mData[1] << " " << vert.mData[2];
+//			}
+//
+//			numIndices = mesh->GetPolygonVertexCount();
+//			//cout << "\nIndice Count:" << numIndices;
+//
+//			// No need to allocate int array, FBX does for us
+//			indices = mesh->GetPolygonVertices();
+//
+//			//================= Process Indices ====================
+//			for (int j = 0; j < numIndices; j++)
+//			{
+//				//cout << "\nIndice:" << indices[j];
+//			}
+//		}
+//		// recurse on all children
+//		ProcessFbxMesh(childNode);
+//	}
+//}
