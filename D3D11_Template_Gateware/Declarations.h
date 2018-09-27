@@ -9,6 +9,8 @@
 using namespace DirectX;
 using namespace std;
 
+#include "Trivial_VS.csh"
+#include "Trivial_PS.csh"
 
 struct SimpleVertex
 {

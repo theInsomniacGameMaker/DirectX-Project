@@ -54,4 +54,8 @@
       <UniqueIdentifier>{b6c72e31-647e-44cd-a60d-0b316676c04d}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="Trivial_PS.hlsl" />
+    <FxCompile Include="Trivial_VS.hlsl" />
+  </ItemGroup>
 </Project>
