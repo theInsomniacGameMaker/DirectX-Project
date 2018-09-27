@@ -93,7 +93,7 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 #pragma region FBX
 
 			// Change the following filename to a suitable filename value.
-			const char* lFilename = "cube.fbx";
+			const char* lFilename = "\\Assets\\Charizard.fbx";
 
 			// Initialize the SDK manager. This object handles memory management.
 			FbxManager* lSdkManager = FbxManager::Create();
@@ -111,7 +111,6 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 				exit(-1);
 			}
 
-
 			// Create a new scene so that it can be populated by the imported file.
 			FbxScene* lScene = FbxScene::Create(lSdkManager, "myScene");
 
@@ -120,21 +119,9 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 
 			// The file is imported, so get rid of the importer.
 			lImporter->Destroy();
-#pragma endregion		
+#pragma endregion
 
 			ProcessFbxMesh(lScene->GetRootNode());
-
-			/*SimpleVertex vertices[] =
-			{
-			{ XMFLOAT3(-1.0f, 1.0f, -1.0f), XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f) },
-			{ XMFLOAT3(1.0f, 1.0f, -1.0f), XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f) },
-			{ XMFLOAT3(1.0f, 1.0f, 1.0f), XMFLOAT4(0.0f, 1.0f, 1.0f, 1.0f) },
-			{ XMFLOAT3(-1.0f, 1.0f, 1.0f), XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f) },
-			{ XMFLOAT3(-1.0f, -1.0f, -1.0f), XMFLOAT4(1.0f, 0.0f, 1.0f, 1.0f) },
-			{ XMFLOAT3(1.0f, -1.0f, -1.0f), XMFLOAT4(1.0f, 1.0f, 0.0f, 1.0f) },
-			{ XMFLOAT3(1.0f, -1.0f, 1.0f), XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f) },
-			{ XMFLOAT3(-1.0f, -1.0f, 1.0f), XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f) },
-			};*/
 
 			D3D11_BUFFER_DESC bd = {};
 			bd.Usage = D3D11_USAGE_DEFAULT;
@@ -151,35 +138,12 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			UINT offset = 0;
 			myContext->IASetVertexBuffers(0, 1, &myVertexBuffer, &stride, &offset);
 
-			// Create index buffer
-			/*WORD indices[] =
-			{
-			3,1,0,
-			2,1,3,
-
-			0,5,4,
-			1,5,0,
-
-			3,4,7,
-			0,4,3,
-
-			1,6,5,
-			2,6,1,
-
-			2,7,6,
-			3,7,2,
-
-			6,4,5,
-			7,4,6,
-			};*/
-
 			bd.Usage = D3D11_USAGE_DEFAULT;
 			bd.ByteWidth = sizeof(int) * numIndices;        // 36 vertices needed for 12 triangles in a triangle list
 			bd.BindFlags = D3D11_BIND_INDEX_BUFFER;
 			bd.CPUAccessFlags = 0;
 			InitData.pSysMem = indices;
 			myDevice->CreateBuffer(&bd, &InitData, &myIndexBuffer);
-
 
 			// Set index buffer
 			myContext->IASetIndexBuffer(myIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
@@ -194,19 +158,17 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			bd.CPUAccessFlags = 0;
 			myDevice->CreateBuffer(&bd, nullptr, &myConstantBuffer);
 
-
 			// Initialize the world matrix
 			worldMatrix = XMMatrixIdentity();
 
 			// Initialize the view matrix
-			XMVECTOR Eye = XMVectorSet(0.0f, 1.0f, -5.0f, 0.0f);
-			XMVECTOR At = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+			XMVECTOR Eye = XMVectorSet(0.0f, 15.0f, -20.0f, 0.0f);
+			XMVECTOR At = XMVectorSet(0.0f, 15.0f, 0.0f, 0.0f);
 			XMVECTOR Up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 			viewMatrix = XMMatrixLookAtLH(Eye, At, Up);
 
 			// Initialize the projection matrix
 			projectionMatrix = XMMatrixPerspectiveFovLH(XM_PIDIV2, width / (FLOAT)height, 0.01f, 100.0f);
-
 		}
 	}
 }
@@ -279,8 +241,6 @@ void LetsDrawSomeStuff::Render()
 			//animate cube
 			worldMatrix = XMMatrixRotationY(t);
 
-
-
 			//Update variables
 			ConstantBuffer cb;
 			cb.mWorld = XMMatrixTranspose(worldMatrix);
@@ -294,7 +254,7 @@ void LetsDrawSomeStuff::Render()
 			myContext->VSSetShader(myVertexShader, nullptr, 0);
 			myContext->VSSetConstantBuffers(0, 1, &myConstantBuffer);
 			myContext->PSSetShader(myPixelShader, nullptr, 0);
-			myContext->DrawIndexed(36, 0, 0);        // 36 vertices needed for 12 triangles in a triangle list
+			myContext->DrawIndexed(numIndices, 0, 0);        // 36 vertices needed for 12 triangles in a triangle list
 
 													 // Present Backbuffer using Swapchain object
 													 // Framerate is currently unlocked, we suggest "MSI Afterburner" to track your current FPS and memory usage.
@@ -338,9 +298,9 @@ void ProcessFbxMesh(FbxNode* Node)
 			for (int j = 0; j < numVertices; j++)
 			{
 				FbxVector4 vert = mesh->GetControlPointAt(j);
-				vertices[j].Pos.x = vert.mData[0] / 50.0f;
-				vertices[j].Pos.y = vert.mData[1] / 50.0f;
-				vertices[j].Pos.z = vert.mData[2] / 50.0f;
+				vertices[j].Pos.x = vert.mData[0] * scale;
+				vertices[j].Pos.y = vert.mData[1] * scale;
+				vertices[j].Pos.z = vert.mData[2] * scale;
 				vertices[j].Color = RAND_COLOR;
 				//cout << "\n" << vert.mData[0] << " " << vert.mData[1] << " " << vert.mData[2];
 			}
@@ -360,5 +320,4 @@ void ProcessFbxMesh(FbxNode* Node)
 		// recurse on all children
 		ProcessFbxMesh(childNode);
 	}
-
 }

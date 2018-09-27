@@ -32,6 +32,8 @@ SimpleVertex *vertices;
 int numVertices = 0;
 int *indices;
 int numIndices = 0;
+float scale = 50.0f;
+
 
 // funtime random color
 #define RAND_COLOR XMFLOAT4(rand()/float(RAND_MAX),rand()/float(RAND_MAX),rand()/float(RAND_MAX),1.0f)
