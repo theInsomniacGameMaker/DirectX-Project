@@ -169,7 +169,6 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 
 			// Initialize the projection matrix
 			myProjection = XMMatrixPerspectiveFovLH(XM_PIDIV2, width / (FLOAT)height, 0.01f, 100.0f);
-
 		}
 	}
 }
@@ -184,7 +183,7 @@ LetsDrawSomeStuff::~LetsDrawSomeStuff()
 
 	// TODO: "Release()" more stuff here!
 	myRenderTargetView->Release();
-		myVertexShader->Release();
+	myVertexShader->Release();
 	myPixelShader->Release();
 	myVertexLayout->Release();
 	myVertexBuffer->Release();
@@ -216,8 +215,8 @@ void LetsDrawSomeStuff::Render()
 			}
 
 			// Set active target for drawing, all array based D3D11 functions should use a syntax similar to below
-			ID3D11RenderTargetView* const targets[] = { myRenderTargetView };
-			myContext->OMSetRenderTargets(1, targets, myDepthStencilView);
+			//ID3D11RenderTargetView* const targets[] = { myRenderTargetView };
+			//myContext->OMSetRenderTargets(1, targets, myDepthStencilView);
 
 			// Clear the screen to dark green
 			const float d_green[] = { 0, 0.5f, 0, 1 };
@@ -268,7 +267,7 @@ void LetsDrawSomeStuff::Render()
 			mySwapChain->Present(0, 0); // set first argument to 1 to enable vertical refresh sync with display
 
 			// Free any temp DX handles aquired this frame
-			myRenderTargetView->Release();
+			//myRenderTargetView->Release();
 		}
 	}
 }
