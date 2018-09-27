@@ -4,17 +4,7 @@
 #include "Gateware Redistribution R5d/Interface/G_Graphics/GDirectX11Surface.h"
 
 // Include DirectX11 for interface access
-#include <windows.h>
-#include <d3d11_1.h>
-#include <d3dcompiler.h>
-#include <directxmath.h>
-#include <directxcolors.h>
-#include <fbxsdk.h>
-#include <iostream>
-using namespace DirectX;
-using namespace std;
-
-
+#include "Declarations.h"
 
 // Simple Container class to make life easier/cleaner
 class LetsDrawSomeStuff
