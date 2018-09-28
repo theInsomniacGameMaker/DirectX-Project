@@ -124,8 +124,8 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			//ProcessFbxMesh(lScene->GetRootNode());
 #pragma endregion
 
-			charizard = Mesh("Charizard.fbx");
-			charizard.SetScale(25);
+			charizard = Mesh("Charizard.fbx",25.0f);
+			charizard.SetScale(1);
 
 			D3D11_BUFFER_DESC bd = {};
 			bd.Usage = D3D11_USAGE_DEFAULT;
@@ -138,9 +138,9 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			myDevice->CreateBuffer(&bd, &InitData, &myVertexBuffer);
 
 			// Set vertex buffer
-			UINT stride = sizeof(SimpleVertex);
-			UINT offset = 0;
-			myContext->IASetVertexBuffers(0, 1, &myVertexBuffer, &stride, &offset);
+			UINT stride[] = { sizeof(SimpleVertex) };
+			UINT offset[] = { 0 };
+			myContext->IASetVertexBuffers(0, 1, &myVertexBuffer, stride, offset);
 
 			bd.Usage = D3D11_USAGE_DEFAULT;
 			bd.ByteWidth = sizeof(int) * charizard.GetNumberOfIndices();        // 36 vertices needed for 12 triangles in a triangle list
@@ -166,8 +166,8 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			worldMatrix = XMMatrixIdentity();
 
 			// Initialize the view matrix
-			XMVECTOR Eye = XMVectorSet(0.0f, 1.0f, -5.0f, 0.0f);
-			XMVECTOR At = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+			XMVECTOR Eye = XMVectorSet(0.0f, 15.0f, -20.0f, 0.0f);
+			XMVECTOR At = XMVectorSet(0.0f, 15.0f, 0.0f, 0.0f);
 			XMVECTOR Up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 			viewMatrix = XMMatrixLookAtLH(Eye, At, Up);
 
@@ -248,7 +248,7 @@ void LetsDrawSomeStuff::Render()
 			XMFLOAT4 vLightDirs[2] =
 			{
 				XMFLOAT4(-0.577f, 0.577f, -0.577f, 1.0f),
-				XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f),
+				XMFLOAT4(0.0f, 0.0f, -1.0f, 1.0f),
 			};
 			XMFLOAT4 vLightColors[2] =
 			{
@@ -256,12 +256,13 @@ void LetsDrawSomeStuff::Render()
 				XMFLOAT4(0.5f, 0.0f, 0.0f, 1.0f)
 			};
 
+			// Rotate the second light around the origin
 			XMMATRIX mRotate = XMMatrixRotationY(-2.0f * t);
 			XMVECTOR vLightDir = XMLoadFloat4(&vLightDirs[1]);
 			vLightDir = XMVector3Transform(vLightDir, mRotate);
 			XMStoreFloat4(&vLightDirs[1], vLightDir);
 
-			//Update variables
+			
 			ConstantBuffer cb;
 			cb.mWorld = XMMatrixTranspose(worldMatrix);
 			cb.mView = XMMatrixTranspose(viewMatrix);
@@ -274,14 +275,13 @@ void LetsDrawSomeStuff::Render()
 			myContext->UpdateSubresource(myConstantBuffer, 0, nullptr, &cb, 0, 0);
 
 			//
-			// Renders a triangle
+			// Render the cube
 			//
 			myContext->VSSetShader(myVertexShader, nullptr, 0);
 			myContext->VSSetConstantBuffers(0, 1, &myConstantBuffer);
 			myContext->PSSetShader(myPixelShader, nullptr, 0);
-			myContext->PSSetShaderResources(0, 1, &myTextureRV);
-			myContext->PSSetSamplers(0, 1, &mySamplerLinear);
-			myContext->DrawIndexed(charizard.GetNumberOfIndices(), 0, 0);        // 36 vertices needed for 12 triangles in a triangle list
+			myContext->PSSetConstantBuffers(0, 1, &myConstantBuffer);
+			myContext->DrawIndexed(charizard.GetNumberOfIndices(), 0, 0);
 
 													 // Present Backbuffer using Swapchain object
 													 // Framerate is currently unlocked, we suggest "MSI Afterburner" to track your current FPS and memory usage.
@@ -292,59 +292,3 @@ void LetsDrawSomeStuff::Render()
 		}
 	}
 }
-
-//void ProcessFbxMesh(FbxNode* Node)
-//{
-//	// set up output console
-//	AllocConsole();
-//	freopen("CONOUT$", "w", stdout);
-//	freopen("CONOUT$", "w", stderr);
-//
-//	//FBX Mesh stuff
-//	int childrenCount = Node->GetChildCount();
-//
-//	//cout << "\nName:" << Node->GetName();
-//
-//	for (int i = 0; i < childrenCount; i++)
-//	{
-//		FbxNode *childNode = Node->GetChild(i);
-//		FbxMesh *mesh = childNode->GetMesh();
-//
-//		if (mesh != NULL)
-//		{
-//			//cout << "\nMesh:" << childNode->GetName();
-//
-//			// Get index count from mesh
-//			numVertices = mesh->GetControlPointsCount();
-//			//cout << "\nVertex Count:" << numVertices;
-//
-//			// Create SimpleVertex array to size of this mesh
-//			vertices = new SimpleVertex[numVertices];
-//
-//			//================= Process Vertices ===================
-//			for (int j = 0; j < numVertices; j++)
-//			{
-//				FbxVector4 vert = mesh->GetControlPointAt(j);
-//				vertices[j].Pos.x = vert.mData[0] * scale;
-//				vertices[j].Pos.y = vert.mData[1] * scale;
-//				vertices[j].Pos.z = vert.mData[2] * scale;
-//				vertices[j].Color = RAND_COLOR;
-//				//cout << "\n" << vert.mData[0] << " " << vert.mData[1] << " " << vert.mData[2];
-//			}
-//
-//			numIndices = mesh->GetPolygonVertexCount();
-//			//cout << "\nIndice Count:" << numIndices;
-//
-//			// No need to allocate int array, FBX does for us
-//			indices = mesh->GetPolygonVertices();
-//
-//			//================= Process Indices ====================
-//			for (int j = 0; j < numIndices; j++)
-//			{
-//				//cout << "\nIndice:" << indices[j];
-//			}
-//		}
-//		// recurse on all children
-//		ProcessFbxMesh(childNode);
-//	}
-//}

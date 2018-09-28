@@ -5,7 +5,7 @@ Mesh::Mesh()
 {
 
 }
-Mesh::Mesh(string fileName)
+Mesh::Mesh(string fileName, float scale)
 {
 	fileName = "\\Assets\\" + fileName;
 	// Change the following filename to a suitable filename value.
@@ -33,6 +33,7 @@ Mesh::Mesh(string fileName)
 
 	// The file is imported, so get rid of the importer.
 	lImporter->Destroy();
+	myMesh.scale = scale;
 	ProcessFbxMesh(lScene->GetRootNode(), myMesh);
 }
 

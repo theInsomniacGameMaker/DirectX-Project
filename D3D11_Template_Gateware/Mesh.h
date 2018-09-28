@@ -7,7 +7,7 @@ class Mesh
 
 public:
 	Mesh();
-	Mesh(string fileName);
+	Mesh(string fileName, float scale);
 	~Mesh();
 	SimpleVertex* GetVertices();
 	int GetNumberOfVertices();

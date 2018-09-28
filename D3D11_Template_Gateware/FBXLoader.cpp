@@ -103,9 +103,9 @@ void ProcessFbxMesh(FbxNode* Node, MeshStruct &meshToMutate)
 			for (int j = 0; j < meshToMutate.numVertices; j++)
 			{
 				FbxVector4 vert = mesh->GetControlPointAt(j);
-				meshToMutate.vertices[j].Pos.x = (float)vert.mData[0] / meshToMutate.scale;
-				meshToMutate.vertices[j].Pos.y = (float)vert.mData[1] / meshToMutate.scale;
-				meshToMutate.vertices[j].Pos.z = (float)vert.mData[2] / meshToMutate.scale;
+				meshToMutate.vertices[j].Pos.x = (float)vert.mData[0] * meshToMutate.scale;
+				meshToMutate.vertices[j].Pos.y = (float)vert.mData[1] * meshToMutate.scale;
+				meshToMutate.vertices[j].Pos.z = (float)vert.mData[2] * meshToMutate.scale;
 				// Generate random normal
 				//vertices[j].Normal = RAND_NORMAL;
 			}
@@ -141,7 +141,7 @@ void ProcessFbxMesh(FbxNode* Node, MeshStruct &meshToMutate)
 				meshToMutate.indices[j] = j;
 			}
 
-			if (true)
+			if (false)
 			{
 				Compactify(meshToMutate);
 			}
