@@ -29,6 +29,8 @@ class LetsDrawSomeStuff
 	XMMATRIX				worldMatrix;
 	XMMATRIX				viewMatrix;
 	XMMATRIX				projectionMatrix;
+	ID3D11ShaderResourceView*           myTextureRV = nullptr;
+	ID3D11SamplerState*                 mySamplerLinear = nullptr;
 
 	Mesh charizard;
 public:
@@ -81,7 +83,7 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			D3D11_INPUT_ELEMENT_DESC layout[] =
 			{
 				{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-			{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+			{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 			};
 			UINT numElements = ARRAYSIZE(layout);
 
@@ -123,6 +125,7 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 #pragma endregion
 
 			charizard = Mesh("Charizard.fbx");
+			charizard.SetScale(25);
 
 			D3D11_BUFFER_DESC bd = {};
 			bd.Usage = D3D11_USAGE_DEFAULT;
@@ -163,8 +166,8 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			worldMatrix = XMMatrixIdentity();
 
 			// Initialize the view matrix
-			XMVECTOR Eye = XMVectorSet(0.0f, 15.0f, -20.0f, 0.0f);
-			XMVECTOR At = XMVectorSet(0.0f, 15.0f, 0.0f, 0.0f);
+			XMVECTOR Eye = XMVectorSet(0.0f, 1.0f, -5.0f, 0.0f);
+			XMVECTOR At = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 			XMVECTOR Up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 			viewMatrix = XMMatrixLookAtLH(Eye, At, Up);
 
@@ -242,11 +245,32 @@ void LetsDrawSomeStuff::Render()
 			//animate cube
 			worldMatrix = XMMatrixRotationY(t);
 
+			XMFLOAT4 vLightDirs[2] =
+			{
+				XMFLOAT4(-0.577f, 0.577f, -0.577f, 1.0f),
+				XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f),
+			};
+			XMFLOAT4 vLightColors[2] =
+			{
+				XMFLOAT4(0.5f, 0.5f, 0.5f, 1.0f),
+				XMFLOAT4(0.5f, 0.0f, 0.0f, 1.0f)
+			};
+
+			XMMATRIX mRotate = XMMatrixRotationY(-2.0f * t);
+			XMVECTOR vLightDir = XMLoadFloat4(&vLightDirs[1]);
+			vLightDir = XMVector3Transform(vLightDir, mRotate);
+			XMStoreFloat4(&vLightDirs[1], vLightDir);
+
 			//Update variables
 			ConstantBuffer cb;
 			cb.mWorld = XMMatrixTranspose(worldMatrix);
 			cb.mView = XMMatrixTranspose(viewMatrix);
 			cb.mProjection = XMMatrixTranspose(projectionMatrix);
+			cb.vLightDir[0] = vLightDirs[0];
+			cb.vLightDir[1] = vLightDirs[1];
+			cb.vLightColor[0] = vLightColors[0];
+			cb.vLightColor[1] = vLightColors[1];
+			cb.vOutputColor = XMFLOAT4(0, 0, 0, 0);
 			myContext->UpdateSubresource(myConstantBuffer, 0, nullptr, &cb, 0, 0);
 
 			//
@@ -255,6 +279,8 @@ void LetsDrawSomeStuff::Render()
 			myContext->VSSetShader(myVertexShader, nullptr, 0);
 			myContext->VSSetConstantBuffers(0, 1, &myConstantBuffer);
 			myContext->PSSetShader(myPixelShader, nullptr, 0);
+			myContext->PSSetShaderResources(0, 1, &myTextureRV);
+			myContext->PSSetSamplers(0, 1, &mySamplerLinear);
 			myContext->DrawIndexed(charizard.GetNumberOfIndices(), 0, 0);        // 36 vertices needed for 12 triangles in a triangle list
 
 													 // Present Backbuffer using Swapchain object

@@ -6,6 +6,7 @@
 #include <directxcolors.h>
 #include <fbxsdk.h>
 #include <iostream>
+#include <vector>
 using namespace DirectX;
 using namespace std;
 
@@ -16,7 +17,7 @@ using namespace std;
 struct SimpleVertex
 {
 	XMFLOAT3 Pos;
-	XMFLOAT4 Color;
+	XMFLOAT3 Normal;
 };
 
 
@@ -25,6 +26,9 @@ struct ConstantBuffer
 	XMMATRIX mWorld;
 	XMMATRIX mView;
 	XMMATRIX mProjection;
+	XMFLOAT4 vLightDir[2];
+	XMFLOAT4 vLightColor[2];
+	XMFLOAT4 vOutputColor;
 };
 
 // Arrays and counts for
