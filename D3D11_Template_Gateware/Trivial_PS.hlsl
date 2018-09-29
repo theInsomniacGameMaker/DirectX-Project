@@ -8,10 +8,14 @@ cbuffer ConstantBuffer : register(b0)
 	float4 vOutputColor;
 }
 
+Texture2D txDiffuse : register(t0);
+SamplerState samLinear : register(s0);
+
 struct PS_INPUT
 {
 	float4 Pos : SV_POSITION;
-	float3 Norm : TEXCOORD0;
+	float3 Norm : NORMAL;
+	float2 Tex : TEXCOORD1;
 };
 
 float4 main(PS_INPUT input) : SV_Target
@@ -23,6 +27,7 @@ float4 main(PS_INPUT input) : SV_Target
 	{
 		finalColor += saturate(dot((float3)vLightDir[i],input.Norm) * vLightColor[i]);
 	}
+	finalColor *= txDiffuse.Sample(samLinear, input.Tex);
 	finalColor.a = 1;
 	return finalColor;
 }

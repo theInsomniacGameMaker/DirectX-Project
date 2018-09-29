@@ -7,7 +7,7 @@ class Mesh
 
 public:
 	Mesh();
-	Mesh(string fileName, float scale);
+	Mesh(string fileName, float scale, ID3D11Device* &myDevice, ID3D11ShaderResourceView* &myTextureRV);
 	~Mesh();
 	SimpleVertex* GetVertices();
 	int GetNumberOfVertices();

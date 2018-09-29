@@ -52,6 +52,9 @@
     <ClCompile Include="Mesh.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
+    <ClCompile Include="DDSTextureLoader.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Declarations.h">
@@ -64,6 +67,9 @@
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="Mesh.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="DDSTextureLoader.h">
       <Filter>Headers</Filter>
     </ClInclude>
   </ItemGroup>

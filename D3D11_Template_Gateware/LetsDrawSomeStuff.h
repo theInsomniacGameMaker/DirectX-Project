@@ -17,20 +17,20 @@ class LetsDrawSomeStuff
 	ID3D11DeviceContext *myContext = nullptr;
 
 	// TODO: Add your own D3D11 variables here (be sure to "Release()" them when done!)
-	D3D_DRIVER_TYPE			myDriverType = D3D_DRIVER_TYPE_NULL;
-	D3D_FEATURE_LEVEL		myFeatureLevel = D3D_FEATURE_LEVEL_11_0;
-	ID3D11RenderTargetView* myRenderTargetView = nullptr;
-	ID3D11VertexShader*		myVertexShader = nullptr;
-	ID3D11PixelShader*		myPixelShader = nullptr;
-	ID3D11InputLayout*		myVertexLayout = nullptr;
-	ID3D11Buffer*			myVertexBuffer = nullptr;
-	ID3D11Buffer*			myIndexBuffer = nullptr;
-	ID3D11Buffer*			myConstantBuffer = nullptr;
-	XMMATRIX				worldMatrix;
-	XMMATRIX				viewMatrix;
-	XMMATRIX				projectionMatrix;
-	ID3D11ShaderResourceView*           myTextureRV = nullptr;
-	ID3D11SamplerState*                 mySamplerLinear = nullptr;
+	D3D_DRIVER_TYPE				myDriverType = D3D_DRIVER_TYPE_NULL;
+	D3D_FEATURE_LEVEL			myFeatureLevel = D3D_FEATURE_LEVEL_11_0;
+	ID3D11RenderTargetView*		myRenderTargetView = nullptr;
+	ID3D11VertexShader*			myVertexShader = nullptr;
+	ID3D11PixelShader*			myPixelShader = nullptr;
+	ID3D11InputLayout*			myVertexLayout = nullptr;
+	ID3D11Buffer*				myVertexBuffer = nullptr;
+	ID3D11Buffer*				myIndexBuffer = nullptr;
+	ID3D11Buffer*				myConstantBuffer = nullptr;
+	XMMATRIX					worldMatrix;
+	XMMATRIX					viewMatrix;
+	XMMATRIX					projectionMatrix;
+	ID3D11ShaderResourceView*   myTextureRV = nullptr;
+	ID3D11SamplerState*			mySamplerLinear = nullptr;
 
 	Mesh charizard;
 public:
@@ -83,7 +83,8 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			D3D11_INPUT_ELEMENT_DESC layout[] =
 			{
 				{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-			{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+				{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+				{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 			};
 			UINT numElements = ARRAYSIZE(layout);
 
@@ -124,7 +125,7 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			//ProcessFbxMesh(lScene->GetRootNode());
 #pragma endregion
 
-			charizard = Mesh("Charizard.fbx",25.0f);
+			charizard = Mesh("Charizard.fbx",25.0f, myDevice, myTextureRV);
 			charizard.SetScale(1);
 
 			D3D11_BUFFER_DESC bd = {};
@@ -162,12 +163,22 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			bd.CPUAccessFlags = 0;
 			myDevice->CreateBuffer(&bd, nullptr, &myConstantBuffer);
 
+			D3D11_SAMPLER_DESC sampDesc = {};
+			sampDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+			sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+			sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+			sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+			sampDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+			sampDesc.MinLOD = 0;
+			sampDesc.MaxLOD = D3D11_FLOAT32_MAX;
+			myDevice->CreateSamplerState(&sampDesc, &mySamplerLinear);
+			
 			// Initialize the world matrix
 			worldMatrix = XMMatrixIdentity();
 
 			// Initialize the view matrix
-			XMVECTOR Eye = XMVectorSet(0.0f, 15.0f, -20.0f, 0.0f);
-			XMVECTOR At = XMVectorSet(0.0f, 15.0f, 0.0f, 0.0f);
+			XMVECTOR Eye = XMVectorSet(0.0f, 20.0f, -15.0f, 0.0f);
+			XMVECTOR At = XMVectorSet(0.0f, 20.0f, 0.0f, 0.0f);
 			XMVECTOR Up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 			viewMatrix = XMMatrixLookAtLH(Eye, At, Up);
 
@@ -263,16 +274,16 @@ void LetsDrawSomeStuff::Render()
 			XMStoreFloat4(&vLightDirs[1], vLightDir);
 
 			
-			ConstantBuffer cb;
-			cb.mWorld = XMMatrixTranspose(worldMatrix);
-			cb.mView = XMMatrixTranspose(viewMatrix);
-			cb.mProjection = XMMatrixTranspose(projectionMatrix);
-			cb.vLightDir[0] = vLightDirs[0];
-			cb.vLightDir[1] = vLightDirs[1];
-			cb.vLightColor[0] = vLightColors[0];
-			cb.vLightColor[1] = vLightColors[1];
-			cb.vOutputColor = XMFLOAT4(0, 0, 0, 0);
-			myContext->UpdateSubresource(myConstantBuffer, 0, nullptr, &cb, 0, 0);
+			ConstantBuffer cb1;
+			cb1.mWorld = XMMatrixTranspose(worldMatrix);
+			cb1.mView = XMMatrixTranspose(viewMatrix);
+			cb1.mProjection = XMMatrixTranspose(projectionMatrix);
+			cb1.vLightDir[0] = vLightDirs[0];
+			cb1.vLightDir[1] = vLightDirs[1];
+			cb1.vLightColor[0] = vLightColors[0];
+			cb1.vLightColor[1] = vLightColors[1];
+			cb1.vOutputColor = XMFLOAT4(0, 0, 0, 0);
+			myContext->UpdateSubresource(myConstantBuffer, 0, nullptr, &cb1, 0, 0);
 
 			//
 			// Render the cube
@@ -281,6 +292,8 @@ void LetsDrawSomeStuff::Render()
 			myContext->VSSetConstantBuffers(0, 1, &myConstantBuffer);
 			myContext->PSSetShader(myPixelShader, nullptr, 0);
 			myContext->PSSetConstantBuffers(0, 1, &myConstantBuffer);
+			myContext->PSSetShaderResources(0, 1, &myTextureRV);
+			myContext->PSSetSamplers(0, 1, &mySamplerLinear);
 			myContext->DrawIndexed(charizard.GetNumberOfIndices(), 0, 0);
 
 													 // Present Backbuffer using Swapchain object
@@ -291,4 +304,8 @@ void LetsDrawSomeStuff::Render()
 			myRenderTargetView->Release();
 		}
 	}
+
+
+
 }
+

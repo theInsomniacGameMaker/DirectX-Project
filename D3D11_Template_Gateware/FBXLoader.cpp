@@ -14,7 +14,7 @@ bool CheckEpsilonEquality(float x, float y)
 void Compactify(MeshStruct &meshToMutate)
 {
 	vector <SimpleVertex> uniqueVertices;
-	//uniqueVertices.resize(meshToMutate.numVertices);
+
 	for (int i = 0; i < meshToMutate.numIndices; i++)
 	{
 		bool foundSomething = false;
@@ -53,19 +53,20 @@ void Compactify(MeshStruct &meshToMutate)
 		meshToMutate.vertices[i].Normal.x = uniqueVertices[i].Normal.x;
 		meshToMutate.vertices[i].Normal.y = uniqueVertices[i].Normal.y;
 		meshToMutate.vertices[i].Normal.z = uniqueVertices[i].Normal.z;
+		meshToMutate.vertices[i].Tex.x = uniqueVertices[i].Tex.x;
+		meshToMutate.vertices[i].Tex.y = uniqueVertices[i].Tex.y;
 	}
 
 	// print out some stats
-	/*cout << "\nindex count BEFORE/AFTER compaction " << meshToMutate.numIndices;
-	cout << "\nvertex count ORIGINAL (FBX source): " << meshToMutate.numVertices;
+	/*cout << "\nindex count BEFORE/AFTER compaction " << numIndices;
+	cout << "\nvertex count ORIGINAL (FBX source): " << numVertices;
 	cout << "\nvertex count AFTER expansion: " << numIndices;
 	cout << "\nvertex count AFTER compaction: " << uniqueVertices.size();
 	cout << "\nSize reduction: " << ((numVertices - uniqueVertices.size()) / (float)numVertices)*100.00f << "%";
 	cout << "\nor " << (uniqueVertices.size() / (float)numVertices) << " of the expanded size";*/
 }
 
-
-void ProcessFbxMesh(FbxNode* Node, MeshStruct &meshToMutate)
+void ProcessFbxMesh(FbxNode* Node, MeshStruct &meshToMutate, ID3D11Device *&myDevice, ID3D11ShaderResourceView*& myTextureRV)
 {// set up output console
 	AllocConsole();
 	freopen("CONOUT$", "w", stdout);
@@ -110,13 +111,14 @@ void ProcessFbxMesh(FbxNode* Node, MeshStruct &meshToMutate)
 				//vertices[j].Normal = RAND_NORMAL;
 			}
 
+
 			// Get the Normals array from the mesh
 			FbxArray<FbxVector4> normalsVec;
 			mesh->GetPolygonVertexNormals(normalsVec);
 			cout << "\nNormalVec Count:" << normalsVec.Size();
 
 			// Declare a new array for the second vertex array
-			// Note the size is meshToMutate.numIndices not numVertices
+			// Note the size is numIndices not numVertices
 			SimpleVertex *vertices2 = new SimpleVertex[meshToMutate.numIndices];
 
 			// align (expand) vertex array and set the normals
@@ -126,6 +128,122 @@ void ProcessFbxMesh(FbxNode* Node, MeshStruct &meshToMutate)
 				vertices2[j].Normal.x = normalsVec[j].mData[0];
 				vertices2[j].Normal.y = normalsVec[j].mData[1];
 				vertices2[j].Normal.z = normalsVec[j].mData[2];
+			}
+
+			int materialCount = childNode->GetSrcObjectCount<FbxSurfaceMaterial>();
+
+			for (int index = 0; index < materialCount; index++)
+			{
+				FbxSurfaceMaterial* material = (FbxSurfaceMaterial*)childNode->GetSrcObject<FbxSurfaceMaterial>(index);
+
+				if (material != NULL)
+				{
+					cout << "\nmaterial: " << material->GetName() << std::endl;
+					// This only gets the material of type sDiffuse, you probably need to traverse all Standard Material Property by its name to get all possible textures.
+					FbxProperty prop = material->FindProperty(FbxSurfaceMaterial::sDiffuse);
+
+					// Check if it's layeredtextures
+					int layeredTextureCount = prop.GetSrcObjectCount<FbxLayeredTexture>();
+
+					if (layeredTextureCount > 0)
+					{
+						for (int j = 0; j < layeredTextureCount; j++)
+						{
+							FbxLayeredTexture* layered_texture = FbxCast<FbxLayeredTexture>(prop.GetSrcObject<FbxLayeredTexture>(j));
+							int lcount = layered_texture->GetSrcObjectCount<FbxTexture>();
+
+							for (int k = 0; k < lcount; k++)
+							{
+								FbxFileTexture* texture = FbxCast<FbxFileTexture>(layered_texture->GetSrcObject<FbxTexture>(k));
+								// Then, you can get all the properties of the texture, include its name
+								const char* textureName = texture->GetFileName();
+								cout << textureName;
+							}
+						}
+					}
+					else
+					{
+						// Directly get textures
+						int textureCount = prop.GetSrcObjectCount<FbxTexture>();
+
+						for (int j = 0; j < textureCount; j++)
+						{
+							FbxFileTexture* texture = FbxCast<FbxFileTexture>(prop.GetSrcObject<FbxTexture>(j));
+							// Then, you can get all the properties of the texture, include its name
+							const char* textureName = texture->GetFileName();
+							cout << textureName;
+
+							string appendedTextureName = (texture->GetFileName());
+							int pos = appendedTextureName.find_last_of('\\');
+							appendedTextureName = appendedTextureName.substr(pos + 1, appendedTextureName.length());
+							appendedTextureName = "Assets\\" + appendedTextureName.substr(0, appendedTextureName.length() - 3) + "dds";
+
+
+							std::wstring widestr = std::wstring(appendedTextureName.begin(), appendedTextureName.end());
+							const wchar_t* widecstr = widestr.c_str();
+
+							HRESULT hr = CreateDDSTextureFromFile(myDevice, widecstr, nullptr, &myTextureRV);
+
+							FbxProperty p = texture->RootProperty.Find("Filename");
+							cout << p.Get<FbxString>() << std::endl;
+						}
+					}
+				}
+			}
+
+
+			//get all UV set names
+			FbxStringList lUVSetNameList;
+			mesh->GetUVSetNames(lUVSetNameList);
+
+			//iterating over all uv sets
+			for (int lUVSetIndex = 0; lUVSetIndex < lUVSetNameList.GetCount(); lUVSetIndex++)
+			{
+				//get lUVSetIndex-th uv set
+				const char* lUVSetName = lUVSetNameList.GetStringAt(lUVSetIndex);
+				const FbxGeometryElementUV* lUVElement = mesh->GetElementUV(lUVSetName);
+
+				if (!lUVElement)
+					continue;
+
+				// only support mapping mode eByPolygonVertex and eByControlPoint
+				if (lUVElement->GetMappingMode() != FbxGeometryElement::eByPolygonVertex &&
+					lUVElement->GetMappingMode() != FbxGeometryElement::eByControlPoint)
+					return;
+
+				//index array, where holds the index referenced to the uv data
+				const bool lUseIndex = lUVElement->GetReferenceMode() != FbxGeometryElement::eDirect;
+				const int lIndexCount = (lUseIndex) ? lUVElement->GetIndexArray().GetCount() : 0;
+
+				//iterating through the data by polygon
+				const int lPolyCount = mesh->GetPolygonCount();
+
+
+				int lPolyIndexCounter = 0;
+				for (int lPolyIndex = 0; lPolyIndex < lPolyCount; ++lPolyIndex)
+				{
+					// build the max index array that we need to pass into MakePoly
+					const int lPolySize = mesh->GetPolygonSize(lPolyIndex);
+					for (int lVertIndex = 0; lVertIndex < lPolySize; ++lVertIndex)
+					{
+						if (lPolyIndexCounter < lIndexCount)
+						{
+							FbxVector2 lUVValue;
+
+							//the UV index depends on the reference mode
+							int lUVIndex = lUseIndex ? lUVElement->GetIndexArray().GetAt(lPolyIndexCounter) : lPolyIndexCounter;
+
+							lUVValue = lUVElement->GetDirectArray().GetAt(lUVIndex);
+
+							//User TODO:
+							//Print out the value of UV(lUVValue) or log it to a file
+
+							vertices2[lPolyIndexCounter].Tex.x = lUVValue.mData[0];
+							vertices2[lPolyIndexCounter].Tex.y = lUVValue.mData[1];
+							lPolyIndexCounter++;
+						}
+					}
+				}
 			}
 
 			// vertices is an "out" var so make sure it points to the new array
@@ -153,7 +271,7 @@ void ProcessFbxMesh(FbxNode* Node, MeshStruct &meshToMutate)
 				meshToMutate.numVertices = meshToMutate.numIndices;
 			}
 		}
-		ProcessFbxMesh(childNode,meshToMutate);
+		ProcessFbxMesh(childNode, meshToMutate, myDevice, myTextureRV);
 	}
 	
 }

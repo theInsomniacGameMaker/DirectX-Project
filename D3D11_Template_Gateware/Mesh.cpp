@@ -5,7 +5,7 @@ Mesh::Mesh()
 {
 
 }
-Mesh::Mesh(string fileName, float scale)
+Mesh::Mesh(string fileName, float scale, ID3D11Device* &myDevice, ID3D11ShaderResourceView* &myTextureRV)
 {
 	fileName = "\\Assets\\" + fileName;
 	// Change the following filename to a suitable filename value.
@@ -34,7 +34,7 @@ Mesh::Mesh(string fileName, float scale)
 	// The file is imported, so get rid of the importer.
 	lImporter->Destroy();
 	myMesh.scale = scale;
-	ProcessFbxMesh(lScene->GetRootNode(), myMesh);
+	ProcessFbxMesh(lScene->GetRootNode(), myMesh, myDevice, myTextureRV);
 }
 
 SimpleVertex* Mesh::GetVertices()
