@@ -109,6 +109,7 @@ void ProcessFbxMesh(FbxNode* Node, MeshStruct &meshToMutate, ID3D11Device *&myDe
 				meshToMutate.vertices[j].Pos.z = (float)vert.mData[2] * meshToMutate.scale;
 				// Generate random normal
 				//vertices[j].Normal = RAND_NORMAL;
+				meshToMutate.vertices[j].TPos = XMFLOAT3(0, 0, 0);
 			}
 
 

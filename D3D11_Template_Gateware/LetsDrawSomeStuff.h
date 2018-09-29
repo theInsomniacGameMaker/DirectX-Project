@@ -6,6 +6,7 @@
 // Include DirectX11 for interface access
 #include "Declarations.h"
 #include "Mesh.h"
+
 // Simple Container class to make life easier/cleaner
 class LetsDrawSomeStuff
 {
@@ -23,8 +24,10 @@ class LetsDrawSomeStuff
 	ID3D11VertexShader*			myVertexShader = nullptr;
 	ID3D11PixelShader*			myPixelShader = nullptr;
 	ID3D11InputLayout*			myVertexLayout = nullptr;
-	ID3D11Buffer*				myVertexBuffer = nullptr;
-	ID3D11Buffer*				myIndexBuffer = nullptr;
+	ID3D11Buffer*				charizardVertexBuffer = nullptr;
+	ID3D11Buffer*				boxVertexBuffer = nullptr;
+	ID3D11Buffer*				charizardIndexBuffer = nullptr;
+	ID3D11Buffer*				boxIndexBuffer = nullptr;
 	ID3D11Buffer*				myConstantBuffer = nullptr;
 	XMMATRIX					worldMatrix;
 	XMMATRIX					viewMatrix;
@@ -33,6 +36,7 @@ class LetsDrawSomeStuff
 	ID3D11SamplerState*			mySamplerLinear = nullptr;
 
 	Mesh charizard;
+	Mesh box;
 public:
 	// Init
 	LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint);
@@ -85,6 +89,7 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 				{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 				{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 				{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+				{ "TEXCOORDP", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 32, D3D11_INPUT_PER_VERTEX_DATA, 0 }
 			};
 			UINT numElements = ARRAYSIZE(layout);
 
@@ -92,41 +97,11 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			myDevice->CreateInputLayout(layout, numElements, Trivial_VS, sizeof(Trivial_VS), &myVertexLayout);
 
 			myContext->IASetInputLayout(myVertexLayout);
-#pragma region FBX
-
-			//// Change the following filename to a suitable filename value.
-			//const char* lFilename = "\\Assets\\Charizard.fbx";
-
-			//// Initialize the SDK manager. This object handles memory management.
-			//FbxManager* lSdkManager = FbxManager::Create();
-			//// Create the IO settings object.
-			//FbxIOSettings *ios = FbxIOSettings::Create(lSdkManager, IOSROOT);
-			//lSdkManager->SetIOSettings(ios);
-
-			//// Create an importer using the SDK manager.
-			//FbxImporter* lImporter = FbxImporter::Create(lSdkManager, "");
-
-			//// Use the first argument as the filename for the importer.
-			//if (!lImporter->Initialize(lFilename, -1, lSdkManager->GetIOSettings())) {
-			//	//printf("Call to FbxImporter::Initialize() failed.\n");
-			//	//printf("Error returned: %s\n\n", lImporter->GetStatus().GetErrorString());
-			//	exit(-1);
-			//}
-
-			//// Create a new scene so that it can be populated by the imported file.
-			//FbxScene* lScene = FbxScene::Create(lSdkManager, "myScene");
-
-			//// Import the contents of the file into the scene.
-			//lImporter->Import(lScene);
-
-			//// The file is imported, so get rid of the importer.
-			//lImporter->Destroy();
 
 			//ProcessFbxMesh(lScene->GetRootNode());
-#pragma endregion
 
-			charizard = Mesh("Charizard.fbx",25.0f, myDevice, myTextureRV);
-			charizard.SetScale(1);
+
+			charizard = Mesh("Charizard.fbx", 25.0f, myDevice, myTextureRV);
 
 			D3D11_BUFFER_DESC bd = {};
 			bd.Usage = D3D11_USAGE_DEFAULT;
@@ -136,22 +111,24 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 
 			D3D11_SUBRESOURCE_DATA InitData = {};
 			InitData.pSysMem = charizard.GetVertices();
-			myDevice->CreateBuffer(&bd, &InitData, &myVertexBuffer);
+			myDevice->CreateBuffer(&bd, &InitData, &charizardVertexBuffer);
 
 			// Set vertex buffer
 			UINT stride[] = { sizeof(SimpleVertex) };
 			UINT offset[] = { 0 };
-			myContext->IASetVertexBuffers(0, 1, &myVertexBuffer, stride, offset);
+			myContext->IASetVertexBuffers(0, 1, &charizardVertexBuffer, stride, offset);
 
 			bd.Usage = D3D11_USAGE_DEFAULT;
 			bd.ByteWidth = sizeof(int) * charizard.GetNumberOfIndices();        // 36 vertices needed for 12 triangles in a triangle list
 			bd.BindFlags = D3D11_BIND_INDEX_BUFFER;
 			bd.CPUAccessFlags = 0;
 			InitData.pSysMem = charizard.GetIndices();
-			myDevice->CreateBuffer(&bd, &InitData, &myIndexBuffer);
+			myDevice->CreateBuffer(&bd, &InitData, &charizardIndexBuffer);
 
 			// Set index buffer
-			myContext->IASetIndexBuffer(myIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
+			myContext->IASetIndexBuffer(charizardIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
+
+			//box = Mesh("cube.fbx", 1 / 50.f, myDevice, myTextureRV);
 
 			// Set primitive topology
 			myContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -172,13 +149,13 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			sampDesc.MinLOD = 0;
 			sampDesc.MaxLOD = D3D11_FLOAT32_MAX;
 			myDevice->CreateSamplerState(&sampDesc, &mySamplerLinear);
-			
+
 			// Initialize the world matrix
 			worldMatrix = XMMatrixIdentity();
 
 			// Initialize the view matrix
-			XMVECTOR Eye = XMVectorSet(0.0f, 20.0f, -15.0f, 0.0f);
-			XMVECTOR At = XMVectorSet(0.0f, 20.0f, 0.0f, 0.0f);
+			XMVECTOR Eye = XMVectorSet(0.0f, 15.0f, -25.0f, 0.0f);
+			XMVECTOR At = XMVectorSet(0.0f, 15.0f, 0.0f, 0.0f);
 			XMVECTOR Up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 			viewMatrix = XMMatrixLookAtLH(Eye, At, Up);
 
@@ -197,13 +174,14 @@ LetsDrawSomeStuff::~LetsDrawSomeStuff()
 	myContext->Release();
 
 	// TODO: "Release()" more stuff here!
-	//myRenderTargetView->Release();
 	myVertexShader->Release();
 	myPixelShader->Release();
 	myVertexLayout->Release();
-	myVertexBuffer->Release();
-	myIndexBuffer->Release();
+	charizardVertexBuffer->Release();
+	charizardIndexBuffer->Release();
 	myConstantBuffer->Release();
+	myTextureRV->Release();
+	mySamplerLinear->Release();
 
 	if (mySurface) // Free Gateware Interface
 	{
@@ -265,25 +243,34 @@ void LetsDrawSomeStuff::Render()
 			{
 				XMFLOAT4(0.5f, 0.5f, 0.5f, 1.0f),
 				XMFLOAT4(0.5f, 0.0f, 0.0f, 1.0f)
+				/*XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f),
+				XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f)*/
 			};
 
-			// Rotate the second light around the origin
+			// Rotate the a matrix
 			XMMATRIX mRotate = XMMatrixRotationY(-2.0f * t);
+			//store the ligh dir in a XMFloat
 			XMVECTOR vLightDir = XMLoadFloat4(&vLightDirs[1]);
+			//transform the light dir by the roatation matrix made
 			vLightDir = XMVector3Transform(vLightDir, mRotate);
+			//copy the values back
 			XMStoreFloat4(&vLightDirs[1], vLightDir);
 
-			
-			ConstantBuffer cb1;
-			cb1.mWorld = XMMatrixTranspose(worldMatrix);
-			cb1.mView = XMMatrixTranspose(viewMatrix);
-			cb1.mProjection = XMMatrixTranspose(projectionMatrix);
-			cb1.vLightDir[0] = vLightDirs[0];
-			cb1.vLightDir[1] = vLightDirs[1];
-			cb1.vLightColor[0] = vLightColors[0];
-			cb1.vLightColor[1] = vLightColors[1];
-			cb1.vOutputColor = XMFLOAT4(0, 0, 0, 0);
-			myContext->UpdateSubresource(myConstantBuffer, 0, nullptr, &cb1, 0, 0);
+			ConstantBuffer cb;
+			cb.mWorld = XMMatrixTranspose(worldMatrix);
+			cb.mView = XMMatrixTranspose(viewMatrix);
+			cb.mProjection = XMMatrixTranspose(projectionMatrix);
+			cb.vLightDir[0] = vLightDirs[0];
+			cb.vLightDir[1] = vLightDirs[1];
+			cb.vLightColor[0] = vLightColors[0];
+			cb.vLightColor[1] = vLightColors[1];
+			cb.pointLight.pos = XMFLOAT4(0, 0,10 ,0);
+			cb.pointLight.range = 100.0f;
+			cb.pointLight.diffuse = XMFLOAT4(0,0,0.4f,1);
+			cb.time = sin(t);
+			cb.vOutputColor = XMFLOAT4(0, 0, 0, 0);
+
+			myContext->UpdateSubresource(myConstantBuffer, 0, nullptr, &cb, 0, 0);
 
 			//
 			// Render the cube
@@ -296,16 +283,13 @@ void LetsDrawSomeStuff::Render()
 			myContext->PSSetSamplers(0, 1, &mySamplerLinear);
 			myContext->DrawIndexed(charizard.GetNumberOfIndices(), 0, 0);
 
-													 // Present Backbuffer using Swapchain object
-													 // Framerate is currently unlocked, we suggest "MSI Afterburner" to track your current FPS and memory usage.
+			// Present Backbuffer using Swapchain object
+			// Framerate is currently unlocked, we suggest "MSI Afterburner" to track your current FPS and memory usage.
 			mySwapChain->Present(0, 0); // set first argument to 1 to enable vertical refresh sync with display
 
 										// Free any temp DX handles aquired this frame
 			myRenderTargetView->Release();
 		}
 	}
-
-
-
 }
 

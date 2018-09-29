@@ -7,6 +7,7 @@
 #include <fbxsdk.h>
 #include <iostream>
 #include <vector>
+#include <time.h>
 using namespace DirectX;
 using namespace std;
 
@@ -19,8 +20,16 @@ struct SimpleVertex
 	XMFLOAT3 Pos;
 	XMFLOAT3 Normal;
 	XMFLOAT2 Tex;
+	XMFLOAT3 TPos;
 };
 
+struct PointLight
+{
+	XMFLOAT4 pos;
+	float range;
+	XMFLOAT3 att;
+	XMFLOAT4 diffuse;
+};
 
 struct ConstantBuffer
 {
@@ -29,6 +38,8 @@ struct ConstantBuffer
 	XMMATRIX mProjection;
 	XMFLOAT4 vLightDir[2];
 	XMFLOAT4 vLightColor[2];
+	PointLight pointLight;
+	float time;
 	XMFLOAT4 vOutputColor;
 };
 
