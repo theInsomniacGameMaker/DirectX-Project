@@ -15,6 +15,16 @@ using namespace std;
 #include "Trivial_VS.csh"
 #include "Trivial_PS.csh"
 
+#define CHARIZARD_MESH 0
+#define BOX_MESH 1
+#define PROCEDURAL_SPHERE 1
+#define WIREFRAME 0
+#define DIRECTIONAL_LIGHT_ON 0
+
+static const XMVECTOR UP = { 0,1,0,0 };
+static const XMVECTOR RIGHT = { 1,0,0,0 };
+static const XMVECTOR FORWARD = { 0,0,1,0 };
+
 struct SimpleVertex
 {
 	XMFLOAT3 Pos;
@@ -57,9 +67,3 @@ struct MeshStruct
 
 // funtime random color
 #define RAND_COLOR XMFLOAT4(rand()/float(RAND_MAX),rand()/float(RAND_MAX),rand()/float(RAND_MAX),1.0f)
-
-#define CHARIZARD_MESH 0
-#define BOX_MESH 0
-#define PROCEDURAL_SPHERE 1
-#define WIREFRAME 0
-#define DIRECTIONAL_LIGHT_ON 1

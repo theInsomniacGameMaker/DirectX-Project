@@ -25,12 +25,18 @@ class LetsDrawSomeStuff
 	ID3D11VertexShader*			myVertexShader = nullptr;
 	ID3D11PixelShader*			myPixelShader = nullptr;
 	ID3D11InputLayout*			myVertexLayout = nullptr;
+#if CHARIZARD_MESH
 	ID3D11Buffer*				charizardVertexBuffer = nullptr;
-	ID3D11Buffer*				boxVertexBuffer = nullptr;
-	ID3D11Buffer*				sphereVertexBuffer = nullptr;
 	ID3D11Buffer*				charizardIndexBuffer = nullptr;
+#endif
+#if BOX_MESH
+	ID3D11Buffer*				boxVertexBuffer = nullptr;
 	ID3D11Buffer*				boxIndexBuffer = nullptr;
+#endif
+#if PROCEDURAL_SPHERE
+	ID3D11Buffer*				sphereVertexBuffer = nullptr;
 	ID3D11Buffer*				sphereIndexBuffer = nullptr;
+#endif
 	ID3D11Buffer*				myConstantBuffer = nullptr;
 	XMMATRIX					worldMatrix;
 	XMMATRIX					viewMatrix;
@@ -91,7 +97,7 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			vp.TopLeftY = 0;
 			myContext->RSSetViewports(1, &vp);
 
-			myDevice->CreateVertexShader(Trivial_VS, sizeof(Trivial_VS), nullptr, &myVertexShader);
+			HRESULT hr = myDevice->CreateVertexShader(Trivial_VS, sizeof(Trivial_VS), nullptr, &myVertexShader);
 			myDevice->CreatePixelShader(Trivial_PS, sizeof(Trivial_PS), nullptr, &myPixelShader);
 
 			// Define the input layout
@@ -177,10 +183,18 @@ LetsDrawSomeStuff::~LetsDrawSomeStuff()
 	myVertexShader->Release();
 	myPixelShader->Release();
 	myVertexLayout->Release();
-#if CHARIZARD_MESH
-	if (charizardVertexBuffer)charizardVertexBuffer->Release();
-	if (charizardIndexBuffer)charizardIndexBuffer->Release();
-#endif
+//#if CHARIZARD_MESH
+//	if (charizardVertexBuffer)charizardVertexBuffer->Release();
+//	if (charizardIndexBuffer)charizardIndexBuffer->Release();
+//#endif
+//#if BOX_MESH
+//	boxVertexBuffer->Release();
+//	boxIndexBuffer->Release();
+//#endif
+//#if PROCEDURAL_SPHERE
+//	sphereVertexBuffer->Release();
+//	sphereIndexBuffer->Release();
+//#endif
 	myConstantBuffer->Release();
 	if (myTextureRV)myTextureRV->Release();
 	if (mySamplerLinear)mySamplerLinear->Release();
@@ -214,17 +228,21 @@ void LetsDrawSomeStuff::Render()
 			myContext->OMSetRenderTargets(1, targets, myDepthStencilView);
 
 			// Clear the screen to dark green
-			const float d_green[] = { 0, 0.5f, 0, 1 };
+			const float d_green[] = { 0, 0.0f, 0, 1 };
 			myContext->ClearRenderTargetView(myRenderTargetView, d_green);
 			
-			if (GetAsyncKeyState(VK_UP))
+		/*	if (GetAsyncKeyState('E'))
 			{
-				Eye+= Up;
+				Eye+=UP;
 			}
+			else if (GetAsyncKeyState('Q'))
+			{
+				Eye -= UP;
+			}*/
 
-			//Eye = XMVectorSet(0.0f, 1.0f, -5.0f, 0.0f);
-			//At = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
-			//Up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+				//Eye = XMVectorSet(0.0f, 1.0f, -5.0f, 0.0f);
+				//At = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+				//Up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 			viewMatrix = XMMatrixLookAtLH(Eye, At, Up);
 
 #if WIREFRAME
@@ -283,12 +301,22 @@ void LetsDrawSomeStuff::Render()
 			cb.vLightDir[1] = vLightDirs[1];
 			cb.vLightColor[0] = vLightColors[0];
 			cb.vLightColor[1] = vLightColors[1];
-			cb.pointLight.pos = XMFLOAT4(0, 7, 0, 0);
-			cb.pointLight.range = 100.0f;
-			cb.pointLight.diffuse = XMFLOAT4(0, 0, 0.4f, 1);
+			cb.pointLight.pos = XMFLOAT4(0, 0, 0, 0);
+			cb.pointLight.range = 7.0f;
+			cb.pointLight.diffuse = XMFLOAT4(1, 1, 1, 1);
 			cb.time = t;
 			cb.vOutputColor = XMFLOAT4(0, 0, 0, 0);
 			myContext->UpdateSubresource(myConstantBuffer, 0, nullptr, &cb, 0, 0);
+
+			//
+			// Render the cube
+			//
+			myContext->VSSetShader(myVertexShader, nullptr, 0);
+			myContext->VSSetConstantBuffers(0, 1, &myConstantBuffer);
+			myContext->PSSetShader(myPixelShader, nullptr, 0);
+			myContext->PSSetConstantBuffers(0, 1, &myConstantBuffer);
+			myContext->PSSetShaderResources(0, 1, &myTextureRV);
+			myContext->PSSetSamplers(0, 1, &mySamplerLinear);
 
 
 			//Setting buffer description
@@ -371,16 +399,19 @@ void LetsDrawSomeStuff::Render()
 			myContext->DrawIndexed(sphereFaces*3,0,0);
 #endif 
 
-			//
-			// Render the cube
-			//
-			myContext->VSSetShader(myVertexShader, nullptr, 0);
-			myContext->VSSetConstantBuffers(0, 1, &myConstantBuffer);
-			myContext->PSSetShader(myPixelShader, nullptr, 0);
-			myContext->PSSetConstantBuffers(0, 1, &myConstantBuffer);
-			myContext->PSSetShaderResources(0, 1, &myTextureRV);
-			myContext->PSSetSamplers(0, 1, &mySamplerLinear);
-
+#if CHARIZARD_MESH
+			if (charizardVertexBuffer)charizardVertexBuffer->Release();
+			if (charizardIndexBuffer)charizardIndexBuffer->Release();
+#endif
+#if BOX_MESH
+			boxVertexBuffer->Release();
+			boxIndexBuffer->Release();
+#endif
+#if PROCEDURAL_SPHERE
+			sphereVertexBuffer->Release();
+			sphereIndexBuffer->Release();
+#endif
+			
 			// Present Backbuffer using Swapchain object
 			// Framerate is currently unlocked, we suggest "MSI Afterburner" to track your current FPS and memory usage.
 			mySwapChain->Present(0, 0); // set first argument to 1 to enable vertical refresh sync with display

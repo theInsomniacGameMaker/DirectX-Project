@@ -27,7 +27,6 @@ struct PS_INPUT
 	float3 Norm : NORMAL;
 	float2 Tex : TEXCOORD1;
 	float3 TPos : TEXCOORD3;
-
 };
 
 float4 main(PS_INPUT input) : SV_Target
@@ -36,8 +35,14 @@ float4 main(PS_INPUT input) : SV_Target
 	float4 pointLightColor = 0;
 	float4 directionalLigthColor = 0;
 	//float4 newPosition = pLight.pos;
-	float4 newPosition = mul(pLight.pos, sin(time));
+	float4 newPosition = mul(pLight.pos, sin(time)*5);
 	float4 baseTexture = txDiffuse.Sample(samLinear, input.Tex);
+
+	if (all(baseTexture == float4(0, 0, 0, 0)))
+	{
+		baseTexture = float4(0.5f, 0.5f, 0.5f, 1);
+	}
+
 	float3 lightToPixelVec = newPosition - input.TPos;
 
 	float d = length(lightToPixelVec);
@@ -56,7 +61,6 @@ float4 main(PS_INPUT input) : SV_Target
 	{
 		directionalLigthColor += saturate(dot((float3)vLightDir[i], input.Norm) * vLightColor[i] * baseTexture);
 	}
-	//finalColor = txDiffuse.Sample(samLinear, input.Tex);
 	finalColor = saturate(directionalLigthColor + pointLightColor);
 	finalColor.a = 1;
 	return finalColor;
