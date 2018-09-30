@@ -7,7 +7,7 @@
 #include "Declarations.h"
 #include "Mesh.h"
 #include "Misc.h"
-
+#include "XTime.h"
 // Simple Container class to make life easier/cleaner
 class LetsDrawSomeStuff
 {
@@ -25,18 +25,22 @@ class LetsDrawSomeStuff
 	ID3D11VertexShader*			myVertexShader = nullptr;
 	ID3D11PixelShader*			myPixelShader = nullptr;
 	ID3D11InputLayout*			myVertexLayout = nullptr;
+
 #if CHARIZARD_MESH
 	ID3D11Buffer*				charizardVertexBuffer = nullptr;
 	ID3D11Buffer*				charizardIndexBuffer = nullptr;
 #endif
+
 #if BOX_MESH
 	ID3D11Buffer*				boxVertexBuffer = nullptr;
 	ID3D11Buffer*				boxIndexBuffer = nullptr;
 #endif
-#if PROCEDURAL_SPHERE
+
+	#if PROCEDURAL_SPHERE
 	ID3D11Buffer*				sphereVertexBuffer = nullptr;
 	ID3D11Buffer*				sphereIndexBuffer = nullptr;
 #endif
+
 	ID3D11Buffer*				myConstantBuffer = nullptr;
 	XMMATRIX					worldMatrix;
 	XMMATRIX					viewMatrix;
@@ -51,7 +55,7 @@ class LetsDrawSomeStuff
 #if WIREFRAME
 	ID3D11RasterizerState* WireFrame;
 #endif
-
+	XTime timer;
 	Mesh charizard;
 	Mesh box;
 public:
@@ -61,6 +65,8 @@ public:
 	~LetsDrawSomeStuff();
 	// Draw
 	void Render();
+	//Camera Movement
+	void CameraMovement();
 };
 
 // Init
@@ -167,6 +173,8 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 
 			// Initialize the projection matrix
 			projectionMatrix = XMMatrixPerspectiveFovLH(XM_PIDIV2, width / (FLOAT)height, 0.01f, 100.0f);
+
+			timer.Restart();
 		}
 	}
 }
@@ -211,6 +219,7 @@ void LetsDrawSomeStuff::Render()
 {
 	if (mySurface) // valid?
 	{
+		timer.Signal();
 		// this could be changed during resolution edits, get it every frame
 		/*ID3D11RenderTargetView *myRenderTargetView = nullptr;*/
 		ID3D11DepthStencilView *myDepthStencilView = nullptr;
@@ -231,20 +240,7 @@ void LetsDrawSomeStuff::Render()
 			const float d_green[] = { 0, 0.0f, 0, 1 };
 			myContext->ClearRenderTargetView(myRenderTargetView, d_green);
 			
-		/*	if (GetAsyncKeyState('E'))
-			{
-				Eye+=UP;
-			}
-			else if (GetAsyncKeyState('Q'))
-			{
-				Eye -= UP;
-			}*/
-
-				//Eye = XMVectorSet(0.0f, 1.0f, -5.0f, 0.0f);
-				//At = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
-				//Up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 			viewMatrix = XMMatrixLookAtLH(Eye, At, Up);
-
 #if WIREFRAME
 			myContext->RSSetState(WireFrame);
 #endif
@@ -264,6 +260,8 @@ void LetsDrawSomeStuff::Render()
 					timeStart = timeCur;
 				t = (timeCur - timeStart) / 1000.0f;
 			}
+
+			CameraMovement();
 
 			//animate cube
 			worldMatrix = XMMatrixRotationY(t);
@@ -418,6 +416,36 @@ void LetsDrawSomeStuff::Render()
 
 			myRenderTargetView->Release(); // Free any temp DX handles aquired this frame
 		}
+	}
+}
+
+void LetsDrawSomeStuff::CameraMovement()
+{
+	if (GetAsyncKeyState('E'))
+	{
+		Eye += ( UP*timer.Delta());
+	}
+	else if (GetAsyncKeyState('Q'))
+	{
+		Eye -= (UP*timer.Delta());
+	}
+
+	if (GetAsyncKeyState('W'))
+	{
+		Eye += (FORWARD*timer.Delta());
+	}
+	else if (GetAsyncKeyState('S'))
+	{
+		Eye -= (FORWARD*timer.Delta());
+	}
+
+	if (GetAsyncKeyState('D'))
+	{
+		Eye += (RIGHT*timer.Delta());
+	}
+	else if (GetAsyncKeyState('A'))
+	{
+		Eye -= (RIGHT*timer.Delta());
 	}
 }
 

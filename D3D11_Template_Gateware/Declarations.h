@@ -19,7 +19,7 @@ using namespace std;
 #define BOX_MESH 1
 #define PROCEDURAL_SPHERE 1
 #define WIREFRAME 0
-#define DIRECTIONAL_LIGHT_ON 0
+#define DIRECTIONAL_LIGHT_ON 1
 
 static const XMVECTOR UP = { 0,1,0,0 };
 static const XMVECTOR RIGHT = { 1,0,0,0 };

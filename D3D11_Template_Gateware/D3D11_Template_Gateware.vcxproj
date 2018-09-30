@@ -150,6 +150,7 @@
     <ClInclude Include="LetsDrawSomeStuff.h" />
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="Misc.h" />
+    <ClInclude Include="XTime.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DDSTextureLoader.cpp" />
@@ -170,6 +171,7 @@
     <ClCompile Include="Gateware Redistribution R5d\Source\G_System\GWindow.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Mesh.cpp" />
+    <ClCompile Include="XTime.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Trivial_PS.hlsl">

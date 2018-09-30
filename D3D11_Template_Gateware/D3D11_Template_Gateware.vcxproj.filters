@@ -55,6 +55,9 @@
     <ClCompile Include="DDSTextureLoader.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
+    <ClCompile Include="XTime.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Declarations.h">
@@ -73,6 +76,9 @@
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="Misc.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="XTime.h">
       <Filter>Headers</Filter>
     </ClInclude>
   </ItemGroup>
