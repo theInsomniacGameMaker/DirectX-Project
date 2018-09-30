@@ -108,7 +108,7 @@ void ProcessFbxMesh(FbxNode* Node, MeshStruct &meshToMutate, ID3D11Device *&myDe
 				meshToMutate.vertices[j].Pos.y = (float)vert.mData[1] * meshToMutate.scale;
 				meshToMutate.vertices[j].Pos.z = (float)vert.mData[2] * meshToMutate.scale;
 				// Generate random normal
-				//vertices[j].Normal = RAND_NORMAL;
+				// vertices[j].Normal = RAND_NORMAL;
 				meshToMutate.vertices[j].TPos = XMFLOAT3(0, 0, 0);
 			}
 
@@ -178,7 +178,6 @@ void ProcessFbxMesh(FbxNode* Node, MeshStruct &meshToMutate, ID3D11Device *&myDe
 							int pos = appendedTextureName.find_last_of('\\');
 							appendedTextureName = appendedTextureName.substr(pos + 1, appendedTextureName.length());
 							appendedTextureName = "Assets\\" + appendedTextureName.substr(0, appendedTextureName.length() - 3) + "dds";
-
 
 							std::wstring widestr = std::wstring(appendedTextureName.begin(), appendedTextureName.end());
 							const wchar_t* widecstr = widestr.c_str();

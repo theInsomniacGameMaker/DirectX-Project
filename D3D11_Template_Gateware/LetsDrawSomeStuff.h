@@ -36,10 +36,16 @@ class LetsDrawSomeStuff
 	ID3D11Buffer*				boxIndexBuffer = nullptr;
 #endif
 
-	#if PROCEDURAL_SPHERE
+#if SPACESHIP
+	ID3D11Buffer*				spaceshipVertexBuffer = nullptr;
+	ID3D11Buffer*				spaceshipIndexBuffer = nullptr;
+#endif
+
+#if PROCEDURAL_SPHERE
 	ID3D11Buffer*				sphereVertexBuffer = nullptr;
 	ID3D11Buffer*				sphereIndexBuffer = nullptr;
 #endif
+
 	ID3D11Buffer*				bulbVertexBuffer = nullptr;
 	ID3D11Buffer*				bulbIndexBuffer = nullptr;
 
@@ -51,7 +57,7 @@ class LetsDrawSomeStuff
 	XMMATRIX					viewMatrix;
 	XMMATRIX					projectionMatrix;
 	ID3D11ShaderResourceView*   myTextureRV = nullptr;
-	ID3D11ShaderResourceView*   myTextureRV1 = nullptr;
+	ID3D11ShaderResourceView*   myTextureRVBulb = nullptr;
 	ID3D11SamplerState*			mySamplerLinear = nullptr;
 
 	XMVECTOR Eye;
@@ -66,6 +72,7 @@ class LetsDrawSomeStuff
 	Mesh box;
 	Mesh ground;
 	Mesh bulb;
+	Mesh spaceShip;
 public:
 	// Init
 	LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint);
@@ -144,12 +151,14 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			CreateSphere(10, 10, myDevice, sphereVertexBuffer, sphereIndexBuffer);
 #endif 
 
-		#if BOX_MESH
+#if BOX_MESH
 			box = Mesh("cube.fbx", 1 / 50.f, myDevice, myTextureRV1);
-		#endif
-
+#endif
+#if SPACESHIP
+			spaceShip = Mesh("Galaga Fighter.fbx", 1/4.0f,myDevice, myTextureRV);
+#endif 
 			ground = Mesh("Ground.fbx", 100,myDevice, myTextureRV);
-			bulb = Mesh("Bulb.fbx", 1, myDevice, myTextureRV);
+			bulb = Mesh("Bulb.fbx", 1.0f/5, myDevice, myTextureRVBulb);
 
 			// Set primitive topology
 			myContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -324,8 +333,8 @@ void LetsDrawSomeStuff::Render()
 			myContext->VSSetConstantBuffers(0, 1, &myConstantBuffer);
 			myContext->PSSetShader(myPixelShader, nullptr, 0);
 			myContext->PSSetConstantBuffers(0, 1, &myConstantBuffer);
-			myContext->PSSetShaderResources(0, 1, &myTextureRV1);
-			myContext->PSSetSamplers(0, 1, &mySamplerLinear);
+			myContext->PSSetShaderResources(0, 1, &myTextureRV);
+			myContext->PSSetSamplers(0, 2, &mySamplerLinear);
 
 
 			//Setting buffer description
@@ -335,7 +344,7 @@ void LetsDrawSomeStuff::Render()
 			UINT offset[] = { 0 };
 #if CHARIZARD_MESH
 			bd.Usage = D3D11_USAGE_DEFAULT;
-			bd.ByteWidth = sizeof(SimpleVertex) *charizard.GetNumberOfVertices();
+			bd.ByteWidth = sizeof(SimpleVertex) * charizard.GetNumberOfVertices();
 			bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 			bd.CPUAccessFlags = 0;
 
@@ -382,6 +391,34 @@ void LetsDrawSomeStuff::Render()
 			myContext->IASetIndexBuffer(boxIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
 			myContext->DrawIndexed(box.GetNumberOfIndices(), 0, 0);
 #endif
+#if SPACESHIP
+			//Setting buffer description
+			bd = {};
+			bd.Usage = D3D11_USAGE_DEFAULT;
+			bd.ByteWidth = sizeof(SimpleVertex) *spaceShip.GetNumberOfVertices();
+			bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+			bd.CPUAccessFlags = 0;
+
+			//setting subresource data
+			InitData = {};
+			InitData.pSysMem = spaceShip.GetVertices();
+			myDevice->CreateBuffer(&bd, &InitData, &spaceshipVertexBuffer);
+
+			myContext->IASetVertexBuffers(0, 1, &spaceshipVertexBuffer, stride, offset);
+
+			bd.Usage = D3D11_USAGE_DEFAULT;
+			bd.ByteWidth = sizeof(int) * spaceShip.GetNumberOfIndices();
+			bd.BindFlags = D3D11_BIND_INDEX_BUFFER;
+			bd.CPUAccessFlags = 0;
+			InitData.pSysMem = spaceShip.GetIndices();
+			myDevice->CreateBuffer(&bd, &InitData, &spaceshipIndexBuffer);
+			// Set index buffer
+			myContext->IASetIndexBuffer(spaceshipIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
+			myContext->DrawIndexed(spaceShip.GetNumberOfIndices(), 0, 0);
+
+			spaceshipVertexBuffer->Release();
+			spaceshipIndexBuffer->Release();
+#endif 
 #if PROCEDURAL_SPHERE
 			bd = {};
 			bd.Usage = D3D11_USAGE_DEFAULT;
@@ -422,7 +459,7 @@ void LetsDrawSomeStuff::Render()
 			myContext->VSSetConstantBuffers(0, 1, &myConstantBuffer);
 			myContext->PSSetShader(myPixelShader, nullptr, 0);
 			myContext->PSSetConstantBuffers(0, 1, &myConstantBuffer);
-			myContext->PSSetShaderResources(0, 1, &myTextureRV);
+			myContext->PSSetShaderResources(0, 1, &myTextureRVBulb);
 			myContext->PSSetSamplers(0, 1, &mySamplerLinear);
 
 			worldMatrix = XMMatrixTranslationFromVector(XMVECTOR{ cb.pointLight.pos.x, cb.pointLight.pos.y, cb.pointLight.pos.z, cb.pointLight.pos.w });
