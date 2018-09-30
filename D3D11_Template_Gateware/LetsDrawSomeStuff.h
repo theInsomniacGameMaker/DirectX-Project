@@ -40,12 +40,18 @@ class LetsDrawSomeStuff
 	ID3D11Buffer*				sphereVertexBuffer = nullptr;
 	ID3D11Buffer*				sphereIndexBuffer = nullptr;
 #endif
+	ID3D11Buffer*				bulbVertexBuffer = nullptr;
+	ID3D11Buffer*				bulbIndexBuffer = nullptr;
+
+	ID3D11Buffer*				groundVertexBuffer = nullptr;
+	ID3D11Buffer*				groundIndexBuffer = nullptr;
 
 	ID3D11Buffer*				myConstantBuffer = nullptr;
 	XMMATRIX					worldMatrix;
 	XMMATRIX					viewMatrix;
 	XMMATRIX					projectionMatrix;
 	ID3D11ShaderResourceView*   myTextureRV = nullptr;
+	ID3D11ShaderResourceView*   myTextureRV1 = nullptr;
 	ID3D11SamplerState*			mySamplerLinear = nullptr;
 
 	XMVECTOR Eye;
@@ -58,6 +64,8 @@ class LetsDrawSomeStuff
 	XTime timer;
 	Mesh charizard;
 	Mesh box;
+	Mesh ground;
+	Mesh bulb;
 public:
 	// Init
 	LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint);
@@ -137,8 +145,11 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 #endif 
 
 		#if BOX_MESH
-			box = Mesh("cube.fbx", 1 / 50.f, myDevice, myTextureRV);
+			box = Mesh("cube.fbx", 1 / 50.f, myDevice, myTextureRV1);
 		#endif
+
+			ground = Mesh("Ground.fbx", 100,myDevice, myTextureRV);
+			bulb = Mesh("Bulb.fbx", 1, myDevice, myTextureRV);
 
 			// Set primitive topology
 			myContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -299,7 +310,7 @@ void LetsDrawSomeStuff::Render()
 			cb.vLightDir[1] = vLightDirs[1];
 			cb.vLightColor[0] = vLightColors[0];
 			cb.vLightColor[1] = vLightColors[1];
-			cb.pointLight.pos = XMFLOAT4(0, 0, 0, 0);
+			cb.pointLight.pos = XMFLOAT4(0, (sin(timer.TotalTime())*5), 0, 0);
 			cb.pointLight.range = 7.0f;
 			cb.pointLight.diffuse = XMFLOAT4(1, 1, 1, 1);
 			cb.time = t;
@@ -313,7 +324,7 @@ void LetsDrawSomeStuff::Render()
 			myContext->VSSetConstantBuffers(0, 1, &myConstantBuffer);
 			myContext->PSSetShader(myPixelShader, nullptr, 0);
 			myContext->PSSetConstantBuffers(0, 1, &myConstantBuffer);
-			myContext->PSSetShaderResources(0, 1, &myTextureRV);
+			myContext->PSSetShaderResources(0, 1, &myTextureRV1);
 			myContext->PSSetSamplers(0, 1, &mySamplerLinear);
 
 
@@ -346,7 +357,6 @@ void LetsDrawSomeStuff::Render()
 
 			myContext->DrawIndexed(charizard.GetNumberOfIndices(), 0, 0);
 #endif
-
 #if BOX_MESH
 			//Setting buffer description
 			bd = {};
@@ -372,7 +382,6 @@ void LetsDrawSomeStuff::Render()
 			myContext->IASetIndexBuffer(boxIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
 			myContext->DrawIndexed(box.GetNumberOfIndices(), 0, 0);
 #endif
-
 #if PROCEDURAL_SPHERE
 			bd = {};
 			bd.Usage = D3D11_USAGE_DEFAULT;
@@ -396,7 +405,6 @@ void LetsDrawSomeStuff::Render()
 			myContext->IASetIndexBuffer(sphereIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
 			myContext->DrawIndexed(sphereFaces*3,0,0);
 #endif 
-
 #if CHARIZARD_MESH
 			if (charizardVertexBuffer)charizardVertexBuffer->Release();
 			if (charizardIndexBuffer)charizardIndexBuffer->Release();
@@ -409,6 +417,77 @@ void LetsDrawSomeStuff::Render()
 			sphereVertexBuffer->Release();
 			sphereIndexBuffer->Release();
 #endif
+
+			myContext->VSSetShader(myVertexShader, nullptr, 0);
+			myContext->VSSetConstantBuffers(0, 1, &myConstantBuffer);
+			myContext->PSSetShader(myPixelShader, nullptr, 0);
+			myContext->PSSetConstantBuffers(0, 1, &myConstantBuffer);
+			myContext->PSSetShaderResources(0, 1, &myTextureRV);
+			myContext->PSSetSamplers(0, 1, &mySamplerLinear);
+
+			worldMatrix = XMMatrixTranslationFromVector(XMVECTOR{ cb.pointLight.pos.x, cb.pointLight.pos.y, cb.pointLight.pos.z, cb.pointLight.pos.w });
+			cb.mWorld = XMMatrixTranspose(worldMatrix);
+
+			myContext->UpdateSubresource(myConstantBuffer, 0, nullptr, &cb, 0, 0);
+			bd = {};
+			bd.Usage = D3D11_USAGE_DEFAULT;
+			bd.ByteWidth = sizeof(SimpleVertex) *bulb.GetNumberOfVertices();
+			bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+			bd.CPUAccessFlags = 0;
+
+			//setting subresource data
+			InitData = {};
+			InitData.pSysMem = bulb.GetVertices();
+			myDevice->CreateBuffer(&bd, &InitData, &bulbVertexBuffer);
+
+			myContext->IASetVertexBuffers(0, 1, &bulbVertexBuffer, stride, offset);
+
+			bd.Usage = D3D11_USAGE_DEFAULT;
+			bd.ByteWidth = sizeof(int) * bulb.GetNumberOfIndices();
+			bd.BindFlags = D3D11_BIND_INDEX_BUFFER;
+			bd.CPUAccessFlags = 0;
+			InitData.pSysMem = bulb.GetIndices();
+			myDevice->CreateBuffer(&bd, &InitData, &bulbIndexBuffer);
+			// Set index buffer
+			myContext->IASetIndexBuffer(bulbIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
+			myContext->DrawIndexed(bulb.GetNumberOfIndices(), 0, 0);
+		
+			myContext->DrawIndexed(bulb.GetNumberOfIndices(), 0, 0);
+
+			bulbVertexBuffer->Release();
+			bulbIndexBuffer->Release();
+
+			XMVECTOR groundPosition = { 0,-0.5f,0,0 };
+			worldMatrix = XMMatrixTranslationFromVector(groundPosition);
+			cb.mWorld = XMMatrixTranspose(worldMatrix);
+			myContext->UpdateSubresource(myConstantBuffer, 0, nullptr, &cb, 0, 0);
+
+			//Setting buffer description
+			bd = {};
+			bd.Usage = D3D11_USAGE_DEFAULT;
+			bd.ByteWidth = sizeof(SimpleVertex) *ground.GetNumberOfVertices();
+			bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+			bd.CPUAccessFlags = 0;
+
+			//setting subresource data
+			InitData = {};
+			InitData.pSysMem = ground.GetVertices();
+			myDevice->CreateBuffer(&bd, &InitData, &groundVertexBuffer);
+
+			myContext->IASetVertexBuffers(0, 1, &groundVertexBuffer, stride, offset);
+
+			bd.Usage = D3D11_USAGE_DEFAULT;
+			bd.ByteWidth = sizeof(int) * ground.GetNumberOfIndices();
+			bd.BindFlags = D3D11_BIND_INDEX_BUFFER;
+			bd.CPUAccessFlags = 0;
+			InitData.pSysMem = ground.GetIndices();
+			myDevice->CreateBuffer(&bd, &InitData, &groundIndexBuffer);
+			// Set index buffer
+			myContext->IASetIndexBuffer(groundIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
+			myContext->DrawIndexed(ground.GetNumberOfIndices(), 0, 0);
+
+			groundVertexBuffer->Release();
+			groundIndexBuffer->Release();
 			
 			// Present Backbuffer using Swapchain object
 			// Framerate is currently unlocked, we suggest "MSI Afterburner" to track your current FPS and memory usage.
@@ -423,29 +502,35 @@ void LetsDrawSomeStuff::CameraMovement()
 {
 	if (GetAsyncKeyState('E'))
 	{
-		Eye += ( UP*timer.Delta());
+		Eye += (UP*timer.Delta());
+		At += ( UP*timer.Delta());
 	}
 	else if (GetAsyncKeyState('Q'))
 	{
 		Eye -= (UP*timer.Delta());
+		At -= (UP*timer.Delta());
 	}
 
 	if (GetAsyncKeyState('W'))
 	{
 		Eye += (FORWARD*timer.Delta());
+		At += (FORWARD*timer.Delta());
 	}
 	else if (GetAsyncKeyState('S'))
 	{
 		Eye -= (FORWARD*timer.Delta());
+		At -= (FORWARD*timer.Delta());
 	}
 
 	if (GetAsyncKeyState('D'))
 	{
 		Eye += (RIGHT*timer.Delta());
+		At += (RIGHT*timer.Delta());
 	}
 	else if (GetAsyncKeyState('A'))
 	{
 		Eye -= (RIGHT*timer.Delta());
+		At -= (RIGHT*timer.Delta());
 	}
 }
 
