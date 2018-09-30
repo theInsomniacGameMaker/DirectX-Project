@@ -57,3 +57,9 @@ struct MeshStruct
 
 // funtime random color
 #define RAND_COLOR XMFLOAT4(rand()/float(RAND_MAX),rand()/float(RAND_MAX),rand()/float(RAND_MAX),1.0f)
+
+#define CHARIZARD_MESH 0
+#define BOX_MESH 0
+#define PROCEDURAL_SPHERE 1
+#define WIREFRAME 0
+#define DIRECTIONAL_LIGHT_ON 1

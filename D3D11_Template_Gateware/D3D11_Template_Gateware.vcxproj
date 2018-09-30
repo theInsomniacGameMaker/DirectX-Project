@@ -149,6 +149,7 @@
     <ClInclude Include="FBXLoader.h" />
     <ClInclude Include="LetsDrawSomeStuff.h" />
     <ClInclude Include="Mesh.h" />
+    <ClInclude Include="Misc.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DDSTextureLoader.cpp" />

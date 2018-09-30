@@ -35,10 +35,10 @@ float4 main(PS_INPUT input) : SV_Target
 	float4 finalColor = 0;
 	float4 pointLightColor = 0;
 	float4 directionalLigthColor = 0;
-	//float4 newPosition = mul(pLight.pos, time);
-	float4 newPosition = pLight.pos;
+	//float4 newPosition = pLight.pos;
+	float4 newPosition = mul(pLight.pos, sin(time));
 	float4 baseTexture = txDiffuse.Sample(samLinear, input.Tex);
-	float3 lightToPixelVec = newPosition- input.TPos;
+	float3 lightToPixelVec = newPosition - input.TPos;
 
 	float d = length(lightToPixelVec);
 	if (d < pLight.range)
@@ -49,7 +49,6 @@ float4 main(PS_INPUT input) : SV_Target
 		pointLightColor = howMuchLight * baseTexture* pLight.diffuse;
 		pointLightColor *= (1.0 - saturate(length(newPosition - input.TPos) / pLight.range));
 		pointLightColor *= (1.0 - saturate(length(newPosition - input.TPos) / pLight.range));
-
 	}
 
 	//do NdotL lighting for 2 directional lights

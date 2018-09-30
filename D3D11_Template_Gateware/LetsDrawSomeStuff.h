@@ -6,6 +6,7 @@
 // Include DirectX11 for interface access
 #include "Declarations.h"
 #include "Mesh.h"
+#include "Misc.h"
 
 // Simple Container class to make life easier/cleaner
 class LetsDrawSomeStuff
@@ -26,14 +27,24 @@ class LetsDrawSomeStuff
 	ID3D11InputLayout*			myVertexLayout = nullptr;
 	ID3D11Buffer*				charizardVertexBuffer = nullptr;
 	ID3D11Buffer*				boxVertexBuffer = nullptr;
+	ID3D11Buffer*				sphereVertexBuffer = nullptr;
 	ID3D11Buffer*				charizardIndexBuffer = nullptr;
 	ID3D11Buffer*				boxIndexBuffer = nullptr;
+	ID3D11Buffer*				sphereIndexBuffer = nullptr;
 	ID3D11Buffer*				myConstantBuffer = nullptr;
 	XMMATRIX					worldMatrix;
 	XMMATRIX					viewMatrix;
 	XMMATRIX					projectionMatrix;
 	ID3D11ShaderResourceView*   myTextureRV = nullptr;
 	ID3D11SamplerState*			mySamplerLinear = nullptr;
+
+	XMVECTOR Eye;
+	XMVECTOR At;
+	XMVECTOR Up;
+
+#if WIREFRAME
+	ID3D11RasterizerState* WireFrame;
+#endif
 
 	Mesh charizard;
 	Mesh box;
@@ -98,42 +109,31 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 
 			myContext->IASetInputLayout(myVertexLayout);
 
-			//ProcessFbxMesh(lScene->GetRootNode());
-
-
+#if WIREFRAME 
+			D3D11_RASTERIZER_DESC wfdesc;
+			ZeroMemory(&wfdesc, sizeof(D3D11_RASTERIZER_DESC));
+			wfdesc.FillMode = D3D11_FILL_WIREFRAME;
+			wfdesc.CullMode = D3D11_CULL_NONE;
+			 myDevice->CreateRasterizerState(&wfdesc, &WireFrame);
+#endif
+#if CHARIZARD_MESH
 			charizard = Mesh("Charizard.fbx", 25.0f, myDevice, myTextureRV);
+#endif
 
-			D3D11_BUFFER_DESC bd = {};
-			bd.Usage = D3D11_USAGE_DEFAULT;
-			bd.ByteWidth = sizeof(SimpleVertex) *charizard.GetNumberOfVertices();
-			bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-			bd.CPUAccessFlags = 0;
+#if PROCEDURAL_SPHERE
+			CreateSphere(10, 10, myDevice, sphereVertexBuffer, sphereIndexBuffer);
+#endif 
 
-			D3D11_SUBRESOURCE_DATA InitData = {};
-			InitData.pSysMem = charizard.GetVertices();
-			myDevice->CreateBuffer(&bd, &InitData, &charizardVertexBuffer);
-
-			// Set vertex buffer
-			UINT stride[] = { sizeof(SimpleVertex) };
-			UINT offset[] = { 0 };
-			myContext->IASetVertexBuffers(0, 1, &charizardVertexBuffer, stride, offset);
-
-			bd.Usage = D3D11_USAGE_DEFAULT;
-			bd.ByteWidth = sizeof(int) * charizard.GetNumberOfIndices();        // 36 vertices needed for 12 triangles in a triangle list
-			bd.BindFlags = D3D11_BIND_INDEX_BUFFER;
-			bd.CPUAccessFlags = 0;
-			InitData.pSysMem = charizard.GetIndices();
-			myDevice->CreateBuffer(&bd, &InitData, &charizardIndexBuffer);
-
-			// Set index buffer
-			myContext->IASetIndexBuffer(charizardIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
-
-			//box = Mesh("cube.fbx", 1 / 50.f, myDevice, myTextureRV);
+		#if BOX_MESH
+			box = Mesh("cube.fbx", 1 / 50.f, myDevice, myTextureRV);
+		#endif
 
 			// Set primitive topology
 			myContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+			//myContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
 
 			// Create the constant buffer
+			D3D11_BUFFER_DESC bd = {};
 			bd.Usage = D3D11_USAGE_DEFAULT;
 			bd.ByteWidth = sizeof(ConstantBuffer);
 			bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
@@ -154,9 +154,9 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			worldMatrix = XMMatrixIdentity();
 
 			// Initialize the view matrix
-			XMVECTOR Eye = XMVectorSet(0.0f, 15.0f, -25.0f, 0.0f);
-			XMVECTOR At = XMVectorSet(0.0f, 15.0f, 0.0f, 0.0f);
-			XMVECTOR Up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+			Eye = XMVectorSet(0.0f, 1.0f, -5.0f, 0.0f);
+			At = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+			Up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 			viewMatrix = XMMatrixLookAtLH(Eye, At, Up);
 
 			// Initialize the projection matrix
@@ -177,11 +177,13 @@ LetsDrawSomeStuff::~LetsDrawSomeStuff()
 	myVertexShader->Release();
 	myPixelShader->Release();
 	myVertexLayout->Release();
-	charizardVertexBuffer->Release();
-	charizardIndexBuffer->Release();
+#if CHARIZARD_MESH
+	if (charizardVertexBuffer)charizardVertexBuffer->Release();
+	if (charizardIndexBuffer)charizardIndexBuffer->Release();
+#endif
 	myConstantBuffer->Release();
-	myTextureRV->Release();
-	mySamplerLinear->Release();
+	if (myTextureRV)myTextureRV->Release();
+	if (mySamplerLinear)mySamplerLinear->Release();
 
 	if (mySurface) // Free Gateware Interface
 	{
@@ -214,6 +216,20 @@ void LetsDrawSomeStuff::Render()
 			// Clear the screen to dark green
 			const float d_green[] = { 0, 0.5f, 0, 1 };
 			myContext->ClearRenderTargetView(myRenderTargetView, d_green);
+			
+			if (GetAsyncKeyState(VK_UP))
+			{
+				Eye+= Up;
+			}
+
+			//Eye = XMVectorSet(0.0f, 1.0f, -5.0f, 0.0f);
+			//At = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+			//Up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+			viewMatrix = XMMatrixLookAtLH(Eye, At, Up);
+
+#if WIREFRAME
+			myContext->RSSetState(WireFrame);
+#endif
 
 			// TODO: Set your shaders, Update & Set your constant buffers, Attatch your vertex & index buffers, Set your InputLayout & Topology & Draw!
 			// Update our time
@@ -241,10 +257,13 @@ void LetsDrawSomeStuff::Render()
 			};
 			XMFLOAT4 vLightColors[2] =
 			{
+			#if DIRECTIONAL_LIGHT_ON
 				XMFLOAT4(0.5f, 0.5f, 0.5f, 1.0f),
 				XMFLOAT4(0.5f, 0.0f, 0.0f, 1.0f)
-				/*XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f),
-				XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f)*/
+			#else
+				XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f),
+				XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f)
+			#endif
 			};
 
 			// Rotate the a matrix
@@ -264,13 +283,93 @@ void LetsDrawSomeStuff::Render()
 			cb.vLightDir[1] = vLightDirs[1];
 			cb.vLightColor[0] = vLightColors[0];
 			cb.vLightColor[1] = vLightColors[1];
-			cb.pointLight.pos = XMFLOAT4(0, 0,10 ,0);
+			cb.pointLight.pos = XMFLOAT4(0, 7, 0, 0);
 			cb.pointLight.range = 100.0f;
-			cb.pointLight.diffuse = XMFLOAT4(0,0,0.4f,1);
-			cb.time = sin(t);
+			cb.pointLight.diffuse = XMFLOAT4(0, 0, 0.4f, 1);
+			cb.time = t;
 			cb.vOutputColor = XMFLOAT4(0, 0, 0, 0);
-
 			myContext->UpdateSubresource(myConstantBuffer, 0, nullptr, &cb, 0, 0);
+
+
+			//Setting buffer description
+			D3D11_BUFFER_DESC bd = {};
+			D3D11_SUBRESOURCE_DATA InitData = {};
+			UINT stride[] = { sizeof(SimpleVertex) };
+			UINT offset[] = { 0 };
+#if CHARIZARD_MESH
+			bd.Usage = D3D11_USAGE_DEFAULT;
+			bd.ByteWidth = sizeof(SimpleVertex) *charizard.GetNumberOfVertices();
+			bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+			bd.CPUAccessFlags = 0;
+
+			//setting subresource data
+			InitData.pSysMem = charizard.GetVertices();
+			myDevice->CreateBuffer(&bd, &InitData, &charizardVertexBuffer);
+
+			// Set vertex buffer
+			myContext->IASetVertexBuffers(0, 1, &charizardVertexBuffer, stride, offset);
+
+			bd.Usage = D3D11_USAGE_DEFAULT;
+			bd.ByteWidth = sizeof(int) * charizard.GetNumberOfIndices();        
+			bd.BindFlags = D3D11_BIND_INDEX_BUFFER;
+			bd.CPUAccessFlags = 0;
+			InitData.pSysMem = charizard.GetIndices();
+			myDevice->CreateBuffer(&bd, &InitData, &charizardIndexBuffer);
+			// Set index buffer
+			myContext->IASetIndexBuffer(charizardIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
+
+			myContext->DrawIndexed(charizard.GetNumberOfIndices(), 0, 0);
+#endif
+
+#if BOX_MESH
+			//Setting buffer description
+			bd = {};
+			bd.Usage = D3D11_USAGE_DEFAULT;
+			bd.ByteWidth = sizeof(SimpleVertex) *box.GetNumberOfVertices();
+			bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+			bd.CPUAccessFlags = 0;
+
+			//setting subresource data
+			InitData = {};
+			InitData.pSysMem = box.GetVertices();
+			myDevice->CreateBuffer(&bd, &InitData, &boxVertexBuffer);
+
+			myContext->IASetVertexBuffers(0, 1, &boxVertexBuffer, stride, offset);
+
+			bd.Usage = D3D11_USAGE_DEFAULT;
+			bd.ByteWidth = sizeof(int) * box.GetNumberOfIndices();
+			bd.BindFlags = D3D11_BIND_INDEX_BUFFER;
+			bd.CPUAccessFlags = 0;
+			InitData.pSysMem = box.GetIndices();
+			myDevice->CreateBuffer(&bd, &InitData, &boxIndexBuffer);
+			// Set index buffer
+			myContext->IASetIndexBuffer(boxIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
+			myContext->DrawIndexed(box.GetNumberOfIndices(), 0, 0);
+#endif
+
+#if PROCEDURAL_SPHERE
+			bd = {};
+			bd.Usage = D3D11_USAGE_DEFAULT;
+			bd.ByteWidth = sizeof(SimpleVertex) * numSphereVertices;
+			bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+			bd.CPUAccessFlags = 0;
+
+			InitData = {};
+			InitData.pSysMem = &sphereVertices[0];
+			myDevice->CreateBuffer(&bd, &InitData, &sphereVertexBuffer);
+
+			myContext->IASetVertexBuffers(0, 1, &sphereVertexBuffer, stride, offset);
+
+			bd.Usage = D3D11_USAGE_DEFAULT;
+			bd.ByteWidth = sizeof(int) * numSphereIndices;
+			bd.BindFlags = D3D11_BIND_INDEX_BUFFER;
+			bd.CPUAccessFlags = 0;
+			InitData.pSysMem = &indices[0];
+			myDevice->CreateBuffer(&bd, &InitData, &sphereIndexBuffer);
+			// Set index buffer
+			myContext->IASetIndexBuffer(sphereIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
+			myContext->DrawIndexed(sphereFaces*3,0,0);
+#endif 
 
 			//
 			// Render the cube
@@ -281,14 +380,12 @@ void LetsDrawSomeStuff::Render()
 			myContext->PSSetConstantBuffers(0, 1, &myConstantBuffer);
 			myContext->PSSetShaderResources(0, 1, &myTextureRV);
 			myContext->PSSetSamplers(0, 1, &mySamplerLinear);
-			myContext->DrawIndexed(charizard.GetNumberOfIndices(), 0, 0);
 
 			// Present Backbuffer using Swapchain object
 			// Framerate is currently unlocked, we suggest "MSI Afterburner" to track your current FPS and memory usage.
 			mySwapChain->Present(0, 0); // set first argument to 1 to enable vertical refresh sync with display
 
-										// Free any temp DX handles aquired this frame
-			myRenderTargetView->Release();
+			myRenderTargetView->Release(); // Free any temp DX handles aquired this frame
 		}
 	}
 }

@@ -72,6 +72,9 @@
     <ClInclude Include="DDSTextureLoader.h">
       <Filter>Headers</Filter>
     </ClInclude>
+    <ClInclude Include="Misc.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Gateware Source">
