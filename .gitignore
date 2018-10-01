@@ -18,3 +18,4 @@ packages/
 *.opensdf
 *.user
 *.VC.db
+D3D11_Template_Gateware/ExampleCode\.cpp

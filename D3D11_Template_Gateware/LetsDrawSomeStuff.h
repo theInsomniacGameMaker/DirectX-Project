@@ -60,6 +60,12 @@ class LetsDrawSomeStuff
 	ID3D11ShaderResourceView*   myTextureRVBulb = nullptr;
 	ID3D11SamplerState*			mySamplerLinear = nullptr;
 
+	//IDirectInputDevice8* DIKeyboard = nullptr;
+	//IDirectInputDevice8* DIMouse = nullptr;
+
+	//DIMOUSESTATE mouseLastState;
+	//LPDIRECTINPUT8 DirectInput;
+
 	XMVECTOR Eye;
 	XMVECTOR At;
 	XMVECTOR Up;
@@ -82,6 +88,8 @@ public:
 	void Render();
 	//Camera Movement
 	void CameraMovement();
+
+	bool InitDirectInput(HINSTANCE hInstance);
 };
 
 // Init
@@ -294,8 +302,8 @@ void LetsDrawSomeStuff::Render()
 			XMFLOAT4 vLightColors[2] =
 			{
 			#if DIRECTIONAL_LIGHT_ON
-				XMFLOAT4(0.5f, 0.5f, 0.5f, 1.0f),
-				XMFLOAT4(0.5f, 0.0f, 0.0f, 1.0f)
+				XMFLOAT4(0.3f, 0.3f, 0.3f, 1.0f),
+				XMFLOAT4(0.2f, 0.0f, 0.0f, 1.0f)
 			#else
 				XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f),
 				XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f)
@@ -320,8 +328,8 @@ void LetsDrawSomeStuff::Render()
 			cb.vLightColor[0] = vLightColors[0];
 			cb.vLightColor[1] = vLightColors[1];
 			cb.pointLight.pos = XMFLOAT4(0, (sin(timer.TotalTime())*5), 0, 0);
-			cb.pointLight.range = 7.0f;
-			cb.pointLight.diffuse = XMFLOAT4(1, 1, 1, 1);
+			cb.pointLight.range = 10.0f;
+			cb.pointLight.diffuse = XMFLOAT4(0, 0, 1, 1);
 			cb.time = t;
 			cb.vOutputColor = XMFLOAT4(0, 0, 0, 0);
 			myContext->UpdateSubresource(myConstantBuffer, 0, nullptr, &cb, 0, 0);
@@ -537,37 +545,87 @@ void LetsDrawSomeStuff::Render()
 
 void LetsDrawSomeStuff::CameraMovement()
 {
+	XMFLOAT4 right;
+	XMStoreFloat4(&right,At);
+	XMVECTOR rightVector = { right.z, right.y,-right.x };
+	rightVector = XMVector3Normalize(rightVector);
 	if (GetAsyncKeyState('E'))
 	{
-		Eye += (UP*timer.Delta());
-		At += ( UP*timer.Delta());
+		Eye += (UP*timer.Delta()*5);
+		At += (UP*timer.Delta() * 5);
 	}
 	else if (GetAsyncKeyState('Q'))
 	{
-		Eye -= (UP*timer.Delta());
-		At -= (UP*timer.Delta());
+		Eye -= (UP*timer.Delta() * 5);
+		At -= (UP*timer.Delta() * 5);
 	}
 
 	if (GetAsyncKeyState('W'))
 	{
-		Eye += (FORWARD*timer.Delta());
-		At += (FORWARD*timer.Delta());
+		Eye += (XMVector3Normalize(At)*timer.Delta() * 5);
+		At += (FORWARD*timer.Delta() * 5);
+
 	}
 	else if (GetAsyncKeyState('S'))
 	{
-		Eye -= (FORWARD*timer.Delta());
-		At -= (FORWARD*timer.Delta());
+		Eye -= (XMVector3Normalize(At)*timer.Delta() * 5);
+		At -= (FORWARD*timer.Delta() * 5);
 	}
 
 	if (GetAsyncKeyState('D'))
 	{
-		Eye += (RIGHT*timer.Delta());
+		Eye += (rightVector*timer.Delta());
 		At += (RIGHT*timer.Delta());
+
 	}
 	else if (GetAsyncKeyState('A'))
 	{
-		Eye -= (RIGHT*timer.Delta());
+		Eye -= (-rightVector*timer.Delta());
 		At -= (RIGHT*timer.Delta());
 	}
+
+
+	if (GetAsyncKeyState('I'))
+	{
+		At += (UP*timer.Delta());
+	}
+	else if (GetAsyncKeyState('K'))
+	{
+		At -= (UP*timer.Delta());
+	}
+
+	if (GetAsyncKeyState('L'))
+	{
+		At += (RIGHT*timer.Delta()*4);
+	}
+	else if (GetAsyncKeyState('J'))
+	{
+		At -= (RIGHT*timer.Delta()*2);
+	}
 }
+
+//bool LetsDrawSomeStuff::InitDirectInput(HINSTANCE hInstance)
+//{
+//	 DirectInput8Create(hInstance,
+//		DIRECTINPUT_VERSION,
+//		IID_IDirectInput8,
+//		(void**)&DirectInput,
+//		NULL);
+//
+//	DirectInput->CreateDevice(GUID_SysKeyboard,
+//		&DIKeyboard,
+//		NULL);
+//
+//	 DirectInput->CreateDevice(GUID_SysMouse,
+//	&DIMouse,
+//	NULL);
+//
+//	 DIKeyboard->SetDataFormat(&c_dfDIKeyboard);
+//	 DIKeyboard->SetCooperativeLevel(hwnd, DISCL_FOREGROUND | DISCL_NONEXCLUSIVE);
+//
+//	 DIMouse->SetDataFormat(&c_dfDIMouse);
+//	 DIMouse->SetCooperativeLevel(hwnd, DISCL_EXCLUSIVE | DISCL_NOWINKEY | DISCL_FOREGROUND);
+//
+//	return true;
+//}
 

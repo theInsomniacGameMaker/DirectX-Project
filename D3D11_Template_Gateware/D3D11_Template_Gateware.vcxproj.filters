@@ -104,4 +104,7 @@
       <Filter>Shaders</Filter>
     </FxCompile>
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="ExampleCode.cpp" />
+  </ItemGroup>
 </Project>

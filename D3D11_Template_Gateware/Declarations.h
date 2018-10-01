@@ -1,9 +1,13 @@
 #pragma once
+#pragma comment (lib, "dinput8.lib")
+#pragma comment (lib, "dxguid.lib")
+
 #include <windows.h>
 #include <d3d11_1.h>
 #include <d3dcompiler.h>
 #include <directxmath.h>
 #include <directxcolors.h>
+#include <dinput.h>
 #include <fbxsdk.h>
 #include <iostream>
 #include <vector>
@@ -20,7 +24,7 @@ using namespace std;
 #define SPACESHIP 1
 #define PROCEDURAL_SPHERE 0
 #define WIREFRAME 0
-#define DIRECTIONAL_LIGHT_ON 0
+#define DIRECTIONAL_LIGHT_ON 1
 #define NON_MOUSE_CAMERA_MOVEMENT 1
 
 static const XMVECTOR UP = { 0,1,0,0 };
