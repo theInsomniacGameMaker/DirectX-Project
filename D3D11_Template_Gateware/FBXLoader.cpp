@@ -176,13 +176,25 @@ void ProcessFbxMesh(FbxNode* Node, MeshStruct &meshToMutate, ID3D11Device *&myDe
 
 							string appendedTextureName = (texture->GetFileName());
 							int pos = appendedTextureName.find_last_of('\\');
-							appendedTextureName = appendedTextureName.substr(pos + 1, appendedTextureName.length());
-							appendedTextureName = "Assets\\" + appendedTextureName.substr(0, appendedTextureName.length() - 3) + "dds";
+							if (pos != -1)
+							{
+								appendedTextureName = appendedTextureName.substr(pos + 1, appendedTextureName.length());
+								appendedTextureName = "Assets\\" + appendedTextureName.substr(0, appendedTextureName.length() - 3) + "dds";
+							}
+							else
+							{
+								pos = appendedTextureName.find_last_of('/');
+								appendedTextureName = appendedTextureName.substr(pos + 1, appendedTextureName.length());
+								appendedTextureName = "Assets\\" + appendedTextureName.substr(0, appendedTextureName.length() - 3) + "dds";
+							}
 
 							std::wstring widestr = std::wstring(appendedTextureName.begin(), appendedTextureName.end());
 							const wchar_t* widecstr = widestr.c_str();
 
-							HRESULT hr = CreateDDSTextureFromFile(myDevice, widecstr, nullptr, &myTextureRV);
+							if (myTextureRV == nullptr)
+							{
+								HRESULT hr = CreateDDSTextureFromFile(myDevice, widecstr, nullptr, &myTextureRV);
+							}
 
 							FbxProperty p = texture->RootProperty.Find("Filename");
 							cout << p.Get<FbxString>() << std::endl;

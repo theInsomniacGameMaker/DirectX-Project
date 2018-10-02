@@ -2,6 +2,7 @@
 #pragma comment (lib, "dinput8.lib")
 #pragma comment (lib, "dxguid.lib")
 
+#include <atlbase.h>
 #include <windows.h>
 #include <d3d11_1.h>
 #include <d3dcompiler.h>
@@ -23,7 +24,7 @@ using namespace std;
 #define CHARIZARD_MESH 0
 #define BOX_MESH 1
 #define SPACESHIP 1
-#define PROCEDURAL_SPHERE 0
+#define PROCEDURAL_SPHERE 1
 #define WIREFRAME 0
 #define DIRECTIONAL_LIGHT_ON 1
 #define NON_MOUSE_CAMERA_MOVEMENT 1

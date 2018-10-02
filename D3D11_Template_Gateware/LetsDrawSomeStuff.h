@@ -14,9 +14,9 @@ class LetsDrawSomeStuff
 	// variables here
 	GW::GRAPHICS::GDirectX11Surface* mySurface = nullptr;
 	// Gettting these handles from GDirectX11Surface will increase their internal refrence counts, be sure to "Release()" them when done!
-	ID3D11Device *myDevice = nullptr;
-	IDXGISwapChain *mySwapChain = nullptr;
-	ID3D11DeviceContext *myContext = nullptr;
+	ID3D11Device* myDevice = nullptr;
+	IDXGISwapChain* mySwapChain = nullptr;
+	ID3D11DeviceContext* myContext = nullptr;
 
 	// TODO: Add your own D3D11 variables here (be sure to "Release()" them when done!)
 	D3D_DRIVER_TYPE				myDriverType = D3D_DRIVER_TYPE_NULL;
@@ -51,27 +51,23 @@ class LetsDrawSomeStuff
 	ID3D11Buffer*				bulbVertexBuffer = nullptr;
 	ID3D11Buffer*				bulbIndexBuffer = nullptr;
 
-	ID3D11Buffer*				groundVertexBuffer = nullptr;
-	ID3D11Buffer*				groundIndexBuffer = nullptr;
-
+	ID3D11Buffer*			groundVertexBuffer = nullptr;
+	ID3D11Buffer*			groundIndexBuffer = nullptr;
+	
 	ID3D11Buffer*				myConstantBuffer = nullptr;
 	XMMATRIX					worldMatrix;
 	XMMATRIX					viewMatrix;
 	XMMATRIX					projectionMatrix;
+
 	ID3D11ShaderResourceView*   myTextureRVSpaceShip = nullptr;
 	ID3D11ShaderResourceView*   myTextureRVBulb = nullptr;
 	ID3D11ShaderResourceView*   myTextureRVBase = nullptr;
 	ID3D11SamplerState*			mySamplerLinear = nullptr;
 
-	//IDirectInputDevice8* DIKeyboard = nullptr;
-	//IDirectInputDevice8* DIMouse = nullptr;
-
-	//DIMOUSESTATE mouseLastState;
-	//LPDIRECTINPUT8 DirectInput;
-
 	XMVECTOR Eye;
 	XMVECTOR At;
 	XMVECTOR Up;
+	ID3D11Debug *DebugDevice;
 
 #if WIREFRAME
 	ID3D11RasterizerState* WireFrame;
@@ -168,7 +164,19 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 #endif
 
 #if PROCEDURAL_SPHERE
-			CreateSphere(10, 10, myDevice, sphereVertexBuffer, sphereIndexBuffer);
+			CreateGrid();
+
+			bd = {};
+			bd.Usage = D3D11_USAGE_DEFAULT;
+			bd.ByteWidth = sizeof(SimpleVertex) * ARRAYSIZE(sphereVertices);
+			bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+			bd.CPUAccessFlags = 0;
+
+			InitData = {};
+			InitData.pSysMem = sphereVertices;
+			myDevice->CreateBuffer(&bd, &InitData, &sphereVertexBuffer);
+
+			// Set index buffer
 #endif 
 
 #if BOX_MESH
@@ -221,11 +229,7 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			InitData.pSysMem = spaceShip.GetIndices();
 			myDevice->CreateBuffer(&bd, &InitData, &spaceshipIndexBuffer);
 			// Set index buffer
-			//myContext->IASetIndexBuffer(spaceshipIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
-			//myContext->DrawIndexed(spaceShip.GetNumberOfIndices(), 0, 0);
-/*
-			spaceshipVertexBuffer->Release();
-			spaceshipIndexBuffer->Release();*/
+
 #endif 
 
 #pragma region BULB_INIT
@@ -321,12 +325,11 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 // Shutdown
 LetsDrawSomeStuff::~LetsDrawSomeStuff()
 {
-	// Release DX Objects aquired from the surface
-	myDevice->Release();
-	mySwapChain->Release();
-	myContext->Release();
+	//Release DX Objects aquired from the surface
+	
 
 	// TODO: "Release()" more stuff here!
+	myRenderTargetView->Release();
 	myVertexShader->Release();
 	myVertexShaderUV->Release();
 	myPixelShader->Release();
@@ -345,7 +348,7 @@ LetsDrawSomeStuff::~LetsDrawSomeStuff()
 
 #if PROCEDURAL_SPHERE
 	if (sphereVertexBuffer)sphereVertexBuffer->Release();
-	if (sphereVertexBuffer)sphereIndexBuffer->Release();
+	//if (sphereVertexBuffer)sphereIndexBuffer->Release();
 #endif
 
 	groundVertexBuffer->Release();
@@ -354,7 +357,7 @@ LetsDrawSomeStuff::~LetsDrawSomeStuff()
 
 	bulbVertexBuffer->Release();
 	bulbIndexBuffer->Release();
-	if (myTextureRVBulb)myTextureRVBulb->Release();
+	myTextureRVBulb->Release();
 
 	myConstantBuffer->Release();
 
@@ -370,6 +373,12 @@ LetsDrawSomeStuff::~LetsDrawSomeStuff()
 		mySurface->DecrementCount(); // reduce internal count (will auto delete on Zero)
 		mySurface = nullptr; // the safest way to fly
 	}
+	/*myDevice->QueryInterface(__uuidof(ID3D11Debug), reinterpret_cast<void**>(&DebugDevice));
+	DebugDevice->ReportLiveDeviceObjects(D3D11_RLDO_DETAIL);*/
+
+	myDevice->Release();
+	mySwapChain->Release();
+	myContext->Release();
 }
 
 // Draw
@@ -381,7 +390,7 @@ void LetsDrawSomeStuff::Render()
 		// this could be changed during resolution edits, get it every frame
 		/*ID3D11RenderTargetView *myRenderTargetView = nullptr;*/
 		ID3D11DepthStencilView *myDepthStencilView = nullptr;
-		if (G_SUCCESS(mySurface->GetRenderTarget((void**)&myRenderTargetView)))
+		if (myRenderTargetView)
 		{
 			// Grab the Z Buffer if one was requested
 			if (G_SUCCESS(mySurface->GetDepthStencilView((void**)&myDepthStencilView)))
@@ -391,11 +400,11 @@ void LetsDrawSomeStuff::Render()
 			}
 
 			// Set active target for drawing, all array based D3D11 functions should use a syntax similar to below
-			ID3D11RenderTargetView* const targets[] = { myRenderTargetView };
-			myContext->OMSetRenderTargets(1, targets, myDepthStencilView);
+			//ID3D11RenderTargetView* const targets[] = { myRenderTargetView };
+			//myContext->OMSetRenderTargets(1, targets, myDepthStencilView);
 
 			// Clear the screen to dark green
-			const float d_green[] = { 0, 0.0f, 0, 1 };
+			const float d_green[] = { 0, 0.5f, 0, 1 };
 			myContext->ClearRenderTargetView(myRenderTargetView, d_green);
 
 			viewMatrix = XMMatrixLookAtLH(Eye, At, Up);
@@ -433,7 +442,7 @@ void LetsDrawSomeStuff::Render()
 			XMFLOAT4 vLightColors[2] =
 			{
 			#if DIRECTIONAL_LIGHT_ON
-				XMFLOAT4(0.3f, 0.3f, 0.3f, 1.0f),
+				XMFLOAT4(0.5f, 0.5f, 0.5f, 1.0f),
 				XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f)
 			#else
 				XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f),
@@ -521,7 +530,7 @@ void LetsDrawSomeStuff::Render()
 			myContext->IASetVertexBuffers(0, 1, &boxVertexBuffer, stride, offset);
 
 			myContext->IASetIndexBuffer(boxIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
-			myContext->DrawIndexed(box.GetNumberOfIndices(), 0, 0);
+			//myContext->DrawIndexed(box.GetNumberOfIndices(), 0, 0);
 #endif
 
 #if SPACESHIP
@@ -534,35 +543,18 @@ void LetsDrawSomeStuff::Render()
 			myContext->IASetVertexBuffers(0, 1, &spaceshipVertexBuffer, stride, offset);
 
 			myContext->IASetIndexBuffer(spaceshipIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
-			myContext->DrawIndexed(spaceShip.GetNumberOfIndices(), 0, 0);
+			//myContext->DrawIndexed(spaceShip.GetNumberOfIndices(), 0, 0);
 
 			/*spaceshipVertexBuffer->Release();
 			spaceshipIndexBuffer->Release();*/
 #endif 
 #if PROCEDURAL_SPHERE
-			bd = {};
-			bd.Usage = D3D11_USAGE_DEFAULT;
-			bd.ByteWidth = sizeof(SimpleVertex) * numSphereVertices;
-			bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-			bd.CPUAccessFlags = 0;
-
-			InitData = {};
-			InitData.pSysMem = &sphereVertices[0];
-			myDevice->CreateBuffer(&bd, &InitData, &sphereVertexBuffer);
+			//myContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINESTRIP);
 
 			myContext->IASetVertexBuffers(0, 1, &sphereVertexBuffer, stride, offset);
+			myContext->Draw(ARRAYSIZE(sphereVertices),0);
+			//myContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-			bd.Usage = D3D11_USAGE_DEFAULT;
-			bd.ByteWidth = sizeof(int) * numSphereIndices;
-			bd.BindFlags = D3D11_BIND_INDEX_BUFFER;
-			bd.CPUAccessFlags = 0;
-			InitData.pSysMem = &indices[0];
-			myDevice->CreateBuffer(&bd, &InitData, &sphereIndexBuffer);
-			// Set index buffer
-			myContext->IASetIndexBuffer(sphereIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
-			myContext->DrawIndexed(sphereFaces * 3, 0, 0);
-			sphereVertexBuffer->Release();
-			sphereIndexBuffer->Release();
 #endif
 
 #pragma region BULB_RENDER
@@ -584,16 +576,14 @@ void LetsDrawSomeStuff::Render()
 			myContext->IASetIndexBuffer(bulbIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
 			myContext->DrawIndexed(bulb.GetNumberOfIndices(), 0, 0);
 #pragma endregion
-
-
 #pragma region GROUND_RENDER			
 			//Rendering ground
 			XMVECTOR groundPosition = { 0,-0.5f,0,0 };
 			worldMatrix = XMMatrixTranslationFromVector(groundPosition);
 			cb.mWorld = XMMatrixTranspose(worldMatrix);
 			myContext->PSSetShaderResources(0, 1, &myTextureRVBase);
-			myContext->UpdateSubresource(myConstantBuffer, 0, nullptr, &cb, 0, 0);
 
+			myContext->UpdateSubresource(myConstantBuffer, 0, nullptr, &cb, 0, 0);
 
 			myContext->IASetVertexBuffers(0, 1, &groundVertexBuffer, stride, offset);
 			// Set index buffer
@@ -603,12 +593,14 @@ void LetsDrawSomeStuff::Render()
 
 
 
+
 			// Present Backbuffer using Swapchain object
 			// Framerate is currently unlocked, we suggest "MSI Afterburner" to track your current FPS and memory usage.
 			mySwapChain->Present(0, 0); // set first argument to 1 to enable vertical refresh sync with display
 
-			myRenderTargetView->Release(); // Free any temp DX handles aquired this frame
-		}
+			//myRenderTargetView->Release(); // Free any temp DX handles aquired this frame
+
+}
 	}
 }
 
