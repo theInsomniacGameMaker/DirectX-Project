@@ -26,11 +26,11 @@ void CreateSphere(int LatLines, int LongLines, ID3D11Device *&myDevice, ID3D11Bu
 	XMMATRIX RotationX, RotationY;
 	for (int i = 0; i < LatLines - 2; ++i)
 	{
-		spherePitch = (i + 1) * (3.14 / (LatLines - 1));
+		spherePitch = (float)(i + 1.0f) * (3.14f / (LatLines - 1));
 		RotationX = XMMatrixRotationX(spherePitch);
 		for (int j = 0; j < LongLines; ++j)
 		{
-			sphereYaw = j * (6.28 / (LongLines));
+			sphereYaw = j * (6.28f / (LongLines));
 			RotationY = XMMatrixRotationZ(sphereYaw);
 			currVertPos = XMVector3TransformNormal(XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f), (RotationX * RotationY));
 			currVertPos = XMVector3Normalize(currVertPos);
@@ -99,6 +99,6 @@ void CreateSphere(int LatLines, int LongLines, ID3D11Device *&myDevice, ID3D11Bu
 	indices[k + 1] = (numSphereVertices - 1) - LongLines;
 	indices[k + 2] = numSphereVertices - 2;
 
-	numSphereIndices = indices.size();
+	numSphereIndices = (int)indices.size();
 }
 

@@ -327,7 +327,7 @@ void LetsDrawSomeStuff::Render()
 
 			// Rotate the a matrix
 			XMMATRIX mRotate = XMMatrixRotationY(-2.0f * t);
-			//store the ligh dir in a XMFloat
+			//store the ligh dir in a XMFloat 
 			XMVECTOR vLightDir = XMLoadFloat4(&vLightDirs[1]);
 			//transform the light dir by the roatation matrix made
 			vLightDir = XMVector3Transform(vLightDir, mRotate);
@@ -342,7 +342,7 @@ void LetsDrawSomeStuff::Render()
 			cb.vLightDir[1] = vLightDirs[1];
 			cb.vLightColor[0] = vLightColors[0];
 			cb.vLightColor[1] = vLightColors[1];
-			cb.pointLight.pos = XMFLOAT4(0, (sin(timer.TotalTime()) * 5), 0, 0);
+			cb.pointLight.pos = XMFLOAT4(0, (sin((float)timer.TotalTime()) * 5), 0, 0);
 			cb.pointLight.range = 6.0f;
 			cb.pointLight.diffuse = XMFLOAT4(0, 0, 1, 1);
 			cb.time = t;
@@ -388,6 +388,9 @@ void LetsDrawSomeStuff::Render()
 			myContext->IASetIndexBuffer(charizardIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
 
 			myContext->DrawIndexed(charizard.GetNumberOfIndices(), 0, 0);
+
+			if (charizardVertexBuffer)charizardVertexBuffer->Release();
+			if (charizardIndexBuffer)charizardIndexBuffer->Release();
 #endif
 #if BOX_MESH
 			myContext->VSSetShader(myVertexShaderUV, nullptr, 0);
@@ -421,6 +424,9 @@ void LetsDrawSomeStuff::Render()
 			// Set index buffer
 			myContext->IASetIndexBuffer(boxIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
 			myContext->DrawIndexed(box.GetNumberOfIndices(), 0, 0);
+
+			boxVertexBuffer->Release();
+			boxIndexBuffer->Release();
 #endif
 #if SPACESHIP
 			myContext->VSSetShader(myVertexShader, nullptr, 0);
@@ -478,16 +484,6 @@ void LetsDrawSomeStuff::Render()
 			// Set index buffer
 			myContext->IASetIndexBuffer(sphereIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
 			myContext->DrawIndexed(sphereFaces * 3, 0, 0);
-#endif 
-#if CHARIZARD_MESH
-			if (charizardVertexBuffer)charizardVertexBuffer->Release();
-			if (charizardIndexBuffer)charizardIndexBuffer->Release();
-#endif
-#if BOX_MESH
-			boxVertexBuffer->Release();
-			boxIndexBuffer->Release();
-#endif
-#if PROCEDURAL_SPHERE
 			sphereVertexBuffer->Release();
 			sphereIndexBuffer->Release();
 #endif
@@ -531,6 +527,7 @@ void LetsDrawSomeStuff::Render()
 			bulbVertexBuffer->Release();
 			bulbIndexBuffer->Release();
 
+			//Rendering ground
 			XMVECTOR groundPosition = { 0,-0.5f,0,0 };
 			worldMatrix = XMMatrixTranslationFromVector(groundPosition);
 			cb.mWorld = XMMatrixTranspose(worldMatrix);
@@ -580,57 +577,57 @@ void LetsDrawSomeStuff::CameraMovement()
 	rightVector = XMVector3Normalize(rightVector);
 	if (GetAsyncKeyState('E'))
 	{
-		Eye += (UP*timer.Delta() * 5);
-		At += (UP*timer.Delta() * 5);
+		Eye += (UP*(float)timer.Delta() * 5.0f);
+		At += (UP*(float)timer.Delta() * 5.0f);
 	}
 	else if (GetAsyncKeyState('Q'))
 	{
-		Eye -= (UP*timer.Delta() * 5);
-		At -= (UP*timer.Delta() * 5);
+		Eye -= (UP*(float)timer.Delta() * 5.0f);
+		At -= (UP*(float)timer.Delta() * 5.0f);
 	}
 
 	if (GetAsyncKeyState('W'))
 	{
-		Eye += (FORWARD*timer.Delta() * 5);
-		At += (FORWARD*timer.Delta() * 5);
+		Eye += (FORWARD*(float)timer.Delta() * 5.0f);
+		At += (FORWARD*(float)timer.Delta() * 5.0f);
 
 	}
 	else if (GetAsyncKeyState('S'))
 	{
-		Eye -= (FORWARD*timer.Delta() * 5);
-		At -= (FORWARD*timer.Delta() * 5);
+		Eye -= (FORWARD*(float)timer.Delta() * 5.0f);
+		At -= (FORWARD*(float)timer.Delta() * 5.0f);
 	}
 
 	if (GetAsyncKeyState('D'))
 	{
-		Eye += (RIGHT*timer.Delta());
-		At += (RIGHT*timer.Delta());
+		Eye += (RIGHT*(float)timer.Delta());
+		At += (RIGHT*(float)timer.Delta());
 
 	}
 	else if (GetAsyncKeyState('A'))
 	{
-		Eye -= (RIGHT *timer.Delta());
-		At -= (RIGHT*timer.Delta());
+		Eye -= (RIGHT *(float)timer.Delta());
+		At -= (RIGHT*(float)timer.Delta());
 	}
 
 
-	if (GetAsyncKeyState('I'))
-	{
-		At += (UP*timer.Delta());
-	}
-	else if (GetAsyncKeyState('K'))
-	{
-		At -= (UP*timer.Delta());
-	}
+	//if (GetAsyncKeyState('I'))
+	//{
+	//	At += (UP*(float)timer.Delta());
+	//}
+	//else if (GetAsyncKeyState('K'))
+	//{ 
+	//	At -= (UP*(float)timer.Delta());
+	//}
 
-	if (GetAsyncKeyState('L'))
-	{
-		At += (RIGHT*timer.Delta() * 4);
-	}
-	else if (GetAsyncKeyState('J'))
-	{
-		At -= (RIGHT*timer.Delta() * 2);
-	}
+	//if (GetAsyncKeyState('L'))
+	//{
+	//	At += (RIGHT*(float)timer.Delta() * 4);
+	//}
+	//else if (GetAsyncKeyState('J'))
+	//{
+	//	At -= (RIGHT*(float)timer.Delta() * 2);
+	//}
 }
 
 //bool LetsDrawSomeStuff::InitDirectInput(HINSTANCE hInstance)
