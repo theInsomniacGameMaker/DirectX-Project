@@ -18,9 +18,10 @@ using namespace std;
 
 #include "Trivial_VS.csh"
 #include "Trivial_PS.csh"
+#include "VS_UVModifier.csh"
 
 #define CHARIZARD_MESH 0
-#define BOX_MESH 0
+#define BOX_MESH 1
 #define SPACESHIP 1
 #define PROCEDURAL_SPHERE 0
 #define WIREFRAME 0

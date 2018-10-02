@@ -103,6 +103,9 @@
     <FxCompile Include="Trivial_VS.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
+    <FxCompile Include="VS_UVModifier.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ExampleCode.cpp" />

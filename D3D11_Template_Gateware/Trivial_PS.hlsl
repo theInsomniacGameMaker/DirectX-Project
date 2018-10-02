@@ -45,16 +45,13 @@ float4 main(PS_INPUT input) : SV_Target
 
 	float3 lightToPixelVec = newPosition - input.TPos;
 
-	float d = length(lightToPixelVec);
-	if (d < pLight.range)
-	{
-		lightToPixelVec /= d;
-		float howMuchLight = saturate(dot(lightToPixelVec, input.Norm));
 
-		pointLightColor = howMuchLight * baseTexture* pLight.diffuse;
-		pointLightColor *= (1.0 - saturate(length(newPosition - input.TPos) / pLight.range));
-		pointLightColor *= (1.0 - saturate(length(newPosition - input.TPos) / pLight.range));
-	}
+	float howMuchLight = saturate(dot(normalize(lightToPixelVec), input.Norm));
+
+	pointLightColor = howMuchLight * baseTexture* pLight.diffuse;
+	pointLightColor *= (1.0 - saturate(length(newPosition - input.TPos) / pLight.range));
+
+
 
 	//do NdotL lighting for 2 directional lights
 	for (int i = 0; i < 2; i++)

@@ -23,6 +23,7 @@ class LetsDrawSomeStuff
 	D3D_FEATURE_LEVEL			myFeatureLevel = D3D_FEATURE_LEVEL_11_0;
 	ID3D11RenderTargetView*		myRenderTargetView = nullptr;
 	ID3D11VertexShader*			myVertexShader = nullptr;
+	ID3D11VertexShader*			myVertexShaderUV = nullptr;
 	ID3D11PixelShader*			myPixelShader = nullptr;
 	ID3D11InputLayout*			myVertexLayout = nullptr;
 
@@ -34,6 +35,7 @@ class LetsDrawSomeStuff
 #if BOX_MESH
 	ID3D11Buffer*				boxVertexBuffer = nullptr;
 	ID3D11Buffer*				boxIndexBuffer = nullptr;
+	ID3D11ShaderResourceView*   myTextureRVBox = nullptr;
 #endif
 
 #if SPACESHIP
@@ -95,6 +97,8 @@ public:
 // Init
 LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 {
+	//winClass.hInstance = GetModuleHandleW(0);
+
 	if (attatchPoint) // valid window?
 	{
 		// Create surface, will auto attatch to GWindow
@@ -127,6 +131,7 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			myContext->RSSetViewports(1, &vp);
 
 			HRESULT hr = myDevice->CreateVertexShader(Trivial_VS, sizeof(Trivial_VS), nullptr, &myVertexShader);
+			hr = myDevice->CreateVertexShader(VS_UVModifier, sizeof(VS_UVModifier), nullptr, &myVertexShaderUV);
 			myDevice->CreatePixelShader(Trivial_PS, sizeof(Trivial_PS), nullptr, &myPixelShader);
 
 			// Define the input layout
@@ -149,7 +154,7 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			ZeroMemory(&wfdesc, sizeof(D3D11_RASTERIZER_DESC));
 			wfdesc.FillMode = D3D11_FILL_WIREFRAME;
 			wfdesc.CullMode = D3D11_CULL_NONE;
-			 myDevice->CreateRasterizerState(&wfdesc, &WireFrame);
+			myDevice->CreateRasterizerState(&wfdesc, &WireFrame);
 #endif
 #if CHARIZARD_MESH
 			charizard = Mesh("Charizard.fbx", 25.0f, myDevice, myTextureRV);
@@ -160,13 +165,13 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 #endif 
 
 #if BOX_MESH
-			box = Mesh("cube.fbx", 1 / 50.f, myDevice, myTextureRV1);
+			box = Mesh("cube.fbx", 1 / 50.f, myDevice, myTextureRVBox);
 #endif
 #if SPACESHIP
-			spaceShip = Mesh("Galaga Fighter.fbx", 1/4.0f,myDevice, myTextureRV);
+			spaceShip = Mesh("Galaga Fighter.fbx", 1 / 4.0f, myDevice, myTextureRV);
 #endif 
-			ground = Mesh("Ground.fbx", 100,myDevice, myTextureRV);
-			bulb = Mesh("Bulb.fbx", 1.0f/5, myDevice, myTextureRVBulb);
+			ground = Mesh("Ground.fbx", 100, myDevice, myTextureRV);
+			bulb = Mesh("Bulb.fbx", 1.0f / 5, myDevice, myTextureRVBulb);
 
 			// Set primitive topology
 			myContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -219,21 +224,31 @@ LetsDrawSomeStuff::~LetsDrawSomeStuff()
 	myVertexShader->Release();
 	myPixelShader->Release();
 	myVertexLayout->Release();
+	myVertexShaderUV->Release();
+
 //#if CHARIZARD_MESH
 //	if (charizardVertexBuffer)charizardVertexBuffer->Release();
 //	if (charizardIndexBuffer)charizardIndexBuffer->Release();
 //#endif
 //#if BOX_MESH
-//	boxVertexBuffer->Release();
-//	boxIndexBuffer->Release();
+//	if (boxVertexBuffer)boxVertexBuffer->Release();
+//	if (boxIndexBuffer)boxIndexBuffer->Release();
 //#endif
 //#if PROCEDURAL_SPHERE
-//	sphereVertexBuffer->Release();
-//	sphereIndexBuffer->Release();
+//	if (sphereVertexBuffer)sphereVertexBuffer->Release();
+//	if (sphereVertexBuffer)sphereIndexBuffer->Release();
 //#endif
+
 	myConstantBuffer->Release();
 	if (myTextureRV)myTextureRV->Release();
+
+# if BOX_MESH
+	if (myTextureRVBox)myTextureRVBox->Release();
+#endif 
+
+
 	if (mySamplerLinear)mySamplerLinear->Release();
+	if (myTextureRVBulb)myTextureRVBulb->Release();
 
 	if (mySurface) // Free Gateware Interface
 	{
@@ -267,7 +282,7 @@ void LetsDrawSomeStuff::Render()
 			// Clear the screen to dark green
 			const float d_green[] = { 0, 0.0f, 0, 1 };
 			myContext->ClearRenderTargetView(myRenderTargetView, d_green);
-			
+
 			viewMatrix = XMMatrixLookAtLH(Eye, At, Up);
 #if WIREFRAME
 			myContext->RSSetState(WireFrame);
@@ -302,8 +317,8 @@ void LetsDrawSomeStuff::Render()
 			XMFLOAT4 vLightColors[2] =
 			{
 			#if DIRECTIONAL_LIGHT_ON
-				XMFLOAT4(0.3f, 0.3f, 0.3f, 1.0f),
-				XMFLOAT4(0.2f, 0.0f, 0.0f, 1.0f)
+				XMFLOAT4(0.0f, 0.7f, 0.0f, 1.0f),
+				XMFLOAT4(0.5f, 0.0f, 0.0f, 1.0f)
 			#else
 				XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f),
 				XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f)
@@ -327,8 +342,8 @@ void LetsDrawSomeStuff::Render()
 			cb.vLightDir[1] = vLightDirs[1];
 			cb.vLightColor[0] = vLightColors[0];
 			cb.vLightColor[1] = vLightColors[1];
-			cb.pointLight.pos = XMFLOAT4(0, (sin(timer.TotalTime())*5), 0, 0);
-			cb.pointLight.range = 10.0f;
+			cb.pointLight.pos = XMFLOAT4(0, (sin(timer.TotalTime()) * 5), 0, 0);
+			cb.pointLight.range = 6.0f;
 			cb.pointLight.diffuse = XMFLOAT4(0, 0, 1, 1);
 			cb.time = t;
 			cb.vOutputColor = XMFLOAT4(0, 0, 0, 0);
@@ -364,7 +379,7 @@ void LetsDrawSomeStuff::Render()
 			myContext->IASetVertexBuffers(0, 1, &charizardVertexBuffer, stride, offset);
 
 			bd.Usage = D3D11_USAGE_DEFAULT;
-			bd.ByteWidth = sizeof(int) * charizard.GetNumberOfIndices();        
+			bd.ByteWidth = sizeof(int) * charizard.GetNumberOfIndices();
 			bd.BindFlags = D3D11_BIND_INDEX_BUFFER;
 			bd.CPUAccessFlags = 0;
 			InitData.pSysMem = charizard.GetIndices();
@@ -375,6 +390,14 @@ void LetsDrawSomeStuff::Render()
 			myContext->DrawIndexed(charizard.GetNumberOfIndices(), 0, 0);
 #endif
 #if BOX_MESH
+			myContext->VSSetShader(myVertexShaderUV, nullptr, 0);
+			myContext->PSSetShaderResources(0, 1, &myTextureRVBox);
+
+			XMVECTOR boxPosition = { -3, 0.0f,0,0 };
+			//XMMatrixTranslationFromVector(boxPosition);
+			cb.mWorld = XMMatrixTranspose(XMMatrixTranslationFromVector(boxPosition));
+			myContext->UpdateSubresource(myConstantBuffer, 0, nullptr, &cb, 0, 0);
+
 			//Setting buffer description
 			bd = {};
 			bd.Usage = D3D11_USAGE_DEFAULT;
@@ -400,6 +423,12 @@ void LetsDrawSomeStuff::Render()
 			myContext->DrawIndexed(box.GetNumberOfIndices(), 0, 0);
 #endif
 #if SPACESHIP
+			myContext->VSSetShader(myVertexShader, nullptr, 0);
+			myContext->PSSetShaderResources(0, 1, &myTextureRV);
+
+			cb.mWorld = XMMatrixTranspose(worldMatrix);
+			myContext->UpdateSubresource(myConstantBuffer, 0, nullptr, &cb, 0, 0);
+
 			//Setting buffer description
 			bd = {};
 			bd.Usage = D3D11_USAGE_DEFAULT;
@@ -448,7 +477,7 @@ void LetsDrawSomeStuff::Render()
 			myDevice->CreateBuffer(&bd, &InitData, &sphereIndexBuffer);
 			// Set index buffer
 			myContext->IASetIndexBuffer(sphereIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
-			myContext->DrawIndexed(sphereFaces*3,0,0);
+			myContext->DrawIndexed(sphereFaces * 3, 0, 0);
 #endif 
 #if CHARIZARD_MESH
 			if (charizardVertexBuffer)charizardVertexBuffer->Release();
@@ -496,7 +525,7 @@ void LetsDrawSomeStuff::Render()
 			// Set index buffer
 			myContext->IASetIndexBuffer(bulbIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
 			myContext->DrawIndexed(bulb.GetNumberOfIndices(), 0, 0);
-		
+
 			myContext->DrawIndexed(bulb.GetNumberOfIndices(), 0, 0);
 
 			bulbVertexBuffer->Release();
@@ -533,7 +562,7 @@ void LetsDrawSomeStuff::Render()
 
 			groundVertexBuffer->Release();
 			groundIndexBuffer->Release();
-			
+
 			// Present Backbuffer using Swapchain object
 			// Framerate is currently unlocked, we suggest "MSI Afterburner" to track your current FPS and memory usage.
 			mySwapChain->Present(0, 0); // set first argument to 1 to enable vertical refresh sync with display
@@ -546,12 +575,12 @@ void LetsDrawSomeStuff::Render()
 void LetsDrawSomeStuff::CameraMovement()
 {
 	XMFLOAT4 right;
-	XMStoreFloat4(&right,At);
+	XMStoreFloat4(&right, At);
 	XMVECTOR rightVector = { right.z, right.y,-right.x };
 	rightVector = XMVector3Normalize(rightVector);
 	if (GetAsyncKeyState('E'))
 	{
-		Eye += (UP*timer.Delta()*5);
+		Eye += (UP*timer.Delta() * 5);
 		At += (UP*timer.Delta() * 5);
 	}
 	else if (GetAsyncKeyState('Q'))
@@ -562,25 +591,25 @@ void LetsDrawSomeStuff::CameraMovement()
 
 	if (GetAsyncKeyState('W'))
 	{
-		Eye += (XMVector3Normalize(At)*timer.Delta() * 5);
+		Eye += (FORWARD*timer.Delta() * 5);
 		At += (FORWARD*timer.Delta() * 5);
 
 	}
 	else if (GetAsyncKeyState('S'))
 	{
-		Eye -= (XMVector3Normalize(At)*timer.Delta() * 5);
+		Eye -= (FORWARD*timer.Delta() * 5);
 		At -= (FORWARD*timer.Delta() * 5);
 	}
 
 	if (GetAsyncKeyState('D'))
 	{
-		Eye += (rightVector*timer.Delta());
+		Eye += (RIGHT*timer.Delta());
 		At += (RIGHT*timer.Delta());
 
 	}
 	else if (GetAsyncKeyState('A'))
 	{
-		Eye -= (-rightVector*timer.Delta());
+		Eye -= (RIGHT *timer.Delta());
 		At -= (RIGHT*timer.Delta());
 	}
 
@@ -596,11 +625,11 @@ void LetsDrawSomeStuff::CameraMovement()
 
 	if (GetAsyncKeyState('L'))
 	{
-		At += (RIGHT*timer.Delta()*4);
+		At += (RIGHT*timer.Delta() * 4);
 	}
 	else if (GetAsyncKeyState('J'))
 	{
-		At -= (RIGHT*timer.Delta()*2);
+		At -= (RIGHT*timer.Delta() * 2);
 	}
 }
 
