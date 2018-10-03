@@ -48,8 +48,13 @@ class LetsDrawSomeStuff
 	ID3D11Buffer*				sphereIndexBuffer = nullptr;
 #endif
 
+
+
 	ID3D11Buffer*				bulbVertexBuffer = nullptr;
 	ID3D11Buffer*				bulbIndexBuffer = nullptr;
+
+	ID3D11Buffer*				pyramidVertexBuffer = nullptr;
+	ID3D11Buffer*				pyramidIndexBuffer = nullptr;
 
 	ID3D11Buffer*			groundVertexBuffer = nullptr;
 	ID3D11Buffer*			groundIndexBuffer = nullptr;
@@ -68,6 +73,8 @@ class LetsDrawSomeStuff
 	XMVECTOR At;
 	XMVECTOR Up;
 	ID3D11Debug *DebugDevice;
+
+	MeshStruct hFilePyramid;
 
 #if WIREFRAME
 	ID3D11RasterizerState* WireFrame;
@@ -159,12 +166,31 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			myDevice->CreateRasterizerState(&wfdesc, &WireFrame);
 #endif
 
+			LoadFromHeader();
+			bd = {};
+			bd.Usage = D3D11_USAGE_DEFAULT;
+			bd.ByteWidth = sizeof(SimpleVertex) *returnStruct.numVertices;
+			bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+			bd.CPUAccessFlags = 0;
+
+			//setting subresource data
+			InitData = {};
+			InitData.pSysMem = returnStruct.vertices;
+			myDevice->CreateBuffer(&bd, &InitData, &pyramidVertexBuffer);
+
+			//bd.Usage = D3D11_USAGE_DEFAULT;
+			//bd.ByteWidth = sizeof(int) * returnStruct.numIndices;
+			//bd.BindFlags = D3D11_BIND_INDEX_BUFFER;
+			//bd.CPUAccessFlags = 0;
+			//InitData.pSysMem = returnStruct.indices;
+			//hr = myDevice->CreateBuffer(&bd, &InitData, &pyramidIndexBuffer);
+
 #if CHARIZARD_MESH
 			charizard = Mesh("Charizard.fbx", 25.0f, myDevice, myTextureRV);
 #endif
 
 #if PROCEDURAL_SPHERE
-			CreateGrid();
+			CreateSpiral();
 
 			bd = {};
 			bd.Usage = D3D11_USAGE_DEFAULT;
@@ -461,6 +487,8 @@ void LetsDrawSomeStuff::Render()
 			//copy the values back
 			XMStoreFloat4(&vLightDirs[1], vLightDir);
 
+			
+
 			ConstantBuffer cb;
 			cb.mWorld = XMMatrixTranspose(worldMatrix);
 			cb.mView = XMMatrixTranspose(viewMatrix);
@@ -535,6 +563,25 @@ void LetsDrawSomeStuff::Render()
 			myContext->DrawIndexed(box.GetNumberOfIndices(), 0, 0);
 #endif
 
+#if DIRECTIONAL_LIGHT_ON
+			myContext->VSSetShader(myVertexShader, nullptr, 0);
+			myContext->PSSetShaderResources(0, 1, &myTextureRVBox);
+
+			XMMATRIX mLight = XMMatrixTranslationFromVector(5.0f * XMLoadFloat4(&vLightDirs[1]));
+			XMMATRIX mLightScale = XMMatrixScaling(0.2f, 0.2f, 0.2f);
+			mLight = mLightScale * mLight;
+
+			// Update the world variable to reflect the current light
+			cb.mWorld = XMMatrixTranspose(mLight);
+			cb.vOutputColor = vLightColors[1];
+			myContext->UpdateSubresource(myConstantBuffer, 0, nullptr, &cb, 0, 0);
+
+			myContext->IASetVertexBuffers(0, 1, &boxVertexBuffer, stride, offset);
+
+			myContext->IASetIndexBuffer(boxIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
+			myContext->DrawIndexed(box.GetNumberOfIndices(), 0, 0);
+#endif 
+
 #if SPACESHIP
 			myContext->VSSetShader(myVertexShader, nullptr, 0);
 			myContext->PSSetShaderResources(0, 1, &myTextureRVSpaceShip);
@@ -598,13 +645,22 @@ void LetsDrawSomeStuff::Render()
 #pragma endregion
 
 
+			XMVECTOR pyramidPosition = { 0,3,0,0 };
+			worldMatrix = XMMatrixTranslationFromVector(pyramidPosition);
+			cb.mWorld = XMMatrixTranspose(worldMatrix);
+			myContext->UpdateSubresource(myConstantBuffer, 0, nullptr, &cb, 0, 0);
+
+			myContext->IASetVertexBuffers(0, 1, &pyramidVertexBuffer, stride, offset);
+			//myContext->IASetIndexBuffer(pyramidIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
+			myContext->Draw((unsigned int)returnStruct.numVertices,0);
+
 			// Present Backbuffer using Swapchain object
 			// Framerate is currently unlocked, we suggest "MSI Afterburner" to track your current FPS and memory usage.
 			mySwapChain->Present(0, 0); // set first argument to 1 to enable vertical refresh sync with display
 
 			myRenderTargetView->Release(); // Free any temp DX handles aquired this frame
 
-}
+		}
 	}
 }
 
