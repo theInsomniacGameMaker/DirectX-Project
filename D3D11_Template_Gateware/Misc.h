@@ -3,7 +3,7 @@
 #include "test pyramid.h"
 
 SimpleVertex sphereVertices[360*17];
-MeshStruct returnStruct;
+MeshStruct hFilePyramid;
 
 float NormalLerp(int start, int end, float ratio)
 {
@@ -53,21 +53,13 @@ SimpleVertex ConvertFromHeaderToSimpleVertex(_OBJ_VERT_ obj, float scale)
 
 void  LoadFromHeader()
 {
-	returnStruct.numVertices = 1674;
-	returnStruct.vertices = new SimpleVertex[1674];
+	hFilePyramid.numVertices = 1674;
+	hFilePyramid.vertices = new SimpleVertex[1674];
 	for (int i = 0; i < 1674; i+=3)
 	{
-		returnStruct.vertices[i]= ConvertFromHeaderToSimpleVertex(test_pyramid_data[test_pyramid_indicies[i]],1	);
-		returnStruct.vertices[i+1]= ConvertFromHeaderToSimpleVertex(test_pyramid_data[test_pyramid_indicies[i + 1]],1);
-		returnStruct.vertices[i + 2] = ConvertFromHeaderToSimpleVertex(test_pyramid_data[test_pyramid_indicies[i + 2]],1);
+		hFilePyramid.vertices[i]= ConvertFromHeaderToSimpleVertex(test_pyramid_data[test_pyramid_indicies[i]],1	);
+		hFilePyramid.vertices[i+1]= ConvertFromHeaderToSimpleVertex(test_pyramid_data[test_pyramid_indicies[i + 1]],1);
+		hFilePyramid.vertices[i + 2] = ConvertFromHeaderToSimpleVertex(test_pyramid_data[test_pyramid_indicies[i + 2]],1);
 	}
-
-	/*returnStruct.numIndices = 1674;
-	returnStruct.indices = new int[returnStruct.numIndices];
-	for (int i = 0; i < 1674; i++)
-	{
-		returnStruct.indices[i] = test_pyramid_indicies[i];
-	}*/
-
 }
 

@@ -44,12 +44,9 @@ class LetsDrawSomeStuff
 	ID3D11Buffer*				spaceshipIndexBuffer = nullptr;
 #endif
 
-#if PROCEDURAL_SPHERE
-	ID3D11Buffer*				sphereVertexBuffer = nullptr;
-	ID3D11Buffer*				sphereIndexBuffer = nullptr;
+#if PROCEDURAL_SPIRAL
+	ID3D11Buffer*				spiralVertexBuffer = nullptr;
 #endif
-
-
 
 	ID3D11Buffer*				bulbVertexBuffer = nullptr;
 	ID3D11Buffer*				bulbIndexBuffer = nullptr;
@@ -72,9 +69,11 @@ class LetsDrawSomeStuff
 	XMVECTOR Eye;
 	XMVECTOR At;
 	XMVECTOR Up;
-	ID3D11Debug *DebugDevice;
 
-	MeshStruct hFilePyramid;
+#if DEBUGGER
+	ID3D11Debug *DebugDevice;
+#endif
+
 
 #if WIREFRAME
 	ID3D11RasterizerState* WireFrame;
@@ -114,14 +113,14 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			mySurface->GetContext((void**)&myContext);
 
 			// TODO: Create new DirectX stuff here! (Buffers, Shaders, Layouts, Views, Textures, etc...)
-			/*ID3D11Texture2D* myBackBuffer = nullptr;
+			ID3D11Texture2D* myBackBuffer = nullptr;
 			mySwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(&myBackBuffer));
 
 			myDevice->CreateRenderTargetView(myBackBuffer, nullptr, &myRenderTargetView);
 			myBackBuffer->Release();
 
 			myContext->OMSetRenderTargets(1, &myRenderTargetView, nullptr);
-*/
+
 			D3D11_VIEWPORT vp;
 			unsigned int width, height;
 			attatchPoint->GetClientWidth(width);
@@ -170,13 +169,13 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			LoadFromHeader();
 			bd = {};
 			bd.Usage = D3D11_USAGE_DEFAULT;
-			bd.ByteWidth = sizeof(SimpleVertex) *returnStruct.numVertices;
+			bd.ByteWidth = sizeof(SimpleVertex) *hFilePyramid.numVertices;
 			bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 			bd.CPUAccessFlags = 0;
 
 			//setting subresource data
 			InitData = {};
-			InitData.pSysMem = returnStruct.vertices;
+			InitData.pSysMem = hFilePyramid.vertices;
 			myDevice->CreateBuffer(&bd, &InitData, &pyramidVertexBuffer);
 
 			
@@ -185,7 +184,7 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			charizard = Mesh("Charizard.fbx", 25.0f, myDevice, myTextureRV);
 #endif
 
-#if PROCEDURAL_SPHERE
+#if PROCEDURAL_SPIRAL
 			CreateSpiral();
 
 			bd = {};
@@ -196,7 +195,7 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 
 			InitData = {};
 			InitData.pSysMem = sphereVertices;
-			myDevice->CreateBuffer(&bd, &InitData, &sphereVertexBuffer);
+			myDevice->CreateBuffer(&bd, &InitData, &spiralVertexBuffer);
 
 			// Set index buffer
 #endif 
@@ -368,9 +367,8 @@ LetsDrawSomeStuff::~LetsDrawSomeStuff()
 	if (myTextureRVBox)myTextureRVBox->Release();
 #endif
 
-#if PROCEDURAL_SPHERE
-	if (sphereVertexBuffer)sphereVertexBuffer->Release();
-	//if (sphereVertexBuffer)sphereIndexBuffer->Release();
+#if PROCEDURAL_SPIRAL
+	if (spiralVertexBuffer)spiralVertexBuffer->Release();
 #endif
 
 	groundVertexBuffer->Release();
@@ -394,18 +392,20 @@ LetsDrawSomeStuff::~LetsDrawSomeStuff()
 	{
 		mySurface->DecrementCount(); // reduce internal count (will auto delete on Zero)
 		mySurface = nullptr; // the safest way to fly
-	}/*
+	}
 
+#if DEBUGGER
 	myDevice->QueryInterface(__uuidof(ID3D11Debug), reinterpret_cast<void**>(&DebugDevice));
-	DebugDevice->ReportLiveDeviceObjects(D3D11_RLDO_DETAIL);*/
+	DebugDevice->ReportLiveDeviceObjects(D3D11_RLDO_DETAIL);
+#endif
 
 	box.LateDestructor();
 	spaceShip.LateDestructor();
 	ground.LateDestructor();
 	bulb.LateDestructor();
-	delete[] returnStruct.vertices;
+	delete[] hFilePyramid.vertices;
 
-	//myRenderTargetView->Release();
+	myRenderTargetView->Release();
 	myDevice->Release();
 	mySwapChain->Release();
 	myContext->Release();
@@ -418,7 +418,7 @@ void LetsDrawSomeStuff::Render()
 	{
 		timer.Signal();
 		// this could be changed during resolution edits, get it every frame
-		/*ID3D11RenderTargetView *myRenderTargetView = nullptr;*/
+		ID3D11RenderTargetView *myRenderTargetView = nullptr;
 		ID3D11DepthStencilView *myDepthStencilView = nullptr;
 		if (G_SUCCESS(mySurface->GetRenderTarget((void**)&myRenderTargetView)))
 		{
@@ -601,7 +601,7 @@ void LetsDrawSomeStuff::Render()
 			/*spaceshipVertexBuffer->Release();
 			spaceshipIndexBuffer->Release();*/
 #endif 
-#if PROCEDURAL_SPHERE
+#if PROCEDURAL_SPIRAL
 			XMVECTOR spiralPos = { 2,1,-1.5f,0 };
 			worldMatrix = XMMatrixTranslationFromVector(spiralPos);
 			cb.mWorld = XMMatrixTranspose(worldMatrix);
@@ -609,7 +609,7 @@ void LetsDrawSomeStuff::Render()
 
 			myContext->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINESTRIP);
 
-			myContext->IASetVertexBuffers(0, 1, &sphereVertexBuffer, stride, offset);
+			myContext->IASetVertexBuffers(0, 1, &spiralVertexBuffer, stride, offset);
 			myContext->Draw(ARRAYSIZE(sphereVertices),0);
 			myContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 #endif
@@ -633,6 +633,7 @@ void LetsDrawSomeStuff::Render()
 			myContext->IASetIndexBuffer(bulbIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
 			myContext->DrawIndexed(bulb.GetNumberOfIndices(), 0, 0);
 #pragma endregion
+
 #pragma region GROUND_RENDER			
 			//Rendering ground
 			XMVECTOR groundPosition = { 0,-1,0,0 };
@@ -648,7 +649,7 @@ void LetsDrawSomeStuff::Render()
 			myContext->DrawIndexed(ground.GetNumberOfIndices(), 0, 0);
 #pragma endregion
 
-
+#pragma region H_FILE_PYRAMID
 			XMVECTOR pyramidPosition = { 0,3,0,0 };
 			worldMatrix = XMMatrixTranslationFromVector(pyramidPosition);
 			cb.mWorld = XMMatrixTranspose(worldMatrix);
@@ -656,7 +657,9 @@ void LetsDrawSomeStuff::Render()
 
 			myContext->IASetVertexBuffers(0, 1, &pyramidVertexBuffer, stride, offset);
 			//myContext->IASetIndexBuffer(pyramidIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
-			myContext->Draw((unsigned int)returnStruct.numVertices,0);
+			myContext->Draw((unsigned int)hFilePyramid.numVertices, 0);
+#pragma endregion
+
 
 			// Present Backbuffer using Swapchain object
 			// Framerate is currently unlocked, we suggest "MSI Afterburner" to track your current FPS and memory usage.
