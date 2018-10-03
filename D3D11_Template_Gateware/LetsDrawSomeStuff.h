@@ -54,10 +54,9 @@ class LetsDrawSomeStuff
 	ID3D11Buffer*				bulbIndexBuffer = nullptr;
 
 	ID3D11Buffer*				pyramidVertexBuffer = nullptr;
-	ID3D11Buffer*				pyramidIndexBuffer = nullptr;
 
-	ID3D11Buffer*			groundVertexBuffer = nullptr;
-	ID3D11Buffer*			groundIndexBuffer = nullptr;
+	ID3D11Buffer*				groundVertexBuffer = nullptr;
+	ID3D11Buffer*				groundIndexBuffer = nullptr;
 	
 	ID3D11Buffer*				myConstantBuffer = nullptr;
 	XMMATRIX					worldMatrix;
@@ -178,12 +177,7 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			InitData.pSysMem = returnStruct.vertices;
 			myDevice->CreateBuffer(&bd, &InitData, &pyramidVertexBuffer);
 
-			//bd.Usage = D3D11_USAGE_DEFAULT;
-			//bd.ByteWidth = sizeof(int) * returnStruct.numIndices;
-			//bd.BindFlags = D3D11_BIND_INDEX_BUFFER;
-			//bd.CPUAccessFlags = 0;
-			//InitData.pSysMem = returnStruct.indices;
-			//hr = myDevice->CreateBuffer(&bd, &InitData, &pyramidIndexBuffer);
+			
 
 #if CHARIZARD_MESH
 			charizard = Mesh("Charizard.fbx", 25.0f, myDevice, myTextureRV);
@@ -393,15 +387,16 @@ LetsDrawSomeStuff::~LetsDrawSomeStuff()
 
 	if (mySamplerLinear)mySamplerLinear->Release();
 
+	pyramidVertexBuffer->Release();
 
 	if (mySurface) // Free Gateware Interface
 	{
 		mySurface->DecrementCount(); // reduce internal count (will auto delete on Zero)
 		mySurface = nullptr; // the safest way to fly
 	}/*
+
 	myDevice->QueryInterface(__uuidof(ID3D11Debug), reinterpret_cast<void**>(&DebugDevice));
 	DebugDevice->ReportLiveDeviceObjects(D3D11_RLDO_DETAIL);*/
-
 
 	//myRenderTargetView->Release();
 	myDevice->Release();
