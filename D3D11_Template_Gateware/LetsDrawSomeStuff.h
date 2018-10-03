@@ -25,6 +25,7 @@ class LetsDrawSomeStuff
 	ID3D11VertexShader*			myVertexShader = nullptr;
 	ID3D11VertexShader*			myVertexShaderUV = nullptr;
 	ID3D11PixelShader*			myPixelShader = nullptr;
+	ID3D11PixelShader*			mySolidPixelShader = nullptr;
 	ID3D11InputLayout*			myVertexLayout = nullptr;
 
 #if CHARIZARD_MESH
@@ -136,6 +137,7 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			HRESULT hr = myDevice->CreateVertexShader(Trivial_VS, sizeof(Trivial_VS), nullptr, &myVertexShader);
 			hr = myDevice->CreateVertexShader(VS_UVModifier, sizeof(VS_UVModifier), nullptr, &myVertexShaderUV);
 			myDevice->CreatePixelShader(Trivial_PS, sizeof(Trivial_PS), nullptr, &myPixelShader);
+			myDevice->CreatePixelShader(SolidPS, sizeof(SolidPS), nullptr, &mySolidPixelShader);
 
 			// Define the input layout
 			D3D11_INPUT_ELEMENT_DESC layout[] =
@@ -329,7 +331,7 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			worldMatrix = XMMatrixIdentity();
 
 			// Initialize the view matrix
-			Eye = XMVectorSet(0.0f, 1.0f, -5.0f, 0.0f);
+			Eye = XMVectorSet(0.0f, 1.0f, -10.0f, 0.0f);
 			At = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 			Up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 			viewMatrix = XMMatrixLookAtLH(Eye, At, Up);
@@ -348,12 +350,11 @@ LetsDrawSomeStuff::~LetsDrawSomeStuff()
 	//Release DX Objects aquired from the surface
 	
 
-	// TODO: "Release()" more stuff here!
-
-	
+	// TODO: "Release()" more stuff here!	
 	myVertexShader->Release();
 	myVertexShaderUV->Release();
 	myPixelShader->Release();
+	mySolidPixelShader->Release();
 	myVertexLayout->Release();
 
 #if CHARIZARD_MESH
@@ -567,6 +568,7 @@ void LetsDrawSomeStuff::Render()
 #if DIRECTIONAL_LIGHT_ON
 			myContext->VSSetShader(myVertexShader, nullptr, 0);
 			myContext->PSSetShaderResources(0, 1, &myTextureRVBox);
+			myContext->PSSetShader(mySolidPixelShader, nullptr, 0);
 
 			XMMATRIX mLight = XMMatrixTranslationFromVector(5.0f * XMLoadFloat4(&vLightDirs[1]));
 			XMMATRIX mLightScale = XMMatrixScaling(0.2f, 0.2f, 0.2f);
@@ -586,6 +588,7 @@ void LetsDrawSomeStuff::Render()
 #if SPACESHIP
 			myContext->VSSetShader(myVertexShader, nullptr, 0);
 			myContext->PSSetShaderResources(0, 1, &myTextureRVSpaceShip);
+			myContext->PSSetShader(myPixelShader, nullptr, 0);
 
 			cb.mWorld = XMMatrixTranspose(worldMatrix);
 			myContext->UpdateSubresource(myConstantBuffer, 0, nullptr, &cb, 0, 0);

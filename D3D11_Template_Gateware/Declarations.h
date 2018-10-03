@@ -20,6 +20,7 @@ using namespace std;
 #include "Trivial_VS.csh"
 #include "Trivial_PS.csh"
 #include "VS_UVModifier.csh"
+#include "SolidPS.csh"
 
 #define CHARIZARD_MESH 0
 #define BOX_MESH 1

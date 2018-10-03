@@ -109,6 +109,9 @@
     <FxCompile Include="VS_UVModifier.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
+    <FxCompile Include="SolidPS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ExampleCode.cpp" />
