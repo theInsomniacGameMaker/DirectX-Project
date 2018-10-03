@@ -61,5 +61,6 @@ void Mesh::SetScale(float s)
 
 Mesh::~Mesh()
 {
-	
+	/*delete[] myMesh.indices;
+	delete[] myMesh.vertices;*/
 }

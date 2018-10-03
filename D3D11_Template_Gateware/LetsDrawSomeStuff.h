@@ -107,14 +107,14 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			mySurface->GetContext((void**)&myContext);
 
 			// TODO: Create new DirectX stuff here! (Buffers, Shaders, Layouts, Views, Textures, etc...)
-			ID3D11Texture2D* myBackBuffer = nullptr;
+			/*ID3D11Texture2D* myBackBuffer = nullptr;
 			mySwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(&myBackBuffer));
 
 			myDevice->CreateRenderTargetView(myBackBuffer, nullptr, &myRenderTargetView);
 			myBackBuffer->Release();
 
 			myContext->OMSetRenderTargets(1, &myRenderTargetView, nullptr);
-
+*/
 			D3D11_VIEWPORT vp;
 			unsigned int width, height;
 			attatchPoint->GetClientWidth(width);
@@ -315,7 +315,7 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			viewMatrix = XMMatrixLookAtLH(Eye, At, Up);
 
 			// Initialize the projection matrix
-			projectionMatrix = XMMatrixPerspectiveFovLH(XM_PIDIV2, width / (FLOAT)height, 0.01f, 100.0f);
+			projectionMatrix = XMMatrixPerspectiveFovLH(XMConvertToRadians(60), width / (FLOAT)height, 0.01f, 100.0f);
 
 			timer.Restart();
 		}
@@ -329,7 +329,8 @@ LetsDrawSomeStuff::~LetsDrawSomeStuff()
 	
 
 	// TODO: "Release()" more stuff here!
-	myRenderTargetView->Release();
+
+	
 	myVertexShader->Release();
 	myVertexShaderUV->Release();
 	myPixelShader->Release();
@@ -354,7 +355,6 @@ LetsDrawSomeStuff::~LetsDrawSomeStuff()
 	groundVertexBuffer->Release();
 	groundIndexBuffer->Release();
 	if (myTextureRVBase)myTextureRVBase->Release();
-
 	bulbVertexBuffer->Release();
 	bulbIndexBuffer->Release();
 	myTextureRVBulb->Release();
@@ -372,10 +372,12 @@ LetsDrawSomeStuff::~LetsDrawSomeStuff()
 	{
 		mySurface->DecrementCount(); // reduce internal count (will auto delete on Zero)
 		mySurface = nullptr; // the safest way to fly
-	}
-	/*myDevice->QueryInterface(__uuidof(ID3D11Debug), reinterpret_cast<void**>(&DebugDevice));
+	}/*
+	myDevice->QueryInterface(__uuidof(ID3D11Debug), reinterpret_cast<void**>(&DebugDevice));
 	DebugDevice->ReportLiveDeviceObjects(D3D11_RLDO_DETAIL);*/
 
+
+	//myRenderTargetView->Release();
 	myDevice->Release();
 	mySwapChain->Release();
 	myContext->Release();
@@ -390,7 +392,7 @@ void LetsDrawSomeStuff::Render()
 		// this could be changed during resolution edits, get it every frame
 		/*ID3D11RenderTargetView *myRenderTargetView = nullptr;*/
 		ID3D11DepthStencilView *myDepthStencilView = nullptr;
-		if (myRenderTargetView)
+		if (G_SUCCESS(mySurface->GetRenderTarget((void**)&myRenderTargetView)))
 		{
 			// Grab the Z Buffer if one was requested
 			if (G_SUCCESS(mySurface->GetDepthStencilView((void**)&myDepthStencilView)))
@@ -400,8 +402,8 @@ void LetsDrawSomeStuff::Render()
 			}
 
 			// Set active target for drawing, all array based D3D11 functions should use a syntax similar to below
-			//ID3D11RenderTargetView* const targets[] = { myRenderTargetView };
-			//myContext->OMSetRenderTargets(1, targets, myDepthStencilView);
+			ID3D11RenderTargetView* const targets[] = { myRenderTargetView };
+			myContext->OMSetRenderTargets(1, targets, myDepthStencilView);
 
 			// Clear the screen to dark green
 			const float d_green[] = { 0, 0.5f, 0, 1 };
@@ -443,7 +445,7 @@ void LetsDrawSomeStuff::Render()
 			{
 			#if DIRECTIONAL_LIGHT_ON
 				XMFLOAT4(0.5f, 0.5f, 0.5f, 1.0f),
-				XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f)
+				XMFLOAT4(0.5f, 0.0f, 0.0f, 1.0f)
 			#else
 				XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f),
 				XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f)
@@ -530,7 +532,7 @@ void LetsDrawSomeStuff::Render()
 			myContext->IASetVertexBuffers(0, 1, &boxVertexBuffer, stride, offset);
 
 			myContext->IASetIndexBuffer(boxIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
-			//myContext->DrawIndexed(box.GetNumberOfIndices(), 0, 0);
+			myContext->DrawIndexed(box.GetNumberOfIndices(), 0, 0);
 #endif
 
 #if SPACESHIP
@@ -543,18 +545,22 @@ void LetsDrawSomeStuff::Render()
 			myContext->IASetVertexBuffers(0, 1, &spaceshipVertexBuffer, stride, offset);
 
 			myContext->IASetIndexBuffer(spaceshipIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
-			//myContext->DrawIndexed(spaceShip.GetNumberOfIndices(), 0, 0);
+			myContext->DrawIndexed(spaceShip.GetNumberOfIndices(), 0, 0);
 
 			/*spaceshipVertexBuffer->Release();
 			spaceshipIndexBuffer->Release();*/
 #endif 
 #if PROCEDURAL_SPHERE
-			//myContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINESTRIP);
+			XMVECTOR spiralPos = { 2,1,-1.5f,0 };
+			worldMatrix = XMMatrixTranslationFromVector(spiralPos);
+			cb.mWorld = XMMatrixTranspose(worldMatrix);
+			myContext->UpdateSubresource(myConstantBuffer, 0, nullptr, &cb, 0, 0);
+
+			myContext->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINESTRIP);
 
 			myContext->IASetVertexBuffers(0, 1, &sphereVertexBuffer, stride, offset);
 			myContext->Draw(ARRAYSIZE(sphereVertices),0);
-			//myContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
+			myContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 #endif
 
 #pragma region BULB_RENDER
@@ -578,7 +584,7 @@ void LetsDrawSomeStuff::Render()
 #pragma endregion
 #pragma region GROUND_RENDER			
 			//Rendering ground
-			XMVECTOR groundPosition = { 0,-0.5f,0,0 };
+			XMVECTOR groundPosition = { 0,-1,0,0 };
 			worldMatrix = XMMatrixTranslationFromVector(groundPosition);
 			cb.mWorld = XMMatrixTranspose(worldMatrix);
 			myContext->PSSetShaderResources(0, 1, &myTextureRVBase);
@@ -592,13 +598,11 @@ void LetsDrawSomeStuff::Render()
 #pragma endregion
 
 
-
-
 			// Present Backbuffer using Swapchain object
 			// Framerate is currently unlocked, we suggest "MSI Afterburner" to track your current FPS and memory usage.
 			mySwapChain->Present(0, 0); // set first argument to 1 to enable vertical refresh sync with display
 
-			//myRenderTargetView->Release(); // Free any temp DX handles aquired this frame
+			myRenderTargetView->Release(); // Free any temp DX handles aquired this frame
 
 }
 	}

@@ -22,8 +22,8 @@ void CreateGrid()
 		for (int j = 0; j < 360; j++)
 		{
 			SimpleVertex s;
-			sphereVertices[p].Pos.x = sin(DegToRad(j))*10;
-			sphereVertices[p].Pos.y = cos(DegToRad(j))*10;
+			sphereVertices[p].Pos.x = sin(DegToRad(j))*2;
+			sphereVertices[p].Pos.y = cos(DegToRad(j))*2;
 
 			float n = i * 360 + j;
 			float d = 360 * 17;
