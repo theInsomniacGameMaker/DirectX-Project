@@ -40,12 +40,10 @@ VS_OUTPUT main(VS_INPUT input)
 {
 	VS_OUTPUT output = (VS_OUTPUT)0;
 	output.Pos = mul(input.Pos, World);
-	output.TPos = output.Pos;
+	output.TPos = (float3)output.Pos;
 	output.Pos = mul(output.Pos, View);
 	output.Pos = mul(output.Pos, Projection);
 	output.Norm = mul(float4(input.Norm, 0), World).xyz;
 	output.Tex = input.Tex;
-	//Changing UVS according to the sin of time
-	//output.Tex = float2(input.Tex.x*abs(sin(time/10)), input.Tex.y*abs(cos(time/10)));
 	return output;
 }

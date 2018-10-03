@@ -37,7 +37,7 @@ void Compactify(MeshStruct &meshToMutate)
 		if (!foundSomething)
 		{
 			uniqueVertices.push_back(meshToMutate.vertices[i]);
-			meshToMutate.indices[i] = uniqueVertices.size() - 1;
+			meshToMutate.indices[i] = (int)uniqueVertices.size() - 1;
 		}
 	}
 
@@ -126,9 +126,9 @@ void ProcessFbxMesh(FbxNode* Node, MeshStruct &meshToMutate, ID3D11Device *&myDe
 			for (int j = 0; j < meshToMutate.numIndices; j++)
 			{
 				vertices2[j] = meshToMutate.vertices[meshToMutate.indices[j]];
-				vertices2[j].Normal.x = normalsVec[j].mData[0];
-				vertices2[j].Normal.y = normalsVec[j].mData[1];
-				vertices2[j].Normal.z = normalsVec[j].mData[2];
+				vertices2[j].Normal.x = (float)normalsVec[j].mData[0];
+				vertices2[j].Normal.y = (float) normalsVec[j].mData[1];
+				vertices2[j].Normal.z = (float)normalsVec[j].mData[2];
 			}
 
 			int materialCount = childNode->GetSrcObjectCount<FbxSurfaceMaterial>();
@@ -175,7 +175,7 @@ void ProcessFbxMesh(FbxNode* Node, MeshStruct &meshToMutate, ID3D11Device *&myDe
 							cout << textureName;
 
 							string appendedTextureName = (texture->GetFileName());
-							int pos = appendedTextureName.find_last_of('\\');
+							int pos = (int)appendedTextureName.find_last_of('\\');
 							if (pos != -1)
 							{
 								appendedTextureName = appendedTextureName.substr(pos + 1, appendedTextureName.length());
@@ -183,7 +183,7 @@ void ProcessFbxMesh(FbxNode* Node, MeshStruct &meshToMutate, ID3D11Device *&myDe
 							}
 							else
 							{
-								pos = appendedTextureName.find_last_of('/');
+								pos = (int)appendedTextureName.find_last_of('/');
 								appendedTextureName = appendedTextureName.substr(pos + 1, appendedTextureName.length());
 								appendedTextureName = "Assets\\" + appendedTextureName.substr(0, appendedTextureName.length() - 3) + "dds";
 							}
@@ -250,8 +250,8 @@ void ProcessFbxMesh(FbxNode* Node, MeshStruct &meshToMutate, ID3D11Device *&myDe
 							//User TODO:
 							//Print out the value of UV(lUVValue) or log it to a file
 
-							vertices2[lPolyIndexCounter].Tex.x = lUVValue.mData[0];
-							vertices2[lPolyIndexCounter].Tex.y = lUVValue.mData[1];
+							vertices2[lPolyIndexCounter].Tex.x = (float)lUVValue.mData[0];
+							vertices2[lPolyIndexCounter].Tex.y = (float)lUVValue.mData[1];
 							lPolyIndexCounter++;
 						}
 					}
@@ -262,7 +262,7 @@ void ProcessFbxMesh(FbxNode* Node, MeshStruct &meshToMutate, ID3D11Device *&myDe
 			// and clean up first array
 			delete meshToMutate.vertices;
 			meshToMutate.vertices = vertices2;
-
+			
 			// make new indices to match the new vertex(2) array
 			delete meshToMutate.indices;
 			meshToMutate.indices = new int[meshToMutate.numIndices];
