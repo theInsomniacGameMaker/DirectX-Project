@@ -398,6 +398,12 @@ LetsDrawSomeStuff::~LetsDrawSomeStuff()
 	myDevice->QueryInterface(__uuidof(ID3D11Debug), reinterpret_cast<void**>(&DebugDevice));
 	DebugDevice->ReportLiveDeviceObjects(D3D11_RLDO_DETAIL);*/
 
+	box.LateDestructor();
+	spaceShip.LateDestructor();
+	ground.LateDestructor();
+	bulb.LateDestructor();
+	delete[] returnStruct.vertices;
+
 	//myRenderTargetView->Release();
 	myDevice->Release();
 	mySwapChain->Release();

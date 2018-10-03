@@ -287,3 +287,4 @@ void ProcessFbxMesh(FbxNode* Node, MeshStruct &meshToMutate, ID3D11Device *&myDe
 	}
 	
 }
+

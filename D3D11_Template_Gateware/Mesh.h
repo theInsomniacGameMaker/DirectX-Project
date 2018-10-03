@@ -9,6 +9,7 @@ public:
 	Mesh();
 	Mesh(string fileName, float scale, ID3D11Device* &myDevice, ID3D11ShaderResourceView* &myTextureRV);
 	~Mesh();
+	void LateDestructor();
 	SimpleVertex* GetVertices();
 	int GetNumberOfVertices();
 	int* GetIndices();

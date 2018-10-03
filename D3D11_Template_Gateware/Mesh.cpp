@@ -64,3 +64,9 @@ Mesh::~Mesh()
 	/*delete[] myMesh.indices;
 	delete[] myMesh.vertices;*/
 }
+
+void Mesh::LateDestructor()
+{
+	delete[] myMesh.indices;
+	delete[] myMesh.vertices;
+}
