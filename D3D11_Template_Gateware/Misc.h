@@ -51,15 +51,17 @@ SimpleVertex ConvertFromHeaderToSimpleVertex(_OBJ_VERT_ obj, float scale)
 	return a;
 }
 
-void  LoadFromHeader()
+void LoadFromHeader()
 {
 	hFilePyramid.numVertices = 1674;
 	hFilePyramid.vertices = new SimpleVertex[1674];
-	for (int i = 0; i < 1674; i+=3)
+	for (int i = 0; i < 1674; i += 3)
 	{
-		hFilePyramid.vertices[i]= ConvertFromHeaderToSimpleVertex(test_pyramid_data[test_pyramid_indicies[i]],1	);
-		hFilePyramid.vertices[i+1]= ConvertFromHeaderToSimpleVertex(test_pyramid_data[test_pyramid_indicies[i + 1]],1);
-		hFilePyramid.vertices[i + 2] = ConvertFromHeaderToSimpleVertex(test_pyramid_data[test_pyramid_indicies[i + 2]],1);
+		hFilePyramid.vertices[i] = ConvertFromHeaderToSimpleVertex(test_pyramid_data[test_pyramid_indicies[i]], 1);
+		hFilePyramid.vertices[i + 1] = ConvertFromHeaderToSimpleVertex(test_pyramid_data[test_pyramid_indicies[i + 1]], 1);
+		hFilePyramid.vertices[i + 2] = ConvertFromHeaderToSimpleVertex(test_pyramid_data[test_pyramid_indicies[i + 2]], 1);
 	}
 }
+
+
 

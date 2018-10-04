@@ -251,7 +251,7 @@ void ProcessFbxMesh(FbxNode* Node, MeshStruct &meshToMutate, ID3D11Device *&myDe
 							//Print out the value of UV(lUVValue) or log it to a file
 
 							vertices2[lPolyIndexCounter].Tex.x = (float)lUVValue.mData[0];
-							vertices2[lPolyIndexCounter].Tex.y = (float)lUVValue.mData[1];
+							vertices2[lPolyIndexCounter].Tex.y = 1.0-(float)lUVValue.mData[1];
 							lPolyIndexCounter++;
 						}
 					}

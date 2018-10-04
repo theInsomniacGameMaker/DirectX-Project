@@ -8,6 +8,7 @@
 #include "Mesh.h"
 #include "Misc.h"
 #include "XTime.h"
+#include "SkyBox.h"
 // Simple Container class to make life easier/cleaner
 class LetsDrawSomeStuff
 {
@@ -59,6 +60,22 @@ class LetsDrawSomeStuff
 	ID3D11Buffer*				groundVertexBuffer = nullptr;
 	ID3D11Buffer*				groundIndexBuffer = nullptr;
 
+	ID3D11Buffer* sphereIndexBuffer;
+	ID3D11Buffer* sphereVertBuffer;
+
+	ID3D11VertexShader* SKYMAP_VS;
+	ID3D11PixelShader* SKYMAP_PS;
+
+	ID3D11ShaderResourceView* smrv;
+
+	ID3D11DepthStencilState* DSLessEqual;
+	ID3D11RasterizerState* RSCullNone;
+
+	int NumSphereVertices;
+	int NumSphereFaces;
+
+	XMMATRIX sphereWorld;
+
 	ID3D11Buffer*				myConstantBuffer = nullptr;
 	XMMATRIX					worldMatrix;
 	XMMATRIX					viewMatrix;
@@ -86,6 +103,7 @@ class LetsDrawSomeStuff
 	Mesh ground;
 	Mesh bulb;
 	Mesh spaceShip;
+	//SkyBox skyBox;
 
 	float fov = 60;
 	unsigned int width, height;
@@ -171,6 +189,8 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			myDevice->CreateRasterizerState(&wfdesc, &WireFrame);
 #endif
 
+
+#pragma region  PYRAMID
 			LoadFromHeader();
 			bd = {};
 			bd.Usage = D3D11_USAGE_DEFAULT;
@@ -182,6 +202,24 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			InitData = {};
 			InitData.pSysMem = hFilePyramid.vertices;
 			myDevice->CreateBuffer(&bd, &InitData, &pyramidVertexBuffer);
+#pragma endregion
+
+
+			/*D3D11_BUFFER_DESC vertexBufferDesc;
+			ZeroMemory(&vertexBufferDesc, sizeof(vertexBufferDesc));
+
+			vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+			vertexBufferDesc.ByteWidth = sizeof(SimpleVertex) * NumSphereVertices;
+			vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+			vertexBufferDesc.CPUAccessFlags = 0;
+			vertexBufferDesc.MiscFlags = 0;
+
+			D3D11_SUBRESOURCE_DATA vertexBufferData;
+
+			ZeroMemory(&vertexBufferData, sizeof(vertexBufferData));
+			vertexBufferData.pSysMem = &skyBox.skyMesh.vertices;*/
+			//hr = d3d11Device->CreateBuffer(&vertexBufferDesc, &vertexBufferData, &sphereVertBuffer);
+
 
 
 
@@ -205,7 +243,6 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			InitData.pSysMem = charizard.GetIndices();
 			myDevice->CreateBuffer(&bd, &InitData, &charizardIndexBuffer);
 			// Set index buffer
-
 #endif
 
 #if PROCEDURAL_SPIRAL
@@ -542,7 +579,12 @@ void LetsDrawSomeStuff::Render()
 			myContext->VSSetConstantBuffers(0, 1, &myConstantBuffer);
 			myContext->PSSetShader(myPixelShader, nullptr, 0);
 			myContext->PSSetConstantBuffers(0, 1, &myConstantBuffer);
+#if SPACESHIP
+			myContext->PSSetShaderResources(0, 1, &myTextureRVSpaceShip);
+#endif
+#if CHARIZARD_MESH
 			myContext->PSSetShaderResources(0, 1, &myTextureRVCharizard);
+#endif
 			myContext->PSSetSamplers(0, 1, &mySamplerLinear);
 
 
@@ -560,7 +602,6 @@ void LetsDrawSomeStuff::Render()
 			myContext->IASetIndexBuffer(charizardIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
 
 			myContext->DrawIndexed(charizard.GetNumberOfIndices(), 0, 0);
-
 #endif
 
 #if BOX_MESH

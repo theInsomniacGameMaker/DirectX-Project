@@ -58,6 +58,9 @@
     <ClCompile Include="XTime.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
+    <ClCompile Include="SkyBox.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Declarations.h">
@@ -82,6 +85,9 @@
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="test pyramid.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="SkyBox.h">
       <Filter>Headers</Filter>
     </ClInclude>
   </ItemGroup>

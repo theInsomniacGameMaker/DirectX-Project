@@ -150,6 +150,7 @@
     <ClInclude Include="LetsDrawSomeStuff.h" />
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="Misc.h" />
+    <ClInclude Include="SkyBox.h" />
     <ClInclude Include="test pyramid.h" />
     <ClInclude Include="XTime.h" />
   </ItemGroup>
@@ -172,6 +173,7 @@
     <ClCompile Include="Gateware Redistribution R5d\Source\G_System\GWindow.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Mesh.cpp" />
+    <ClCompile Include="SkyBox.cpp" />
     <ClCompile Include="XTime.cpp" />
   </ItemGroup>
   <ItemGroup>
