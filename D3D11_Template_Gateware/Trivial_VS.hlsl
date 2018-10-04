@@ -14,7 +14,7 @@ cbuffer ConstantBuffer : register(b0)
 	float4 vLightDir[2];
 	float4 vLightColor[2];
 	PointLight pLight;
-	float time;
+	float4 time;
 	float4 vOutputColor;
 }
 
