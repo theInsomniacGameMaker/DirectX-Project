@@ -21,6 +21,8 @@ using namespace std;
 #include "Trivial_PS.csh"
 #include "VS_UVModifier.csh"
 #include "SolidPS.csh"
+#include "PS_SkyBox.csh"
+#include "VS_SkyBox.csh"
 
 #define CHARIZARD_MESH 1
 #define BOX_MESH 1

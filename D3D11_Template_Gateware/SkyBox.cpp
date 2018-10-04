@@ -1,5 +1,10 @@
 #include "SkyBox.h"
 
+SkyBox::SkyBox()
+{
+
+}
+
 SkyBox::SkyBox(int LatLines, int LongLines)
 {
 	NumSphereVertices = ((LatLines - 2) * LongLines) + 2;
@@ -8,7 +13,7 @@ SkyBox::SkyBox(int LatLines, int LongLines)
 	float sphereYaw = 0.0f;
 	float spherePitch = 0.0f;
 
-	std::vector<SimpleVertex> vertices(NumSphereVertices);
+	 vertices.resize(NumSphereVertices);
 
 	XMVECTOR currVertPos = XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
 
@@ -53,7 +58,7 @@ SkyBox::SkyBox(int LatLines, int LongLines)
 	//hr = d3d11Device->CreateBuffer(&vertexBufferDesc, &vertexBufferData, &sphereVertBuffer);
 
 
-	std::vector<int> indices(NumSphereFaces * 3);
+	indices.resize(NumSphereFaces * 3);
 
 	int k = 0;
 	for (int l = 0; l < LongLines - 1; ++l)

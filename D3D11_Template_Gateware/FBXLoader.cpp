@@ -142,6 +142,7 @@ void ProcessFbxMesh(FbxNode* Node, MeshStruct &meshToMutate, ID3D11Device *&myDe
 					cout << "\nmaterial: " << material->GetName() << std::endl;
 					// This only gets the material of type sDiffuse, you probably need to traverse all Standard Material Property by its name to get all possible textures.
 					FbxProperty prop = material->FindProperty(FbxSurfaceMaterial::sDiffuse);
+					//use another property to get bump map
 
 					// Check if it's layeredtextures
 					int layeredTextureCount = prop.GetSrcObjectCount<FbxLayeredTexture>();
@@ -166,7 +167,7 @@ void ProcessFbxMesh(FbxNode* Node, MeshStruct &meshToMutate, ID3D11Device *&myDe
 					{
 						// Directly get textures
 						int textureCount = prop.GetSrcObjectCount<FbxTexture>();
-
+						//get 
 						for (int j = 0; j < textureCount; j++)
 						{
 							FbxFileTexture* texture = FbxCast<FbxFileTexture>(prop.GetSrcObject<FbxTexture>(j));

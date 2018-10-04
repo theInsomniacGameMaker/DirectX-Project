@@ -60,19 +60,17 @@ class LetsDrawSomeStuff
 	ID3D11Buffer*				groundVertexBuffer = nullptr;
 	ID3D11Buffer*				groundIndexBuffer = nullptr;
 
-	ID3D11Buffer* sphereIndexBuffer;
-	ID3D11Buffer* sphereVertBuffer;
+	ID3D11Buffer* skyBoxIndexBuffer;
+	ID3D11Buffer* skyBoxVertexBuffer;
 
 	ID3D11VertexShader* SKYMAP_VS;
 	ID3D11PixelShader* SKYMAP_PS;
 
-	ID3D11ShaderResourceView* smrv;
+	ID3D11ShaderResourceView* myTextureRVSkyBox;
 
 	ID3D11DepthStencilState* DSLessEqual;
+	ID3D11RasterizerState* RSBackFaceCull;
 	ID3D11RasterizerState* RSCullNone;
-
-	int NumSphereVertices;
-	int NumSphereFaces;
 
 	XMMATRIX sphereWorld;
 
@@ -104,7 +102,7 @@ class LetsDrawSomeStuff
 	Mesh bulb;
 	Mesh spaceShip;
 	//SkyBox skyBox;
-
+	Mesh skyBox;
 	float fov = 60;
 	unsigned int width, height;
 
@@ -158,8 +156,11 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 
 			HRESULT hr = myDevice->CreateVertexShader(Trivial_VS, sizeof(Trivial_VS), nullptr, &myVertexShader);
 			hr = myDevice->CreateVertexShader(VS_UVModifier, sizeof(VS_UVModifier), nullptr, &myVertexShaderUV);
+			hr = myDevice->CreateVertexShader(VS_SkyBox, sizeof(VS_SkyBox), nullptr, &SKYMAP_VS);
+
 			myDevice->CreatePixelShader(Trivial_PS, sizeof(Trivial_PS), nullptr, &myPixelShader);
 			myDevice->CreatePixelShader(SolidPS, sizeof(SolidPS), nullptr, &mySolidPixelShader);
+			myDevice->CreatePixelShader(PS_SkyBox, sizeof(PS_SkyBox), nullptr, &SKYMAP_PS);
 
 			// Define the input layout
 			D3D11_INPUT_ELEMENT_DESC layout[] =
@@ -204,24 +205,27 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			myDevice->CreateBuffer(&bd, &InitData, &pyramidVertexBuffer);
 #pragma endregion
 
+#pragma region SKY_BOX
+			skyBox = Mesh("SkyBox.fbx",10.0f,myDevice, myTextureRVSkyBox);
+			hr = CreateDDSTextureFromFile(myDevice, L"Assets\\OutputCube.dds", nullptr, &myTextureRVSkyBox);
+			bd.Usage = D3D11_USAGE_DEFAULT;
+			bd.ByteWidth = sizeof(SimpleVertex) * skyBox.GetNumberOfVertices();
+			bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+			bd.CPUAccessFlags = 0;
 
-			/*D3D11_BUFFER_DESC vertexBufferDesc;
-			ZeroMemory(&vertexBufferDesc, sizeof(vertexBufferDesc));
+			//setting subresource data
+			InitData.pSysMem = skyBox.GetVertices();
+			myDevice->CreateBuffer(&bd, &InitData, &skyBoxVertexBuffer);
 
-			vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-			vertexBufferDesc.ByteWidth = sizeof(SimpleVertex) * NumSphereVertices;
-			vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-			vertexBufferDesc.CPUAccessFlags = 0;
-			vertexBufferDesc.MiscFlags = 0;
+			// Set vertex buffer
 
-			D3D11_SUBRESOURCE_DATA vertexBufferData;
-
-			ZeroMemory(&vertexBufferData, sizeof(vertexBufferData));
-			vertexBufferData.pSysMem = &skyBox.skyMesh.vertices;*/
-			//hr = d3d11Device->CreateBuffer(&vertexBufferDesc, &vertexBufferData, &sphereVertBuffer);
-
-
-
+			bd.Usage = D3D11_USAGE_DEFAULT;
+			bd.ByteWidth = sizeof(int) * skyBox.GetNumberOfIndices();
+			bd.BindFlags = D3D11_BIND_INDEX_BUFFER;
+			bd.CPUAccessFlags = 0;
+			InitData.pSysMem = skyBox.GetIndices();
+			myDevice->CreateBuffer(&bd, &InitData, &skyBoxIndexBuffer);
+#pragma endregion
 
 #if CHARIZARD_MESH
 			charizard = Mesh("Charizard.fbx",5.0f, myDevice, myTextureRVCharizard);
@@ -365,9 +369,12 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 #pragma endregion
 
 
+#pragma region SET_TOPOLOGY
 			// Set primitive topology
 			myContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-			//myContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
+			//myContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);  
+#pragma endregion
+
 
 			// Create the constant buffer
 			bd = {};
@@ -492,6 +499,7 @@ void LetsDrawSomeStuff::Render()
 			if (G_SUCCESS(mySurface->GetDepthStencilView((void**)&myDepthStencilView)))
 			{
 				myContext->ClearDepthStencilView(myDepthStencilView, D3D11_CLEAR_DEPTH, 1, 0); // clear it to Z exponential Far.
+
 				myDepthStencilView->Release();
 			}
 
@@ -508,6 +516,10 @@ void LetsDrawSomeStuff::Render()
 #if WIREFRAME
 			myContext->RSSetState(WireFrame);
 #endif
+
+
+			myContext->RSSetState(RSBackFaceCull);
+
 
 			// TODO: Set your shaders, Update & Set your constant buffers, Attatch your vertex & index buffers, Set your InputLayout & Topology & Draw!
 			// Update our time
@@ -579,6 +591,35 @@ void LetsDrawSomeStuff::Render()
 			myContext->VSSetConstantBuffers(0, 1, &myConstantBuffer);
 			myContext->PSSetShader(myPixelShader, nullptr, 0);
 			myContext->PSSetConstantBuffers(0, 1, &myConstantBuffer);
+
+			D3D11_BUFFER_DESC bd = {};
+			D3D11_SUBRESOURCE_DATA InitData = {};
+			UINT stride[] = { sizeof(SimpleVertex) };
+			UINT offset[] = { 0 };
+
+			cb.mWorld = XMMatrixTranslationFromVector(Eye);
+			myContext->PSSetShaderResources(0, 1, &myTextureRVSkyBox);
+			myContext->UpdateSubresource(myConstantBuffer, 0, nullptr, &cb, 0, 0);
+			myContext->VSSetShader(SKYMAP_VS, nullptr, 0);
+			myContext->PSSetShader(SKYMAP_PS, nullptr, 0);
+
+			myContext->IASetVertexBuffers(0, 1, &skyBoxVertexBuffer, stride, offset);
+			// Set index buffer
+			myContext->IASetIndexBuffer(skyBoxIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
+
+			myContext->DrawIndexed(skyBox.GetNumberOfIndices(), 0, 0);
+
+
+			myContext->ClearDepthStencilView(myDepthStencilView, D3D11_CLEAR_DEPTH, 1, 0); // clear it to Z exponential Far.
+
+
+
+
+
+			cb.mWorld = XMMatrixTranspose(worldMatrix);
+			myContext->UpdateSubresource(myConstantBuffer, 0, nullptr, &cb, 0, 0);
+			myContext->VSSetShader(myVertexShader, nullptr, 0);
+			myContext->PSSetShader(myPixelShader, nullptr, 0);
 #if SPACESHIP
 			myContext->PSSetShaderResources(0, 1, &myTextureRVSpaceShip);
 #endif
@@ -589,10 +630,6 @@ void LetsDrawSomeStuff::Render()
 
 
 			//Setting buffer description
-			D3D11_BUFFER_DESC bd = {};
-			D3D11_SUBRESOURCE_DATA InitData = {};
-			UINT stride[] = { sizeof(SimpleVertex) };
-			UINT offset[] = { 0 };
 #if CHARIZARD_MESH
 
 			// Set vertex buffer
@@ -712,6 +749,8 @@ void LetsDrawSomeStuff::Render()
 #pragma endregion
 
 
+			
+			
 			// Present Backbuffer using Swapchain object
 			// Framerate is currently unlocked, we suggest "MSI Afterburner" to track your current FPS and memory usage.
 			mySwapChain->Present(0, 0); // set first argument to 1 to enable vertical refresh sync with display
