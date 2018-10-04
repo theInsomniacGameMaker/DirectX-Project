@@ -31,6 +31,8 @@ class LetsDrawSomeStuff
 #if CHARIZARD_MESH
 	ID3D11Buffer*				charizardVertexBuffer = nullptr;
 	ID3D11Buffer*				charizardIndexBuffer = nullptr;
+	ID3D11ShaderResourceView*   myTextureRVCharizard = nullptr;
+
 #endif
 
 #if BOX_MESH
@@ -42,6 +44,7 @@ class LetsDrawSomeStuff
 #if SPACESHIP
 	ID3D11Buffer*				spaceshipVertexBuffer = nullptr;
 	ID3D11Buffer*				spaceshipIndexBuffer = nullptr;
+	ID3D11ShaderResourceView*   myTextureRVSpaceShip = nullptr;
 #endif
 
 #if PROCEDURAL_SPIRAL
@@ -55,13 +58,12 @@ class LetsDrawSomeStuff
 
 	ID3D11Buffer*				groundVertexBuffer = nullptr;
 	ID3D11Buffer*				groundIndexBuffer = nullptr;
-	
+
 	ID3D11Buffer*				myConstantBuffer = nullptr;
 	XMMATRIX					worldMatrix;
 	XMMATRIX					viewMatrix;
 	XMMATRIX					projectionMatrix;
 
-	ID3D11ShaderResourceView*   myTextureRVSpaceShip = nullptr;
 	ID3D11ShaderResourceView*   myTextureRVBulb = nullptr;
 	ID3D11ShaderResourceView*   myTextureRVBase = nullptr;
 	ID3D11SamplerState*			mySamplerLinear = nullptr;
@@ -85,7 +87,7 @@ class LetsDrawSomeStuff
 	Mesh bulb;
 	Mesh spaceShip;
 
-	float fov=60;
+	float fov = 60;
 	unsigned int width, height;
 
 public:
@@ -181,10 +183,29 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			InitData.pSysMem = hFilePyramid.vertices;
 			myDevice->CreateBuffer(&bd, &InitData, &pyramidVertexBuffer);
 
-			
+
 
 #if CHARIZARD_MESH
-			charizard = Mesh("Charizard.fbx", 25.0f, myDevice, myTextureRV);
+			charizard = Mesh("Charizard.fbx", 25.0f, myDevice, myTextureRVCharizard);
+			bd.Usage = D3D11_USAGE_DEFAULT;
+			bd.ByteWidth = sizeof(SimpleVertex) * charizard.GetNumberOfVertices();
+			bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+			bd.CPUAccessFlags = 0;
+
+			//setting subresource data
+			InitData.pSysMem = charizard.GetVertices();
+			myDevice->CreateBuffer(&bd, &InitData, &charizardVertexBuffer);
+
+			// Set vertex buffer
+
+			bd.Usage = D3D11_USAGE_DEFAULT;
+			bd.ByteWidth = sizeof(int) * charizard.GetNumberOfIndices();
+			bd.BindFlags = D3D11_BIND_INDEX_BUFFER;
+			bd.CPUAccessFlags = 0;
+			InitData.pSysMem = charizard.GetIndices();
+			myDevice->CreateBuffer(&bd, &InitData, &charizardIndexBuffer);
+			// Set index buffer
+
 #endif
 
 #if PROCEDURAL_SPIRAL
@@ -350,7 +371,7 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 LetsDrawSomeStuff::~LetsDrawSomeStuff()
 {
 	//Release DX Objects aquired from the surface
-	
+
 
 	// TODO: "Release()" more stuff here!	
 	myVertexShader->Release();
@@ -362,6 +383,7 @@ LetsDrawSomeStuff::~LetsDrawSomeStuff()
 #if CHARIZARD_MESH
 	if (charizardVertexBuffer)charizardVertexBuffer->Release();
 	if (charizardIndexBuffer)charizardIndexBuffer->Release();
+	myTextureRVCharizard->Release();
 #endif
 
 #if BOX_MESH
@@ -383,9 +405,12 @@ LetsDrawSomeStuff::~LetsDrawSomeStuff()
 
 	myConstantBuffer->Release();
 
+#if SPACESHIP
 	spaceshipVertexBuffer->Release();
 	spaceshipIndexBuffer->Release();
 	if (myTextureRVSpaceShip)myTextureRVSpaceShip->Release();
+#endif // SPACESHIP
+
 
 	if (mySamplerLinear)mySamplerLinear->Release();
 
@@ -493,7 +518,7 @@ void LetsDrawSomeStuff::Render()
 			//copy the values back
 			XMStoreFloat4(&vLightDirs[1], vLightDir);
 
-			
+
 
 			ConstantBuffer cb;
 			cb.mWorld = XMMatrixTranspose(worldMatrix);
@@ -517,7 +542,7 @@ void LetsDrawSomeStuff::Render()
 			myContext->VSSetConstantBuffers(0, 1, &myConstantBuffer);
 			myContext->PSSetShader(myPixelShader, nullptr, 0);
 			myContext->PSSetConstantBuffers(0, 1, &myConstantBuffer);
-			myContext->PSSetShaderResources(0, 1, &myTextureRVSpaceShip);
+			myContext->PSSetShaderResources(0, 1, &myTextureRVCharizard);
 			myContext->PSSetSamplers(0, 1, &mySamplerLinear);
 
 
@@ -527,31 +552,15 @@ void LetsDrawSomeStuff::Render()
 			UINT stride[] = { sizeof(SimpleVertex) };
 			UINT offset[] = { 0 };
 #if CHARIZARD_MESH
-			bd.Usage = D3D11_USAGE_DEFAULT;
-			bd.ByteWidth = sizeof(SimpleVertex) * charizard.GetNumberOfVertices();
-			bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-			bd.CPUAccessFlags = 0;
-
-			//setting subresource data
-			InitData.pSysMem = charizard.GetVertices();
-			myDevice->CreateBuffer(&bd, &InitData, &charizardVertexBuffer);
 
 			// Set vertex buffer
 			myContext->IASetVertexBuffers(0, 1, &charizardVertexBuffer, stride, offset);
 
-			bd.Usage = D3D11_USAGE_DEFAULT;
-			bd.ByteWidth = sizeof(int) * charizard.GetNumberOfIndices();
-			bd.BindFlags = D3D11_BIND_INDEX_BUFFER;
-			bd.CPUAccessFlags = 0;
-			InitData.pSysMem = charizard.GetIndices();
-			myDevice->CreateBuffer(&bd, &InitData, &charizardIndexBuffer);
 			// Set index buffer
 			myContext->IASetIndexBuffer(charizardIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
 
 			myContext->DrawIndexed(charizard.GetNumberOfIndices(), 0, 0);
 
-			if (charizardVertexBuffer)charizardVertexBuffer->Release();
-			if (charizardIndexBuffer)charizardIndexBuffer->Release();
 #endif
 
 #if BOX_MESH
@@ -611,7 +620,7 @@ void LetsDrawSomeStuff::Render()
 			myContext->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINESTRIP);
 
 			myContext->IASetVertexBuffers(0, 1, &spiralVertexBuffer, stride, offset);
-			myContext->Draw(ARRAYSIZE(sphereVertices),0);
+			myContext->Draw(ARRAYSIZE(sphereVertices), 0);
 			myContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 #endif
 
@@ -682,7 +691,7 @@ void LetsDrawSomeStuff::CameraMovement()
 	{
 		Eye += (UP*(float)timer.Delta() * 5.0f);
 		At += (UP*(float)timer.Delta() * 5.0f);
-		}
+	}
 	else if (GetAsyncKeyState('Q'))
 	{
 		Eye -= (UP*(float)timer.Delta() * 5.0f);
@@ -741,7 +750,7 @@ void LetsDrawSomeStuff::CameraMovement()
 	//{
 	//	At -= (RIGHT*(float)timer.Delta() * 2);
 	//}
-	}
+}
 
 //bool LetsDrawSomeStuff::InitDirectInput(HINSTANCE hInstance)
 //{

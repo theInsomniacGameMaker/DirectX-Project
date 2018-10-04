@@ -22,9 +22,9 @@ using namespace std;
 #include "VS_UVModifier.csh"
 #include "SolidPS.csh"
 
-#define CHARIZARD_MESH 0
+#define CHARIZARD_MESH 1
 #define BOX_MESH 1
-#define SPACESHIP 1
+#define SPACESHIP 0
 #define PROCEDURAL_SPIRAL 1
 #define WIREFRAME 0
 #define DIRECTIONAL_LIGHT_ON 1

@@ -190,10 +190,10 @@ void ProcessFbxMesh(FbxNode* Node, MeshStruct &meshToMutate, ID3D11Device *&myDe
 
 							std::wstring widestr = std::wstring(appendedTextureName.begin(), appendedTextureName.end());
 							const wchar_t* widecstr = widestr.c_str();
-
+							HRESULT hr;
 							if (myTextureRV == nullptr)
 							{
-								HRESULT hr = CreateDDSTextureFromFile(myDevice, widecstr, nullptr, &myTextureRV);
+								hr = CreateDDSTextureFromFile(myDevice, widecstr, nullptr, &myTextureRV);
 							}
 
 							FbxProperty p = texture->RootProperty.Find("Filename");
