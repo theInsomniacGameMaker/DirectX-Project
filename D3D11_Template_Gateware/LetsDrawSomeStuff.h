@@ -84,6 +84,10 @@ class LetsDrawSomeStuff
 	Mesh ground;
 	Mesh bulb;
 	Mesh spaceShip;
+
+	float fov=60;
+	unsigned int width, height;
+
 public:
 	// Init
 	LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint);
@@ -122,7 +126,6 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			myContext->OMSetRenderTargets(1, &myRenderTargetView, nullptr);
 
 			D3D11_VIEWPORT vp;
-			unsigned int width, height;
 			attatchPoint->GetClientWidth(width);
 			attatchPoint->GetClientHeight(height);
 			vp.Width = (FLOAT)width;
@@ -336,7 +339,7 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			viewMatrix = XMMatrixLookAtLH(Eye, At, Up);
 
 			// Initialize the projection matrix
-			projectionMatrix = XMMatrixPerspectiveFovLH(XMConvertToRadians(60), width / (FLOAT)height, 0.01f, 100.0f);
+			projectionMatrix = XMMatrixPerspectiveFovLH(XMConvertToRadians(fov), width / (FLOAT)height, 0.01f, 100.0f);
 
 			timer.Restart();
 		}
@@ -403,6 +406,7 @@ LetsDrawSomeStuff::~LetsDrawSomeStuff()
 	spaceShip.LateDestructor();
 	ground.LateDestructor();
 	bulb.LateDestructor();
+
 	delete[] hFilePyramid.vertices;
 
 	myRenderTargetView->Release();
@@ -555,7 +559,6 @@ void LetsDrawSomeStuff::Render()
 			myContext->PSSetShaderResources(0, 1, &myTextureRVBox);
 
 			XMVECTOR boxPosition = { -3, 0.0f,0,0 };
-			//XMMatrixTranslationFromVector(boxPosition);
 			cb.mWorld = XMMatrixTranspose(XMMatrixTranslationFromVector(boxPosition));
 			myContext->UpdateSubresource(myConstantBuffer, 0, nullptr, &cb, 0, 0);
 
@@ -598,8 +601,6 @@ void LetsDrawSomeStuff::Render()
 			myContext->IASetIndexBuffer(spaceshipIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
 			myContext->DrawIndexed(spaceShip.GetNumberOfIndices(), 0, 0);
 
-			/*spaceshipVertexBuffer->Release();
-			spaceshipIndexBuffer->Release();*/
 #endif 
 #if PROCEDURAL_SPIRAL
 			XMVECTOR spiralPos = { 2,1,-1.5f,0 };
@@ -712,6 +713,16 @@ void LetsDrawSomeStuff::CameraMovement()
 		At -= (RIGHT*(float)timer.Delta());
 	}
 
+	if (GetAsyncKeyState(VK_UP))
+	{
+		fov += (10 * timer.Delta());
+		projectionMatrix = XMMatrixPerspectiveFovLH(XMConvertToRadians(fov), width / (FLOAT)height, 0.01f, 100.0f);
+	}
+	else if (GetAsyncKeyState(VK_DOWN))
+	{
+		fov -= (10 * timer.Delta());
+		projectionMatrix = XMMatrixPerspectiveFovLH(XMConvertToRadians(fov), width / (FLOAT)height, 0.01f, 100.0f);
+	}
 
 	//if (GetAsyncKeyState('I'))
 	//{
