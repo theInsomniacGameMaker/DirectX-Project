@@ -14,7 +14,7 @@ cbuffer ConstantBuffer : register(b0)
 	float4 vLightDir[2];
 	float4 vLightColor[2];
 	PointLight pLight;
-	float time;
+	float4 time;
 	float4 vOutputColor;
 }
 
@@ -46,6 +46,6 @@ VS_OUTPUT main(VS_INPUT input)
 	output.Norm = mul(float4(input.Norm, 0), World).xyz;
 	output.Tex = input.Tex;
 	//Changing UVS according to the sin of time
-	output.Tex = float2(input.Tex.x*abs(sin(time/10)), input.Tex.y*abs(cos(time/10)));
+	output.Tex = float2(input.Tex.x*abs(sin(time.x/10)), input.Tex.y*abs(cos(time.x/10)));
 	return output;
 }

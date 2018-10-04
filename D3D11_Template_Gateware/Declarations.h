@@ -27,7 +27,7 @@ using namespace std;
 #define SPACESHIP 1
 #define PROCEDURAL_SPIRAL 1
 #define WIREFRAME 0
-#define DIRECTIONAL_LIGHT_ON 0
+#define DIRECTIONAL_LIGHT_ON 1
 #define NON_MOUSE_CAMERA_MOVEMENT 1
 #define DEBUGGER 0
 
@@ -59,7 +59,7 @@ struct ConstantBuffer
 	XMFLOAT4 vLightDir[2];
 	XMFLOAT4 vLightColor[2];
 	PointLight pointLight;
-	float time;
+	XMFLOAT4 time;
 	XMFLOAT4 vOutputColor;
 };
 

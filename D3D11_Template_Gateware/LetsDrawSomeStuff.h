@@ -502,7 +502,7 @@ void LetsDrawSomeStuff::Render()
 			cb.pointLight.pos = XMFLOAT4(0, (sin((float)timer.TotalTime()) * 5), 0, 0);
 			cb.pointLight.range = 6.0f;
 			cb.pointLight.diffuse = XMFLOAT4(0, 0, 1, 1);
-			cb.time = t;
+			cb.time.x = t;
 			cb.vOutputColor = XMFLOAT4(0, 0, 0, 0);
 			myContext->UpdateSubresource(myConstantBuffer, 0, nullptr, &cb, 0, 0);
 
