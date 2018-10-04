@@ -26,7 +26,7 @@ struct PS_INPUT
 	float4 Pos : SV_POSITION;
 	float3 Norm : NORMAL;
 	float2 Tex : TEXCOORD1;
-	float3 TPos : TEXCOORD3;
+	float4 wPos : POSITION;
 };
 
 float4 main(PS_INPUT input) : SV_Target

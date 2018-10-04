@@ -27,7 +27,7 @@ using namespace std;
 #define SPACESHIP 1
 #define PROCEDURAL_SPIRAL 1
 #define WIREFRAME 0
-#define DIRECTIONAL_LIGHT_ON 1
+#define DIRECTIONAL_LIGHT_ON 0
 #define NON_MOUSE_CAMERA_MOVEMENT 1
 #define DEBUGGER 0
 
@@ -40,7 +40,7 @@ struct SimpleVertex
 	XMFLOAT3 Pos;
 	XMFLOAT3 Normal;
 	XMFLOAT2 Tex;
-	XMFLOAT3 TPos;
+	//XMFLOAT3 TPos;
 };
 
 struct PointLight
