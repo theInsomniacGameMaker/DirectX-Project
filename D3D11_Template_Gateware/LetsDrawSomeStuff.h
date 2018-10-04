@@ -186,7 +186,7 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 
 
 #if CHARIZARD_MESH
-			charizard = Mesh("Charizard.fbx", 25.0f, myDevice, myTextureRVCharizard);
+			charizard = Mesh("Charizard.fbx",5.0f, myDevice, myTextureRVCharizard);
 			bd.Usage = D3D11_USAGE_DEFAULT;
 			bd.ByteWidth = sizeof(SimpleVertex) * charizard.GetNumberOfVertices();
 			bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;

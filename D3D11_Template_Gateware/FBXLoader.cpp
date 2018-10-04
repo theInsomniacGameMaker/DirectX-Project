@@ -271,7 +271,7 @@ void ProcessFbxMesh(FbxNode* Node, MeshStruct &meshToMutate, ID3D11Device *&myDe
 				meshToMutate.indices[j] = j;
 			}
 
-			if (false)
+			if (true)
 			{
 				Compactify(meshToMutate);
 			}
