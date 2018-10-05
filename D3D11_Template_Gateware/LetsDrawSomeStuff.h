@@ -593,52 +593,55 @@ void LetsDrawSomeStuff::Render()
 			//animate cube
 			worldMatrix = XMMatrixRotationY(t);
 
-			XMFLOAT4 vLightDirs[2] =
-			{
-				XMFLOAT4(-0.577f, 0.577f, -0.577f, 1.0f),
-				XMFLOAT4(0.0f, 0.0f, -1.0f, 1.0f),
-			};
-			XMFLOAT4 vLightColors[2] =
-			{
-			#if DIRECTIONAL_LIGHT_ON
-				XMFLOAT4(0.5f, 0.5f, 0.5f, 1.0f),
-				XMFLOAT4(0.5f, 0.0f, 0.0f, 1.0f)
-			#else
-				XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f),
-				XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f)
-			#endif
-			};
-
-			// Rotate the a matrix
-			XMMATRIX mRotate = XMMatrixRotationY(-2.0f * t);
-			//store the ligh dir in a XMFloat 
-			XMVECTOR vLightDir = XMLoadFloat4(&vLightDirs[1]);
-			//transform the light dir by the roatation matrix made
-			vLightDir = XMVector3Transform(vLightDir, mRotate);
-			//copy the values back
-			XMStoreFloat4(&vLightDirs[1], vLightDir);
-
-
+		
 			ConstantBuffer cb;
 			cb.mWorld = XMMatrixTranspose(worldMatrix);
 			cb.mView = XMMatrixTranspose(viewMatrix);
 			cb.mProjection = XMMatrixTranspose(projectionMatrix);
-			cb.vLightDir[0] = vLightDirs[0];
-			cb.vLightDir[1] = vLightDirs[1];
-			cb.vLightColor[0] = vLightColors[0];
-			cb.vLightColor[1] = vLightColors[1];
-			cb.pointLight.pos = XMFLOAT4(0, (sin((float)timer.TotalTime()) * 5), 0, 0);
-			cb.pointLight.range = 6.0f;
-			cb.pointLight.diffuse = XMFLOAT4(0, 0, 1, 1);
 			cb.time.x = t;
 			cb.vOutputColor = XMFLOAT4(0, 0, 0, 0);
 			myContext->UpdateSubresource(myConstantBuffer, 0, nullptr, &cb, 0, 0);
 
+			LightConstantBuffer lCb;
+			lCb.lights[0].Position = XMFLOAT4(0, 0, 0, 1);
+			lCb.lights[0].Direction = XMFLOAT4(-0.577f, 0.577f, -0.577f, 1.0f);
+
+#if DIRECTIONAL_LIGHT_ON
+			lCb.lights[0].Color = XMFLOAT4(0.5f, 0.5f, 0.5f, 1.0f);
+#else
+			lCb.lights[0].Color =XMFLOAT4(0, 0, 0, 0);
+#endif
+
+			lCb.lights[1].Position = XMFLOAT4(0, 0, 0, 1);
+			lCb.lights[1].Direction = XMFLOAT4(0.0f, 0.0f, -1.0f, 1.0f);
+#if DIRECTIONAL_LIGHT_ON
+			lCb.lights[1].Color = XMFLOAT4(0.5f, 0.0f, 0.0f, 1.0f);
+#else
+			lCb.lights[1].Color = XMFLOAT4(0, 0, 0, 0);
+#endif 
+
+			lCb.lights[2].Position = XMFLOAT4(0, (sin((float)timer.TotalTime()) * 5), 0, 2);
+			lCb.lights[2].Range.x = 6.0f;
+			lCb.lights[2].Color = XMFLOAT4(0, 0, 1, 1);
+
+#pragma region ROTATE_DIRECTIONAL_LIGHT
+			// Rotate the a matrix
+			XMMATRIX mRotate = XMMatrixRotationY(-2.0f * t);
+			//store the ligh dir in a XMFloat 
+			XMVECTOR newLightDir = XMLoadFloat4(&lCb.lights[1].Direction);
+			//transform the light dir by the roatation matrix made
+			newLightDir = XMVector3Transform(newLightDir, mRotate);
+			//copy the values back
+			XMStoreFloat4(&lCb.lights[1].Direction, newLightDir);
+#pragma endregion
+
+			myContext->UpdateSubresource(myLightConstantBuffer, 0, nullptr, &lCb, 0, 0);
 
 			myContext->VSSetShader(myVertexShader, nullptr, 0);
 			myContext->VSSetConstantBuffers(0, 1, &myConstantBuffer);
 			myContext->PSSetShader(myPixelShader, nullptr, 0);
 			myContext->PSSetConstantBuffers(0, 1, &myConstantBuffer);
+			myContext->PSSetConstantBuffers(1, 1, &myLightConstantBuffer);
 			myContext->PSSetSamplers(0, 1, &mySamplerLinear);
 
 			UINT stride[] = { sizeof(SimpleVertex) };
@@ -712,13 +715,13 @@ void LetsDrawSomeStuff::Render()
 			myContext->PSSetShaderResources(0, 1, &myTextureRVBox);
 			myContext->PSSetShader(mySolidPixelShader, nullptr, 0);
 
-			XMMATRIX mLight = XMMatrixTranslationFromVector(5.0f * XMLoadFloat4(&vLightDirs[1]));
+			XMMATRIX mLight = XMMatrixTranslationFromVector(5.0f * XMLoadFloat4(&lCb.lights[1].Direction));
 			XMMATRIX mLightScale = XMMatrixScaling(0.2f, 0.2f, 0.2f);
 			mLight = mLightScale * mLight;
 
 			// Update the world variable to reflect the current light
 			cb.mWorld = XMMatrixTranspose(mLight);
-			cb.vOutputColor = vLightColors[1];
+			cb.vOutputColor = lCb.lights[1].Color;
 			myContext->UpdateSubresource(myConstantBuffer, 0, nullptr, &cb, 0, 0);
 
 			myContext->IASetVertexBuffers(0, 1, &boxVertexBuffer, stride, offset);
@@ -762,11 +765,10 @@ void LetsDrawSomeStuff::Render()
 			myContext->PSSetShaderResources(0, 1, &myTextureRVBulb);
 			myContext->PSSetSamplers(0, 1, &mySamplerLinear);
 
-			worldMatrix = XMMatrixTranslationFromVector(XMVECTOR{ cb.pointLight.pos.x, cb.pointLight.pos.y, cb.pointLight.pos.z, cb.pointLight.pos.w });
+			worldMatrix = XMMatrixTranslationFromVector(XMVECTOR{ lCb.lights[2].Position.x, lCb.lights[2].Position.y, lCb.lights[2].Position.z, 1});
 			cb.mWorld = XMMatrixTranspose(worldMatrix);
 
 			myContext->UpdateSubresource(myConstantBuffer, 0, nullptr, &cb, 0, 0);
-
 
 			myContext->IASetVertexBuffers(0, 1, &bulbVertexBuffer, stride, offset);
 
@@ -813,8 +815,6 @@ void LetsDrawSomeStuff::Render()
 			myContext->DrawIndexedInstanced(box.GetNumberOfIndices(), 10, 0, 0, 0);
 #pragma endregion
 
-
-
 #pragma region LAST_STEP
 
 			// Present Backbuffer using Swapchain object
@@ -823,6 +823,7 @@ void LetsDrawSomeStuff::Render()
 
 			myRenderTargetView->Release(); // Free any temp DX handles aquired this frame  
 #pragma endregion
+
 		}
 	}
 }

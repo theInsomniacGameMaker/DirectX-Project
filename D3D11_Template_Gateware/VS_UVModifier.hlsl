@@ -1,23 +1,11 @@
-struct PointLight
-{
-	float4 pos;
-	float  range;
-	float3 att;
-	float4 diffuse;
-};
-
 cbuffer ConstantBuffer : register(b0)
 {
 	matrix World;
 	matrix View;
 	matrix Projection;
-	float4 vLightDir[2];
-	float4 vLightColor[2];
-	PointLight pLight;
 	float4 time;
 	float4 vOutputColor;
 }
-
 
 struct VS_INPUT
 {
