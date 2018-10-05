@@ -1,11 +1,3 @@
-struct PointLight
-{
-	float4 pos;
-	float  range;
-	float3 att;
-	float4 diffuse;
-};
-
 struct Light
 {
 	float4 Position;
@@ -21,8 +13,7 @@ cbuffer ConstantBuffer : register(b0)
 	matrix Projection;
 	float4 vLightDir[2];
 	float4 vLightColor[2];
-	PointLight pLight;
-	float time;
+	float4 time;
 	float4 vOutputColor;
 }
 
@@ -48,8 +39,7 @@ float4 main(PS_INPUT input) : SV_Target
 	float4 finalColor = 0;
 	float4 pointLightColor = 0;
 	float4 directionalLigthColor = 0;
-	float4 newPosition = pLight.pos;
-	float4 baseTexture = txDiffuse.Sample(samLinear, input.Tex);
+ 	float4 baseTexture = txDiffuse.Sample(samLinear, input.Tex);
 
 	if (all(baseTexture == float4(0, 0, 0, 0)))
 	{

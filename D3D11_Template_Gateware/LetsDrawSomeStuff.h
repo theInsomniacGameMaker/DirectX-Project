@@ -627,9 +627,6 @@ void LetsDrawSomeStuff::Render()
 			cb.vLightDir[1] = vLightDirs[1];
 			cb.vLightColor[0] = vLightColors[0];
 			cb.vLightColor[1] = vLightColors[1];
-			cb.pointLight.pos = XMFLOAT4(0, (sin((float)timer.TotalTime()) * 5), 0, 0);
-			cb.pointLight.range = 6.0f;
-			cb.pointLight.diffuse = XMFLOAT4(0, 0, 1, 1);
 			cb.time.x = t;
 			cb.vOutputColor = XMFLOAT4(0, 0, 0, 0);
 			myContext->UpdateSubresource(myConstantBuffer, 0, nullptr, &cb, 0, 0);
@@ -777,11 +774,10 @@ void LetsDrawSomeStuff::Render()
 			myContext->PSSetShaderResources(0, 1, &myTextureRVBulb);
 			myContext->PSSetSamplers(0, 1, &mySamplerLinear);
 
-			worldMatrix = XMMatrixTranslationFromVector(XMVECTOR{ cb.pointLight.pos.x, cb.pointLight.pos.y, cb.pointLight.pos.z, cb.pointLight.pos.w });
+			worldMatrix = XMMatrixTranslationFromVector(XMVECTOR{ lCb.lights[2].Position.x, lCb.lights[2].Position.y, lCb.lights[2].Position.z, 1});
 			cb.mWorld = XMMatrixTranspose(worldMatrix);
 
 			myContext->UpdateSubresource(myConstantBuffer, 0, nullptr, &cb, 0, 0);
-
 
 			myContext->IASetVertexBuffers(0, 1, &bulbVertexBuffer, stride, offset);
 
@@ -828,8 +824,6 @@ void LetsDrawSomeStuff::Render()
 			myContext->DrawIndexedInstanced(box.GetNumberOfIndices(), 10, 0, 0, 0);
 #pragma endregion
 
-
-
 #pragma region LAST_STEP
 
 			// Present Backbuffer using Swapchain object
@@ -838,6 +832,7 @@ void LetsDrawSomeStuff::Render()
 
 			myRenderTargetView->Release(); // Free any temp DX handles aquired this frame  
 #pragma endregion
+
 		}
 	}
 }

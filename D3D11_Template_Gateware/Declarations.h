@@ -69,7 +69,6 @@ struct ConstantBuffer
 	XMMATRIX mProjection;
 	XMFLOAT4 vLightDir[2];
 	XMFLOAT4 vLightColor[2];
-	PointLight pointLight;
 	XMFLOAT4 time;
 	XMFLOAT4 vOutputColor;
 };
