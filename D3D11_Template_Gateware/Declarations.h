@@ -46,6 +46,14 @@ struct SimpleVertex
 	XMFLOAT4 Tangent;
 };
 
+struct Light
+{
+	XMFLOAT4 Position;
+	XMFLOAT4 Color;
+	XMFLOAT4 Direction;
+	XMFLOAT4 Range;
+};
+
 struct PointLight
 {
 	XMFLOAT4 pos;
@@ -69,6 +77,11 @@ struct ConstantBuffer
 struct InstanceConstantBuffer
 {
 	XMMATRIX worldArray[10];
+};
+
+struct LightConstantBuffer
+{
+	Light lights[3];
 };
 
 // Arrays and counts for
