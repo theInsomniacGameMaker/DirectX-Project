@@ -80,6 +80,7 @@ class LetsDrawSomeStuff
 
 	ID3D11Buffer*				myConstantBuffer = nullptr;
 	ID3D11Buffer*				myInstanceConstantBuffer = nullptr;
+	ID3D11Buffer*				myLightConstantBuffer = nullptr;
 	XMMATRIX					worldMatrix;
 	XMMATRIX					viewMatrix;
 	XMMATRIX					projectionMatrix;
