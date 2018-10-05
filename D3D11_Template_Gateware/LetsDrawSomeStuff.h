@@ -144,6 +144,7 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			mySurface->GetSwapchain((void**)&mySwapChain);
 			mySurface->GetContext((void**)&myContext);
 
+#pragma region SETTING_RENDER_TARGET_VIEW
 			// TODO: Create new DirectX stuff here! (Buffers, Shaders, Layouts, Views, Textures, etc...)
 			ID3D11Texture2D* myBackBuffer = nullptr;
 			mySwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(&myBackBuffer));
@@ -152,7 +153,9 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			myBackBuffer->Release();
 
 			myContext->OMSetRenderTargets(1, &myRenderTargetView, nullptr);
+#pragma endregion
 
+#pragma region SETTING_VIEWPORT
 			D3D11_VIEWPORT vp;
 			attatchPoint->GetClientWidth(width);
 			attatchPoint->GetClientHeight(height);
@@ -163,6 +166,9 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			vp.TopLeftX = 0;
 			vp.TopLeftY = 0;
 			myContext->RSSetViewports(1, &vp);
+#pragma endregion
+
+#pragma region CREATING_SHADERS
 
 			HRESULT hr = myDevice->CreateVertexShader(Trivial_VS, sizeof(Trivial_VS), nullptr, &myVertexShader);
 			hr = myDevice->CreateVertexShader(VS_UVModifier, sizeof(VS_UVModifier), nullptr, &myVertexShaderUV);
@@ -172,7 +178,9 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			myDevice->CreatePixelShader(Trivial_PS, sizeof(Trivial_PS), nullptr, &myPixelShader);
 			myDevice->CreatePixelShader(SolidPS, sizeof(SolidPS), nullptr, &mySolidPixelShader);
 			myDevice->CreatePixelShader(PS_SkyBox, sizeof(PS_SkyBox), nullptr, &SKYMAP_PS);
+#pragma endregion
 
+#pragma region CREATE_INPUT_LAYOUT
 			// Define the input layout
 			D3D11_INPUT_ELEMENT_DESC layout[] =
 			{
@@ -185,24 +193,27 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 
 			// Create the input layout
 			myDevice->CreateInputLayout(layout, numElements, Trivial_VS, sizeof(Trivial_VS), &myVertexLayout);
-
 			myContext->IASetInputLayout(myVertexLayout);
+#pragma endregion
 
+#pragma region DESCRIPTOR_VARIABLES
 			D3D11_BUFFER_DESC bd = {};
 			D3D11_SUBRESOURCE_DATA InitData = {};
 			UINT stride[] = { sizeof(SimpleVertex) };
 			UINT offset[] = { 0 };
+#pragma endregion
 
+#pragma region WIREFRAME_SETUP
 #if WIREFRAME 
 			D3D11_RASTERIZER_DESC wfdesc;
 			ZeroMemory(&wfdesc, sizeof(D3D11_RASTERIZER_DESC));
 			wfdesc.FillMode = D3D11_FILL_WIREFRAME;
 			wfdesc.CullMode = D3D11_CULL_NONE;
 			myDevice->CreateRasterizerState(&wfdesc, &WireFrame);
-#endif
+#endif  
+#pragma endregion
 
-
-#pragma region  PYRAMID
+#pragma region  PYRAMID_INIT
 			LoadFromHeader();
 			bd = {};
 			bd.Usage = D3D11_USAGE_DEFAULT;
@@ -216,7 +227,7 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			myDevice->CreateBuffer(&bd, &InitData, &pyramidVertexBuffer);
 #pragma endregion
 
-#pragma region SKY_BOX
+#pragma region SKY_BOX_INIT
 			skyBox = Mesh("SkyBox.fbx", 10.0f, myDevice, myTextureRVSkyBox);
 			hr = CreateDDSTextureFromFile(myDevice, L"Assets\\OutputCube.dds", nullptr, &myTextureRVSkyBox);
 			bd.Usage = D3D11_USAGE_DEFAULT;
@@ -238,6 +249,7 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			myDevice->CreateBuffer(&bd, &InitData, &skyBoxIndexBuffer);
 #pragma endregion
 
+#pragma region CHARIZARD_INIT
 #if CHARIZARD_MESH
 			charizard = Mesh("Charizard.fbx", 5.0f, myDevice, myTextureRVCharizard);
 			bd.Usage = D3D11_USAGE_DEFAULT;
@@ -258,8 +270,10 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			InitData.pSysMem = charizard.GetIndices();
 			myDevice->CreateBuffer(&bd, &InitData, &charizardIndexBuffer);
 			// Set index buffer
-#endif
+#endif  
+#pragma endregion
 
+#pragma region SPIRAL_INIT
 #if PROCEDURAL_SPIRAL
 			CreateSpiral();
 
@@ -274,8 +288,10 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			myDevice->CreateBuffer(&bd, &InitData, &spiralVertexBuffer);
 
 			// Set index buffer
-#endif 
+#endif   
+#pragma endregion
 
+#pragma region BOX_INIT
 #if BOX_MESH
 			box = Mesh("cube.fbx", 1 / 50.f, myDevice, myTextureRVBox);
 			bd = {};
@@ -289,7 +305,6 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			InitData.pSysMem = box.GetVertices();
 			myDevice->CreateBuffer(&bd, &InitData, &boxVertexBuffer);
 
-			//myContext->IASetVertexBuffers(0, 1, &boxVertexBuffer, stride, offset);
 
 			bd.Usage = D3D11_USAGE_DEFAULT;
 			bd.ByteWidth = sizeof(int) * box.GetNumberOfIndices();
@@ -297,11 +312,11 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			bd.CPUAccessFlags = 0;
 			InitData.pSysMem = box.GetIndices();
 			myDevice->CreateBuffer(&bd, &InitData, &boxIndexBuffer);
-			// Set index buffer
-			//myContext->IASetIndexBuffer(boxIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
-			//myContext->DrawIndexed(box.GetNumberOfIndices(), 0, 0);
-#endif
 
+#endif  
+#pragma endregion
+
+#pragma region SPACESHIP_INIT
 #if SPACESHIP
 			spaceShip = Mesh("Galaga Fighter.fbx", 1 / 4.0f, myDevice, myTextureRVSpaceShip);
 
@@ -327,7 +342,8 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			myDevice->CreateBuffer(&bd, &InitData, &spaceshipIndexBuffer);
 			// Set index buffer
 
-#endif 
+#endif   
+#pragma endregion
 
 #pragma region BULB_INIT
 			bulb = Mesh("Bulb.fbx", 1.0f / 5, myDevice, myTextureRVBulb);
@@ -379,14 +395,13 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			myDevice->CreateBuffer(&bd, &InitData, &groundIndexBuffer);
 #pragma endregion
 
-
 #pragma region SET_TOPOLOGY
 			// Set primitive topology
 			myContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 			//myContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);  
 #pragma endregion
 
-
+#pragma region CREATING_CONSTANT_BUFFERS
 			// Create the constant buffer
 			bd = {};
 			bd.Usage = D3D11_USAGE_DEFAULT;
@@ -402,11 +417,22 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			bd.CPUAccessFlags = 0;
 			myDevice->CreateBuffer(&bd, nullptr, &myInstanceConstantBuffer);
 
+			bd = {};
+			bd.Usage = D3D11_USAGE_DEFAULT;
+			bd.ByteWidth = sizeof(LightConstantBuffer);
+			bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+			bd.CPUAccessFlags = 0;
+			myDevice->CreateBuffer(&bd, nullptr, &myLightConstantBuffer);
+#pragma endregion
+
+#pragma region SETTING_cBUFFER_VALUES
 			for (int i = 0; i < 10; i++)
 			{
 				iCb.worldArray[i] = XMMatrixTranspose(XMMatrixTranslationFromVector(XMVECTOR{ i*0.3f, i*0.5f, i*0.7f }));
 			}
+#pragma endregion
 
+#pragma region SETTING_SAMPLER
 			D3D11_SAMPLER_DESC sampDesc = {};
 			sampDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
 			sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
@@ -416,6 +442,9 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			sampDesc.MinLOD = 0;
 			sampDesc.MaxLOD = D3D11_FLOAT32_MAX;
 			myDevice->CreateSamplerState(&sampDesc, &mySamplerLinear);
+#pragma endregion
+
+#pragma region SETTING_WVP
 
 			// Initialize the world matrix
 			worldMatrix = XMMatrixIdentity();
@@ -428,6 +457,7 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 
 			// Initialize the projection matrix
 			projectionMatrix = XMMatrixPerspectiveFovLH(XMConvertToRadians(fov), width / (FLOAT)height, 0.01f, 100.0f);
+#pragma endregion
 
 			timer.Restart();
 		}
@@ -589,7 +619,6 @@ void LetsDrawSomeStuff::Render()
 			XMStoreFloat4(&vLightDirs[1], vLightDir);
 
 
-
 			ConstantBuffer cb;
 			cb.mWorld = XMMatrixTranspose(worldMatrix);
 			cb.mView = XMMatrixTranspose(viewMatrix);
@@ -606,19 +635,16 @@ void LetsDrawSomeStuff::Render()
 			myContext->UpdateSubresource(myConstantBuffer, 0, nullptr, &cb, 0, 0);
 
 
-			//
-			// Render the cube
-			//
 			myContext->VSSetShader(myVertexShader, nullptr, 0);
 			myContext->VSSetConstantBuffers(0, 1, &myConstantBuffer);
 			myContext->PSSetShader(myPixelShader, nullptr, 0);
 			myContext->PSSetConstantBuffers(0, 1, &myConstantBuffer);
 			myContext->PSSetSamplers(0, 1, &mySamplerLinear);
 
-			D3D11_BUFFER_DESC bd = {};
-			D3D11_SUBRESOURCE_DATA InitData = {};
 			UINT stride[] = { sizeof(SimpleVertex) };
 			UINT offset[] = { 0 };
+
+#pragma region SKYBOX_RENDER
 
 			cb.mWorld = XMMatrixTranslationFromVector(Eye);
 			myContext->PSSetShaderResources(0, 1, &myTextureRVSkyBox);
@@ -634,6 +660,8 @@ void LetsDrawSomeStuff::Render()
 
 
 			myContext->ClearDepthStencilView(myDepthStencilView, D3D11_CLEAR_DEPTH, 1, 0); // clear it to Z exponential Far.
+
+#pragma endregion
 
 			cb.mWorld = XMMatrixTranspose(worldMatrix);
 			myContext->UpdateSubresource(myConstantBuffer, 0, nullptr, &cb, 0, 0);
@@ -661,6 +689,8 @@ void LetsDrawSomeStuff::Render()
 			myContext->DrawIndexed(charizard.GetNumberOfIndices(), 0, 0);
 #endif
 
+
+#pragma region BOX_RENDER
 #if BOX_MESH
 			myContext->VSSetShader(myVertexShaderUV, nullptr, 0);
 			myContext->PSSetShaderResources(0, 1, &myTextureRVBox);
@@ -674,6 +704,8 @@ void LetsDrawSomeStuff::Render()
 			myContext->IASetIndexBuffer(boxIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
 			myContext->DrawIndexed(box.GetNumberOfIndices(), 0, 0);
 #endif
+
+#pragma endregion
 
 #if DIRECTIONAL_LIGHT_ON
 			myContext->VSSetShader(myVertexShader, nullptr, 0);
@@ -767,6 +799,8 @@ void LetsDrawSomeStuff::Render()
 			//myContext->IASetIndexBuffer(pyramidIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
 			myContext->Draw((unsigned int)hFilePyramid.numVertices, 0);
 #pragma endregion
+
+#pragma region DRAW_INSTANCED_BOX
 			myContext->UpdateSubresource(myInstanceConstantBuffer, 0, nullptr, &iCb, 0, 0);
 			myContext->VSSetShader(myVertexShaderInstance, nullptr, 0);
 			myContext->PSSetShaderResources(0, 1, &myTextureRVBox);
@@ -775,15 +809,20 @@ void LetsDrawSomeStuff::Render()
 			myContext->IASetVertexBuffers(0, 1, &boxVertexBuffer, stride, offset);
 
 			myContext->IASetIndexBuffer(boxIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
-			
+
 			myContext->DrawIndexedInstanced(box.GetNumberOfIndices(), 10, 0, 0, 0);
+#pragma endregion
+
+
+
+#pragma region LAST_STEP
 
 			// Present Backbuffer using Swapchain object
 			// Framerate is currently unlocked, we suggest "MSI Afterburner" to track your current FPS and memory usage.
 			mySwapChain->Present(0, 0); // set first argument to 1 to enable vertical refresh sync with display
 
-			myRenderTargetView->Release(); // Free any temp DX handles aquired this frame
-
+			myRenderTargetView->Release(); // Free any temp DX handles aquired this frame  
+#pragma endregion
 		}
 	}
 }
