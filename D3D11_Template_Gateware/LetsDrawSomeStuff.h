@@ -634,6 +634,18 @@ void LetsDrawSomeStuff::Render()
 			cb.vOutputColor = XMFLOAT4(0, 0, 0, 0);
 			myContext->UpdateSubresource(myConstantBuffer, 0, nullptr, &cb, 0, 0);
 
+			LightConstantBuffer lCb;
+			lCb.lights[0].Position = XMFLOAT4(0, 0, 0, 1);
+			lCb.lights[0].Direction = vLightDirs[0];
+			lCb.lights[0].Color = vLightColors[0];
+
+			lCb.lights[1].Position = XMFLOAT4(0, 0, 0, 1);
+			lCb.lights[1].Direction = vLightDirs[1];
+			lCb.lights[1].Color = vLightColors[1];
+
+			lCb.lights[2].Position = XMFLOAT4(0, (sin((float)timer.TotalTime()) * 5), 0, 2);
+			lCb.lights[2].Range.x = 6.0f;
+			lCb.lights[2].Color = XMFLOAT4(0, 0, 1, 1);
 
 			myContext->VSSetShader(myVertexShader, nullptr, 0);
 			myContext->VSSetConstantBuffers(0, 1, &myConstantBuffer);
