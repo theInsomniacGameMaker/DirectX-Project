@@ -87,6 +87,7 @@ class LetsDrawSomeStuff
 	XMVECTOR At;
 	XMVECTOR Up;
 
+	float camYaw, camPitch, camRoll;
 #if DEBUGGER
 	ID3D11Debug *DebugDevice;
 #endif
@@ -206,7 +207,7 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 #pragma endregion
 
 #pragma region SKY_BOX
-			skyBox = Mesh("SkyBox.fbx",10.0f,myDevice, myTextureRVSkyBox);
+			skyBox = Mesh("SkyBox.fbx", 10.0f, myDevice, myTextureRVSkyBox);
 			hr = CreateDDSTextureFromFile(myDevice, L"Assets\\OutputCube.dds", nullptr, &myTextureRVSkyBox);
 			bd.Usage = D3D11_USAGE_DEFAULT;
 			bd.ByteWidth = sizeof(SimpleVertex) * skyBox.GetNumberOfVertices();
@@ -228,7 +229,7 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 #pragma endregion
 
 #if CHARIZARD_MESH
-			charizard = Mesh("Charizard.fbx",5.0f, myDevice, myTextureRVCharizard);
+			charizard = Mesh("Charizard.fbx", 5.0f, myDevice, myTextureRVCharizard);
 			bd.Usage = D3D11_USAGE_DEFAULT;
 			bd.ByteWidth = sizeof(SimpleVertex) * charizard.GetNumberOfVertices();
 			bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
@@ -511,12 +512,11 @@ void LetsDrawSomeStuff::Render()
 			const float d_green[] = { 0, 0.5f, 0, 1 };
 			myContext->ClearRenderTargetView(myRenderTargetView, d_green);
 
-			viewMatrix = XMMatrixLookAtLH(Eye, At, Up);
+			CameraMovement();
 
 #if WIREFRAME
 			myContext->RSSetState(WireFrame);
 #endif
-
 
 			myContext->RSSetState(RSBackFaceCull);
 
@@ -537,7 +537,6 @@ void LetsDrawSomeStuff::Render()
 				t = (timeCur - timeStart) / 1000.0f;
 			}
 
-			CameraMovement();
 
 			//animate cube
 			worldMatrix = XMMatrixRotationY(t);
@@ -749,8 +748,8 @@ void LetsDrawSomeStuff::Render()
 #pragma endregion
 
 
-			
-			
+
+
 			// Present Backbuffer using Swapchain object
 			// Framerate is currently unlocked, we suggest "MSI Afterburner" to track your current FPS and memory usage.
 			mySwapChain->Present(0, 0); // set first argument to 1 to enable vertical refresh sync with display
@@ -767,6 +766,7 @@ void LetsDrawSomeStuff::CameraMovement()
 	XMStoreFloat4(&right, At);
 	XMVECTOR rightVector = { right.z, right.y,-right.x };
 	rightVector = XMVector3Normalize(rightVector);
+
 	if (GetAsyncKeyState('E'))
 	{
 		Eye += (UP*(float)timer.Delta() * 5.0f);
@@ -792,16 +792,17 @@ void LetsDrawSomeStuff::CameraMovement()
 
 	if (GetAsyncKeyState('D'))
 	{
-		Eye += (RIGHT*(float)timer.Delta());
-		At += (RIGHT*(float)timer.Delta());
+		Eye += (RIGHT*(float)timer.Delta()* 5.0f);
+		At += (RIGHT*(float)timer.Delta()* 5.0f);
 
 	}
 	else if (GetAsyncKeyState('A'))
 	{
-		Eye -= (RIGHT *(float)timer.Delta());
-		At -= (RIGHT*(float)timer.Delta());
+		Eye -= (RIGHT *(float)timer.Delta()* 5.0f);
+		At -= (RIGHT*(float)timer.Delta()* 5.0f);
 	}
 
+#pragma region FOV_ZOOMING
 	if (GetAsyncKeyState(VK_UP))
 	{
 		fov += (10 * timer.Delta());
@@ -812,24 +813,38 @@ void LetsDrawSomeStuff::CameraMovement()
 		fov -= (10 * timer.Delta());
 		projectionMatrix = XMMatrixPerspectiveFovLH(XMConvertToRadians(fov), width / (FLOAT)height, 0.01f, 100.0f);
 	}
+#pragma endregion
 
-	//if (GetAsyncKeyState('I'))
-	//{
-	//	At += (UP*(float)timer.Delta());
-	//}
-	//else if (GetAsyncKeyState('K'))
-	//{ 
-	//	At -= (UP*(float)timer.Delta());
-	//}
 
-	//if (GetAsyncKeyState('L'))
-	//{
-	//	At += (RIGHT*(float)timer.Delta() * 4);
-	//}
-	//else if (GetAsyncKeyState('J'))
-	//{
-	//	At -= (RIGHT*(float)timer.Delta() * 2);
-	//}
+	if (GetAsyncKeyState('O'))
+	{
+		camRoll += 1 * timer.Delta();
+	}
+	else if (GetAsyncKeyState('U'))
+	{
+		camRoll -= 1 * timer.Delta();
+	}
+
+	if (GetAsyncKeyState('I'))
+	{
+		camPitch += 1 * timer.Delta();
+	}
+	else if (GetAsyncKeyState('K'))
+	{
+		camPitch -= 1 * timer.Delta();
+	}
+
+	if (GetAsyncKeyState('J'))
+	{
+		camYaw += 1 * timer.Delta();
+	}
+	else if (GetAsyncKeyState('L'))
+	{
+		camYaw -= 1 * timer.Delta();
+	}
+
+	viewMatrix = XMMatrixLookAtLH(Eye, At, Up);
+	viewMatrix*= XMMatrixRotationRollPitchYaw(camPitch, camYaw, camRoll);
 }
 
 //bool LetsDrawSomeStuff::InitDirectInput(HINSTANCE hInstance)
