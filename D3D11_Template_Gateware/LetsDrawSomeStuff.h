@@ -178,7 +178,7 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 				{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 				{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 				{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-				//{ "TEXCOORDP", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 32, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+				{"TANGENT", 0,DXGI_FORMAT_R32G32B32A32_FLOAT,0,32,D3D11_INPUT_PER_VERTEX_DATA,0 }
 			};
 			UINT numElements = ARRAYSIZE(layout);
 
@@ -634,11 +634,11 @@ void LetsDrawSomeStuff::Render()
 
 			myContext->ClearDepthStencilView(myDepthStencilView, D3D11_CLEAR_DEPTH, 1, 0); // clear it to Z exponential Far.
 
-
 			cb.mWorld = XMMatrixTranspose(worldMatrix);
 			myContext->UpdateSubresource(myConstantBuffer, 0, nullptr, &cb, 0, 0);
 			myContext->VSSetShader(myVertexShader, nullptr, 0);
 			myContext->PSSetShader(myPixelShader, nullptr, 0);
+
 #if SPACESHIP
 			myContext->PSSetShaderResources(0, 1, &myTextureRVSpaceShip);
 #endif

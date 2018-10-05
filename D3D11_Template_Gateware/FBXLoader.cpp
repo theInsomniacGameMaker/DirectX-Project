@@ -112,6 +112,8 @@ void ProcessFbxMesh(FbxNode* Node, MeshStruct &meshToMutate, ID3D11Device *&myDe
 				//meshToMutate.vertices[j].wPos = XMFLOAT3(0, 0, 0);
 			}
 
+		//	FbxArray<FbxVector4> tangentsVec;
+			//mesh->GetElementTangent(tangentsVec);
 
 			// Get the Normals array from the mesh
 			FbxArray<FbxVector4> normalsVec;
