@@ -54,21 +54,11 @@ struct Light
 	XMFLOAT4 Range;
 };
 
-struct PointLight
-{
-	XMFLOAT4 pos;
-	float range;
-	XMFLOAT3 att;
-	XMFLOAT4 diffuse;
-};
-
 struct ConstantBuffer
 {
 	XMMATRIX mWorld;
 	XMMATRIX mView;
 	XMMATRIX mProjection;
-	XMFLOAT4 vLightDir[2];
-	XMFLOAT4 vLightColor[2];
 	XMFLOAT4 time;
 	XMFLOAT4 vOutputColor;
 };
