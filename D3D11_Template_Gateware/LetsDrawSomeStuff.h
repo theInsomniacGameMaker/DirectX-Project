@@ -23,10 +23,16 @@ class LetsDrawSomeStuff
 	D3D_DRIVER_TYPE				myDriverType = D3D_DRIVER_TYPE_NULL;
 	D3D_FEATURE_LEVEL			myFeatureLevel = D3D_FEATURE_LEVEL_11_0;
 	ID3D11RenderTargetView*		myRenderTargetView = nullptr;
+
 	ID3D11VertexShader*			myVertexShader = nullptr;
 	ID3D11VertexShader*			myVertexShaderUV = nullptr;
+	ID3D11VertexShader*			SKYMAP_VS;
+	ID3D11VertexShader*			myVertexShaderInstance;
+
 	ID3D11PixelShader*			myPixelShader = nullptr;
 	ID3D11PixelShader*			mySolidPixelShader = nullptr;
+	ID3D11PixelShader*			SKYMAP_PS;
+
 	ID3D11InputLayout*			myVertexLayout = nullptr;
 
 #if CHARIZARD_MESH
@@ -63,8 +69,6 @@ class LetsDrawSomeStuff
 	ID3D11Buffer* skyBoxIndexBuffer;
 	ID3D11Buffer* skyBoxVertexBuffer;
 
-	ID3D11VertexShader* SKYMAP_VS;
-	ID3D11PixelShader* SKYMAP_PS;
 
 	ID3D11ShaderResourceView* myTextureRVSkyBox;
 
@@ -75,6 +79,7 @@ class LetsDrawSomeStuff
 	XMMATRIX sphereWorld;
 
 	ID3D11Buffer*				myConstantBuffer = nullptr;
+	ID3D11Buffer*				myInstanceConstantBuffer = nullptr;
 	XMMATRIX					worldMatrix;
 	XMMATRIX					viewMatrix;
 	XMMATRIX					projectionMatrix;
@@ -96,6 +101,9 @@ class LetsDrawSomeStuff
 #if WIREFRAME
 	ID3D11RasterizerState* WireFrame;
 #endif
+
+	InstanceConstantBuffer iCb;
+
 	XTime timer;
 	Mesh charizard;
 	Mesh box;
@@ -158,6 +166,7 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			HRESULT hr = myDevice->CreateVertexShader(Trivial_VS, sizeof(Trivial_VS), nullptr, &myVertexShader);
 			hr = myDevice->CreateVertexShader(VS_UVModifier, sizeof(VS_UVModifier), nullptr, &myVertexShaderUV);
 			hr = myDevice->CreateVertexShader(VS_SkyBox, sizeof(VS_SkyBox), nullptr, &SKYMAP_VS);
+			hr = myDevice->CreateVertexShader(VS_Instance, sizeof(VS_Instance), nullptr, &myVertexShaderInstance);
 
 			myDevice->CreatePixelShader(Trivial_PS, sizeof(Trivial_PS), nullptr, &myPixelShader);
 			myDevice->CreatePixelShader(SolidPS, sizeof(SolidPS), nullptr, &mySolidPixelShader);
@@ -385,6 +394,18 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			bd.CPUAccessFlags = 0;
 			myDevice->CreateBuffer(&bd, nullptr, &myConstantBuffer);
 
+			bd = {};
+			bd.Usage = D3D11_USAGE_DEFAULT;
+			bd.ByteWidth = sizeof(InstanceConstantBuffer);
+			bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+			bd.CPUAccessFlags = 0;
+			myDevice->CreateBuffer(&bd, nullptr, &myInstanceConstantBuffer);
+
+			for (int i = 0; i < 10; i++)
+			{
+				iCb.worldArray[i] = XMMatrixTranspose(XMMatrixTranslationFromVector(XMVECTOR{ i*0.3f, i*0.5f, i*0.7f }));
+			}
+
 			D3D11_SAMPLER_DESC sampDesc = {};
 			sampDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
 			sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
@@ -518,7 +539,7 @@ void LetsDrawSomeStuff::Render()
 			myContext->RSSetState(WireFrame);
 #endif
 
-			myContext->RSSetState(RSBackFaceCull);
+			//myContext->RSSetState(RSBackFaceCull);
 
 
 			// TODO: Set your shaders, Update & Set your constant buffers, Attatch your vertex & index buffers, Set your InputLayout & Topology & Draw!
@@ -583,6 +604,7 @@ void LetsDrawSomeStuff::Render()
 			cb.vOutputColor = XMFLOAT4(0, 0, 0, 0);
 			myContext->UpdateSubresource(myConstantBuffer, 0, nullptr, &cb, 0, 0);
 
+
 			//
 			// Render the cube
 			//
@@ -590,6 +612,7 @@ void LetsDrawSomeStuff::Render()
 			myContext->VSSetConstantBuffers(0, 1, &myConstantBuffer);
 			myContext->PSSetShader(myPixelShader, nullptr, 0);
 			myContext->PSSetConstantBuffers(0, 1, &myConstantBuffer);
+			myContext->PSSetSamplers(0, 1, &mySamplerLinear);
 
 			D3D11_BUFFER_DESC bd = {};
 			D3D11_SUBRESOURCE_DATA InitData = {};
@@ -610,9 +633,6 @@ void LetsDrawSomeStuff::Render()
 
 
 			myContext->ClearDepthStencilView(myDepthStencilView, D3D11_CLEAR_DEPTH, 1, 0); // clear it to Z exponential Far.
-
-
-
 
 
 			cb.mWorld = XMMatrixTranspose(worldMatrix);
@@ -746,9 +766,16 @@ void LetsDrawSomeStuff::Render()
 			//myContext->IASetIndexBuffer(pyramidIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
 			myContext->Draw((unsigned int)hFilePyramid.numVertices, 0);
 #pragma endregion
+			myContext->UpdateSubresource(myInstanceConstantBuffer, 0, nullptr, &iCb, 0, 0);
+			myContext->VSSetShader(myVertexShaderInstance, nullptr, 0);
+			myContext->PSSetShaderResources(0, 1, &myTextureRVBox);
+			myContext->VSSetConstantBuffers(1, 1, &myInstanceConstantBuffer);
 
+			myContext->IASetVertexBuffers(0, 1, &boxVertexBuffer, stride, offset);
 
-
+			myContext->IASetIndexBuffer(boxIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
+			
+			myContext->DrawIndexedInstanced(box.GetNumberOfIndices(), 10, 0, 0, 0);
 
 			// Present Backbuffer using Swapchain object
 			// Framerate is currently unlocked, we suggest "MSI Afterburner" to track your current FPS and memory usage.
@@ -762,10 +789,7 @@ void LetsDrawSomeStuff::Render()
 
 void LetsDrawSomeStuff::CameraMovement()
 {
-	XMFLOAT4 right;
-	XMStoreFloat4(&right, At);
-	XMVECTOR rightVector = { right.z, right.y,-right.x };
-	rightVector = XMVector3Normalize(rightVector);
+#pragma region CAMERA_MOVEMENT
 
 	if (GetAsyncKeyState('E'))
 	{
@@ -801,6 +825,7 @@ void LetsDrawSomeStuff::CameraMovement()
 		Eye -= (RIGHT *(float)timer.Delta()* 5.0f);
 		At -= (RIGHT*(float)timer.Delta()* 5.0f);
 	}
+#pragma endregion
 
 #pragma region FOV_ZOOMING
 	if (GetAsyncKeyState(VK_UP))
@@ -815,6 +840,7 @@ void LetsDrawSomeStuff::CameraMovement()
 	}
 #pragma endregion
 
+#pragma region CAMERA_ROTATION
 
 	if (GetAsyncKeyState('O'))
 	{
@@ -842,6 +868,7 @@ void LetsDrawSomeStuff::CameraMovement()
 	{
 		camYaw -= 1 * timer.Delta();
 	}
+#pragma endregion
 
 	viewMatrix = XMMatrixLookAtLH(Eye, At, Up);
 	viewMatrix*= XMMatrixRotationRollPitchYaw(camPitch, camYaw, camRoll);

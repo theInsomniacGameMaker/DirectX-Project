@@ -23,13 +23,14 @@ using namespace std;
 #include "SolidPS.csh"
 #include "PS_SkyBox.csh"
 #include "VS_SkyBox.csh"
+#include "VS_Instance.csh"
 
 #define CHARIZARD_MESH 1
 #define BOX_MESH 1
 #define SPACESHIP 0
 #define PROCEDURAL_SPIRAL 1
 #define WIREFRAME 0
-#define DIRECTIONAL_LIGHT_ON 0
+#define DIRECTIONAL_LIGHT_ON 1
 #define NON_MOUSE_CAMERA_MOVEMENT 1
 #define DEBUGGER 0
 
@@ -63,6 +64,11 @@ struct ConstantBuffer
 	PointLight pointLight;
 	XMFLOAT4 time;
 	XMFLOAT4 vOutputColor;
+};
+
+struct InstanceConstantBuffer
+{
+	XMMATRIX worldArray[10];
 };
 
 // Arrays and counts for
