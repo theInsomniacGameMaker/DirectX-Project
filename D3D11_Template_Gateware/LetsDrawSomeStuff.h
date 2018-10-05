@@ -647,10 +647,13 @@ void LetsDrawSomeStuff::Render()
 			lCb.lights[2].Range.x = 6.0f;
 			lCb.lights[2].Color = XMFLOAT4(0, 0, 1, 1);
 
+			myContext->UpdateSubresource(myLightConstantBuffer, 0, nullptr, &lCb, 0, 0);
+
 			myContext->VSSetShader(myVertexShader, nullptr, 0);
 			myContext->VSSetConstantBuffers(0, 1, &myConstantBuffer);
 			myContext->PSSetShader(myPixelShader, nullptr, 0);
 			myContext->PSSetConstantBuffers(0, 1, &myConstantBuffer);
+			myContext->PSSetConstantBuffers(1, 1, &myLightConstantBuffer);
 			myContext->PSSetSamplers(0, 1, &mySamplerLinear);
 
 			UINT stride[] = { sizeof(SimpleVertex) };
