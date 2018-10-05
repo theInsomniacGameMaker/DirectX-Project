@@ -30,7 +30,7 @@ using namespace std;
 #define SPACESHIP 0
 #define PROCEDURAL_SPIRAL 1
 #define WIREFRAME 0
-#define DIRECTIONAL_LIGHT_ON 1
+#define DIRECTIONAL_LIGHT_ON 0
 #define NON_MOUSE_CAMERA_MOVEMENT 1
 #define DEBUGGER 0
 
@@ -70,7 +70,7 @@ struct InstanceConstantBuffer
 
 struct LightConstantBuffer
 {
-	Light lights[3];
+	Light lights[4];
 };
 
 // Arrays and counts for

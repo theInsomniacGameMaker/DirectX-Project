@@ -624,6 +624,14 @@ void LetsDrawSomeStuff::Render()
 			lCb.lights[2].Range.x = 6.0f;
 			lCb.lights[2].Color = XMFLOAT4(0, 0, 1, 1);
 
+			lCb.lights[3].Position = XMFLOAT4(0.0f, 10.0f, 0,2.0f);
+			lCb.lights[3].Direction = XMFLOAT4(0.0f, -1.0f, 0.0f, 10.0f);
+			lCb.lights[3].Range.x = 15.0f;
+			lCb.lights[3].Range.y = 5.0f;
+			lCb.lights[3].Color = XMFLOAT4(0, 1, 0, 1);
+
+
+
 #pragma region ROTATE_DIRECTIONAL_LIGHT
 			// Rotate the a matrix
 			XMMATRIX mRotate = XMMatrixRotationY(-2.0f * t);

@@ -18,9 +18,8 @@ cbuffer ConstantBuffer : register(b0)
 
 cbuffer LightBuffer : register (b1)
 {
-	Light lights[3];
+	Light lights[4];
 }
-
 
 Texture2D txDiffuse : register(t0);
 SamplerState samLinear : register(s0);
@@ -45,7 +44,7 @@ float4 main(PS_INPUT input) : SV_Target
 		baseTexture = float4(0.5f, 0.5f, 0.5f, 1);
 	}
 
-	for (int i = 0; i < 3; i++)
+	for (int i = 0; i < 4; i++)
 	{
 		if (lights[i].Position.w == 1)
 		{
@@ -58,6 +57,16 @@ float4 main(PS_INPUT input) : SV_Target
 			pointLightColor = howMuchLight * baseTexture* lights[i].Color;
 			pointLightColor *= (1.0 - saturate(length(lights[i].Position - input.wPos) / lights[i].Range.x));
 			finalColor += saturate(pointLightColor);
+		}
+		else if (lights[i].Position.w == 3)
+		{
+			float3 lightToPixelVec = normalize(lights[i].Position - input.wPos);
+			float3 surfaceRatio = saturate(dot(-lightToPixelVec, float3(lights[i].Direction.x, lights[i].Direction.y, lights[i].Direction.z)));
+			float spotFactor = (surfaceRatio > lights[i].Direction.w) ? 1 : 0;
+			float3 lightRatio = saturate(dot(lightToPixelVec, input.Norm));
+			float3 spotLightColor = spotFactor*lightRatio*lights[i].Color*baseTexture;
+			spotLightColor *= (1.0 - saturate((lights[i].Range.y - surfaceRatio) / (lights[i].Range.y - lights[i].Direction.w)));
+			finalColor += float4(spotLightColor,1);
 		}
 	}	
 	finalColor = saturate(finalColor);
