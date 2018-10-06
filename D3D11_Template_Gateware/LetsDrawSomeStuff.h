@@ -212,6 +212,29 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			myDevice->CreateRasterizerState(&wfdesc, &WireFrame);
 #endif  
 #pragma endregion
+#pragma region CHARIZARD_INIT
+#if CHARIZARD_MESH
+			charizard = Mesh("Charizard.fbx", 5.0f, myDevice, myTextureRVCharizard);
+			bd.Usage = D3D11_USAGE_DEFAULT;
+			bd.ByteWidth = sizeof(SimpleVertex) * charizard.GetNumberOfVertices();
+			bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+			bd.CPUAccessFlags = 0;
+
+			//setting subresource data
+			InitData.pSysMem = charizard.GetVertices();
+			myDevice->CreateBuffer(&bd, &InitData, &charizardVertexBuffer);
+
+			// Set vertex buffer
+
+			bd.Usage = D3D11_USAGE_DEFAULT;
+			bd.ByteWidth = sizeof(int) * charizard.GetNumberOfIndices();
+			bd.BindFlags = D3D11_BIND_INDEX_BUFFER;
+			bd.CPUAccessFlags = 0;
+			InitData.pSysMem = charizard.GetIndices();
+			myDevice->CreateBuffer(&bd, &InitData, &charizardIndexBuffer);
+			// Set index buffer
+#endif  
+#pragma endregion
 
 #pragma region  PYRAMID_INIT
 			LoadFromHeader();
@@ -249,29 +272,6 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			myDevice->CreateBuffer(&bd, &InitData, &skyBoxIndexBuffer);
 #pragma endregion
 
-#pragma region CHARIZARD_INIT
-#if CHARIZARD_MESH
-			charizard = Mesh("Charizard.fbx", 5.0f, myDevice, myTextureRVCharizard);
-			bd.Usage = D3D11_USAGE_DEFAULT;
-			bd.ByteWidth = sizeof(SimpleVertex) * charizard.GetNumberOfVertices();
-			bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-			bd.CPUAccessFlags = 0;
-
-			//setting subresource data
-			InitData.pSysMem = charizard.GetVertices();
-			myDevice->CreateBuffer(&bd, &InitData, &charizardVertexBuffer);
-
-			// Set vertex buffer
-
-			bd.Usage = D3D11_USAGE_DEFAULT;
-			bd.ByteWidth = sizeof(int) * charizard.GetNumberOfIndices();
-			bd.BindFlags = D3D11_BIND_INDEX_BUFFER;
-			bd.CPUAccessFlags = 0;
-			InitData.pSysMem = charizard.GetIndices();
-			myDevice->CreateBuffer(&bd, &InitData, &charizardIndexBuffer);
-			// Set index buffer
-#endif  
-#pragma endregion
 
 #pragma region SPIRAL_INIT
 #if PROCEDURAL_SPIRAL
@@ -624,11 +624,19 @@ void LetsDrawSomeStuff::Render()
 			lCb.lights[2].Range.x = 6.0f;
 			lCb.lights[2].Color = XMFLOAT4(0, 0, 1, 1);
 
-			lCb.lights[3].Position = XMFLOAT4(0.0f, 10.0f, 0,2.0f);
+			lCb.lights[3].Position = XMFLOAT4(sin(timer.TotalTime()*2),10.0f, cos(timer.TotalTime()*2),3.0f);
 			lCb.lights[3].Direction = XMFLOAT4(0.0f, -1.0f, 0.0f, 10.0f);
-			lCb.lights[3].Range.x = 15.0f;
-			lCb.lights[3].Range.y = 5.0f;
+			lCb.lights[3].Range.x = 0.9f;
+			lCb.lights[3].Range.y = 0.8f;
 			lCb.lights[3].Color = XMFLOAT4(0, 1, 0, 1);
+
+			lCb.lights[4].Position = XMFLOAT4(0.0f, 10.0f, 0, 3.0f);
+			lCb.lights[4].Direction = XMFLOAT4(sin(timer.TotalTime()) / 3, -1.0f, 0.0f, 10.0f);
+			lCb.lights[4].Range.x = 0.9f;
+			lCb.lights[4].Range.y = 0.8f;
+			lCb.lights[4].Color = XMFLOAT4(1, 1, 1, 1);
+
+
 
 
 
