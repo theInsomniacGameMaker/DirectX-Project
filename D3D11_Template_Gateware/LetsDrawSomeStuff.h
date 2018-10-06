@@ -75,7 +75,7 @@ class LetsDrawSomeStuff
 
 
 	ID3D11ShaderResourceView*	myTextureRVSkyBox;
-	ID3D11ShaderResourceView*	myTextureRVPMT1;
+	ID3D11ShaderResourceView*	myTextureRVPMT[2];
 	ID3D11ShaderResourceView*	myTextureRVPMT2;
 
 	ID3D11DepthStencilState* DSLessEqual;
@@ -200,8 +200,8 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			//myDevice->CreateGeometryShader(GS_PointToQuad, sizeof(GS_PointToQuad), nullptr, &myGeometryShader);
 #pragma endregion
 
-			hr = CreateDDSTextureFromFile(myDevice, L"Assets\\PirateBox.dds", nullptr, &myTextureRVPMT1);
-			hr = CreateDDSTextureFromFile(myDevice, L"Assets\\Brick.dds", nullptr, &myTextureRVPMT2);
+			hr = CreateDDSTextureFromFile(myDevice, L"Assets\\PirateBox.dds", nullptr, &myTextureRVPMT[0]);
+			hr = CreateDDSTextureFromFile(myDevice, L"Assets\\Brick.dds", nullptr, &myTextureRVPMT[1]);
 
 
 
@@ -451,9 +451,11 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 #pragma endregion
 
 #pragma region SETTING_cBUFFER_VALUES
+			int j = -5;
 			for (int i = 0; i < 10; i++)
 			{
-				iCb.worldArray[i] = XMMatrixTranspose(XMMatrixTranslationFromVector(XMVECTOR{ i*0.3f, i*0.5f, i*0.7f }));
+				iCb.worldArray[i] = XMMatrixTranspose(XMMatrixTranslationFromVector(XMVECTOR{ j*0.3f, j*1.5f, j*0.7f }));
+				j++;
 			}
 #pragma endregion
 
@@ -849,8 +851,8 @@ void LetsDrawSomeStuff::Render()
 			myContext->UpdateSubresource(myInstanceConstantBuffer, 0, nullptr, &iCb, 0, 0);
 			myContext->VSSetShader(myVertexShaderInstance, nullptr, 0);
 			myContext->PSSetShader(myPixelShaderMultitexturing, nullptr, 0);
-			myContext->PSSetShaderResources(0, 1, &myTextureRVPMT1);
-			myContext->PSSetShaderResources(1, 1, &myTextureRVPMT2);
+			myContext->PSSetShaderResources(0, 2, myTextureRVPMT);
+			//myContext->PSSetShaderResources(1, 1, &myTextureRVPMT2);
 			myContext->VSSetConstantBuffers(1, 1, &myInstanceConstantBuffer);
 
 			myContext->IASetVertexBuffers(0, 1, &boxVertexBuffer, stride, offset);

@@ -21,8 +21,8 @@ cbuffer LightBuffer : register (b1)
 	Light lights[5];
 }
 
-Texture2D txDiffuse1 : register(t0);
-Texture2D txDiffuse2 : register(t1);
+Texture2D txDiffuse[2] : register(t0);
+
 SamplerState samLinear : register(s0);
 
 struct PS_INPUT
@@ -38,8 +38,8 @@ float4 main(PS_INPUT input) : SV_Target
 	float4 finalColor = 0;
 	float4 pointLightColor = 0;
 	float4 directionalLigthColor = 0;
-	float4 bottomTexture = txDiffuse1.Sample(samLinear, input.Tex);
-	float4 topTexture = txDiffuse2.Sample(samLinear, input.Tex);
+	float4 bottomTexture = txDiffuse[0].Sample(samLinear, input.Tex);
+	float4 topTexture = txDiffuse[1].Sample(samLinear, input.Tex);
 
 	float4 baseTexture = saturate(bottomTexture * topTexture*2.0f);
 
