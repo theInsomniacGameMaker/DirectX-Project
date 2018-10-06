@@ -70,7 +70,7 @@ struct InstanceConstantBuffer
 
 struct LightConstantBuffer
 {
-	Light lights[4];
+	Light lights[5];
 };
 
 // Arrays and counts for
