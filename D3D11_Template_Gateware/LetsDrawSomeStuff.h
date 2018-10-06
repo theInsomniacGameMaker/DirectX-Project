@@ -28,10 +28,13 @@ class LetsDrawSomeStuff
 	ID3D11VertexShader*			myVertexShaderUV = nullptr;
 	ID3D11VertexShader*			SKYMAP_VS;
 	ID3D11VertexShader*			myVertexShaderInstance;
+	ID3D11VertexShader*			myVertexShaderWave;
 
 	ID3D11PixelShader*			myPixelShader = nullptr;
 	ID3D11PixelShader*			mySolidPixelShader = nullptr;
 	ID3D11PixelShader*			SKYMAP_PS;
+
+	ID3D11GeometryShader*		myGeometryShader = nullptr;
 
 	ID3D11InputLayout*			myVertexLayout = nullptr;
 
@@ -66,11 +69,11 @@ class LetsDrawSomeStuff
 	ID3D11Buffer*				groundVertexBuffer = nullptr;
 	ID3D11Buffer*				groundIndexBuffer = nullptr;
 
-	ID3D11Buffer* skyBoxIndexBuffer;
-	ID3D11Buffer* skyBoxVertexBuffer;
+	ID3D11Buffer*				skyBoxIndexBuffer;
+	ID3D11Buffer*				skyBoxVertexBuffer;
 
 
-	ID3D11ShaderResourceView* myTextureRVSkyBox;
+	ID3D11ShaderResourceView*	myTextureRVSkyBox;
 
 	ID3D11DepthStencilState* DSLessEqual;
 	ID3D11RasterizerState* RSBackFaceCull;
@@ -174,10 +177,23 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			hr = myDevice->CreateVertexShader(VS_UVModifier, sizeof(VS_UVModifier), nullptr, &myVertexShaderUV);
 			hr = myDevice->CreateVertexShader(VS_SkyBox, sizeof(VS_SkyBox), nullptr, &SKYMAP_VS);
 			hr = myDevice->CreateVertexShader(VS_Instance, sizeof(VS_Instance), nullptr, &myVertexShaderInstance);
+			hr = myDevice->CreateVertexShader(VS_PositionModifier, sizeof(VS_PositionModifier), nullptr, &myVertexShaderWave);
 
 			myDevice->CreatePixelShader(Trivial_PS, sizeof(Trivial_PS), nullptr, &myPixelShader);
 			myDevice->CreatePixelShader(SolidPS, sizeof(SolidPS), nullptr, &mySolidPixelShader);
 			myDevice->CreatePixelShader(PS_SkyBox, sizeof(PS_SkyBox), nullptr, &SKYMAP_PS);
+
+			//D3D11_SO_DECLARATION_ENTRY pDecl[] =
+			//{
+			//	// semantic name, semantic index, start component, component count, output slot
+			//	{ "SV_POSITION", 0, 0, 4, 0 },   // output all components of position
+			//	{ "NORMAL", 0, 0, 3, 0 },     // output the first 3 of the normal
+			//	{ "TEXCOORD1", 0, 0, 3, 0 },     // output the first 2 texture coordinates
+			//	{"POSITION",0,0,4,0}
+			//};
+			//D3D11Device->CreateGeometryShaderWithStreamOut(pShaderBytecode, ShaderBytecodesize, pDecl,
+			//	sizeof(pDecl), NULL, 0, 0, NULL, &pStreamOutGS);
+			//myDevice->CreateGeometryShader(GS_PointToQuad, sizeof(GS_PointToQuad), nullptr, &myGeometryShader);
 #pragma endregion
 
 #pragma region CREATE_INPUT_LAYOUT
@@ -210,29 +226,6 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			wfdesc.FillMode = D3D11_FILL_WIREFRAME;
 			wfdesc.CullMode = D3D11_CULL_NONE;
 			myDevice->CreateRasterizerState(&wfdesc, &WireFrame);
-#endif  
-#pragma endregion
-#pragma region CHARIZARD_INIT
-#if CHARIZARD_MESH
-			charizard = Mesh("Charizard.fbx", 5.0f, myDevice, myTextureRVCharizard);
-			bd.Usage = D3D11_USAGE_DEFAULT;
-			bd.ByteWidth = sizeof(SimpleVertex) * charizard.GetNumberOfVertices();
-			bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-			bd.CPUAccessFlags = 0;
-
-			//setting subresource data
-			InitData.pSysMem = charizard.GetVertices();
-			myDevice->CreateBuffer(&bd, &InitData, &charizardVertexBuffer);
-
-			// Set vertex buffer
-
-			bd.Usage = D3D11_USAGE_DEFAULT;
-			bd.ByteWidth = sizeof(int) * charizard.GetNumberOfIndices();
-			bd.BindFlags = D3D11_BIND_INDEX_BUFFER;
-			bd.CPUAccessFlags = 0;
-			InitData.pSysMem = charizard.GetIndices();
-			myDevice->CreateBuffer(&bd, &InitData, &charizardIndexBuffer);
-			// Set index buffer
 #endif  
 #pragma endregion
 
@@ -272,6 +265,29 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			myDevice->CreateBuffer(&bd, &InitData, &skyBoxIndexBuffer);
 #pragma endregion
 
+#pragma region CHARIZARD_INIT
+#if CHARIZARD_MESH
+			charizard = Mesh("Charizard.fbx", 5.0f, myDevice, myTextureRVCharizard);
+			bd.Usage = D3D11_USAGE_DEFAULT;
+			bd.ByteWidth = sizeof(SimpleVertex) * charizard.GetNumberOfVertices();
+			bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+			bd.CPUAccessFlags = 0;
+
+			//setting subresource data
+			InitData.pSysMem = charizard.GetVertices();
+			myDevice->CreateBuffer(&bd, &InitData, &charizardVertexBuffer);
+
+			// Set vertex buffer
+
+			bd.Usage = D3D11_USAGE_DEFAULT;
+			bd.ByteWidth = sizeof(int) * charizard.GetNumberOfIndices();
+			bd.BindFlags = D3D11_BIND_INDEX_BUFFER;
+			bd.CPUAccessFlags = 0;
+			InitData.pSysMem = charizard.GetIndices();
+			myDevice->CreateBuffer(&bd, &InitData, &charizardIndexBuffer);
+			// Set index buffer
+#endif  
+#pragma endregion
 
 #pragma region SPIRAL_INIT
 #if PROCEDURAL_SPIRAL
@@ -659,6 +675,8 @@ void LetsDrawSomeStuff::Render()
 			myContext->PSSetConstantBuffers(0, 1, &myConstantBuffer);
 			myContext->PSSetConstantBuffers(1, 1, &myLightConstantBuffer);
 			myContext->PSSetSamplers(0, 1, &mySamplerLinear);
+		/*	myContext->GSSetShader(myGeometryShader, nullptr, 0);
+			myContext->GSSetConstantBuffers(0, 1, &myConstantBuffer);*/
 
 			UINT stride[] = { sizeof(SimpleVertex) };
 			UINT offset[] = { 0 };
@@ -798,7 +816,7 @@ void LetsDrawSomeStuff::Render()
 			worldMatrix = XMMatrixTranslationFromVector(groundPosition);
 			cb.mWorld = XMMatrixTranspose(worldMatrix);
 			myContext->PSSetShaderResources(0, 1, &myTextureRVBase);
-
+			myContext->VSSetShader(myVertexShaderWave, nullptr, 0);
 			myContext->UpdateSubresource(myConstantBuffer, 0, nullptr, &cb, 0, 0);
 
 			myContext->IASetVertexBuffers(0, 1, &groundVertexBuffer, stride, offset);

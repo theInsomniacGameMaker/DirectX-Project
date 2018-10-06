@@ -1,4 +1,4 @@
-
+static const int j = 1, k = 2, l=5;
 
 cbuffer ConstantBuffer : register(b0)
 {
@@ -34,7 +34,9 @@ struct VS_OUTPUT
 VS_OUTPUT main(VS_INPUT input)
 {
 	VS_OUTPUT output = (VS_OUTPUT)0;
-	output.Pos = mul(sin(time.x), input.Pos);
+	//position.x += a * sin(k * position.y + f * time);
+	input.Pos.y += j * sin((k*input.Pos.x + l * time.x)/5.0f);
+	output.Pos = mul(input.Pos, World);
 	output.wPos = output.Pos;
 	output.Pos = mul(output.Pos, View);
 	output.Pos = mul(output.Pos, Projection);

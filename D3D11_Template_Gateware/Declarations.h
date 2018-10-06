@@ -24,6 +24,8 @@ using namespace std;
 #include "PS_SkyBox.csh"
 #include "VS_SkyBox.csh"
 #include "VS_Instance.csh"
+#include "VS_PositionModifier.csh"
+#include "GS_PointToQuad.csh"
 
 #define CHARIZARD_MESH 1
 #define BOX_MESH 1
