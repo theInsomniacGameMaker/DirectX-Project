@@ -66,6 +66,27 @@ void Compactify(MeshStruct &meshToMutate)
 	cout << "\nor " << (uniqueVertices.size() / (float)numVertices) << " of the expanded size";*/
 }
 
+XMFLOAT3 ConvertFromFBXVector4(const FbxVector4 cd)
+{
+	return XMFLOAT3(cd.mData[0], cd.mData[1], cd.mData[2]);
+}
+
+XMFLOAT3 ConvertFromFBXVector4(const FbxVector4 cd, float scale)
+{
+	return XMFLOAT3(cd.mData[0]*scale, cd.mData[1]*scale, cd.mData[2]*scale);
+}
+
+
+XMFLOAT4 ConvertFromFBXVector4To4(const FbxVector4 cd)
+{
+	return XMFLOAT4(cd.mData[0], cd.mData[1], cd.mData[2], cd.mData[3]);
+}
+
+XMFLOAT2 ConvertFromFBXVector2(const FbxVector2 cd)
+{
+	return XMFLOAT2(cd.mData[0], cd.mData[1]);
+}
+
 void ProcessFbxMesh(FbxNode* Node, MeshStruct &meshToMutate, ID3D11Device *&myDevice, ID3D11ShaderResourceView*& myTextureRV)
 {// set up output console
 	AllocConsole();
@@ -112,10 +133,10 @@ void ProcessFbxMesh(FbxNode* Node, MeshStruct &meshToMutate, ID3D11Device *&myDe
 				//meshToMutate.vertices[j].wPos = XMFLOAT3(0, 0, 0);
 			}
 
-		//	FbxArray<FbxVector4> tangentsVec;
-			//mesh->GetElementTangent(tangentsVec);
+			//	FbxArray<FbxVector4> tangentsVec;
+				//mesh->GetElementTangent(tangentsVec);
 
-			// Get the Normals array from the mesh
+				// Get the Normals array from the mesh
 			FbxArray<FbxVector4> normalsVec;
 			mesh->GetPolygonVertexNormals(normalsVec);
 			cout << "\nNormalVec Count:" << normalsVec.Size();
@@ -129,7 +150,7 @@ void ProcessFbxMesh(FbxNode* Node, MeshStruct &meshToMutate, ID3D11Device *&myDe
 			{
 				vertices2[j] = meshToMutate.vertices[meshToMutate.indices[j]];
 				vertices2[j].Normal.x = (float)normalsVec[j].mData[0];
-				vertices2[j].Normal.y = (float) normalsVec[j].mData[1];
+				vertices2[j].Normal.y = (float)normalsVec[j].mData[1];
 				vertices2[j].Normal.z = (float)normalsVec[j].mData[2];
 			}
 
@@ -254,7 +275,10 @@ void ProcessFbxMesh(FbxNode* Node, MeshStruct &meshToMutate, ID3D11Device *&myDe
 							//Print out the value of UV(lUVValue) or log it to a file
 
 							vertices2[lPolyIndexCounter].Tex.x = (float)lUVValue.mData[0];
-							vertices2[lPolyIndexCounter].Tex.y = 1.0-(float)lUVValue.mData[1];
+							vertices2[lPolyIndexCounter].Tex.y = 1.0 - (float)lUVValue.mData[1];
+
+
+
 							lPolyIndexCounter++;
 						}
 					}
@@ -265,7 +289,7 @@ void ProcessFbxMesh(FbxNode* Node, MeshStruct &meshToMutate, ID3D11Device *&myDe
 			// and clean up first array
 			delete meshToMutate.vertices;
 			meshToMutate.vertices = vertices2;
-			
+
 			// make new indices to match the new vertex(2) array
 			delete meshToMutate.indices;
 			meshToMutate.indices = new int[meshToMutate.numIndices];
@@ -288,6 +312,211 @@ void ProcessFbxMesh(FbxNode* Node, MeshStruct &meshToMutate, ID3D11Device *&myDe
 		}
 		ProcessFbxMesh(childNode, meshToMutate, myDevice, myTextureRV);
 	}
-	
+
 }
+
+void ProcessPolygons(FbxMesh* mesh, MeshStruct &meshToMutate)
+{
+	vector <SimpleVertex> vertices;
+	vector <int> indices;
+	int polyCount = mesh->GetPolygonCount();
+	FbxVector4* controlPoints = mesh->GetControlPoints();
+
+	int vertexId = 0;
+	for (int i = 0; i < polyCount; i++) //looping for the number of polygons
+	{
+		int vertexCount = mesh->GetPolygonSize(i); //also called polygonSize
+
+		for (int j = 0; j < vertexCount; j++)
+		{
+			SimpleVertex unique_vertex;
+			int controlPointIndex = mesh->GetPolygonVertex(i, j);
+
+			FbxVector4 position = controlPoints[controlPointIndex];
+			unique_vertex.Pos = ConvertFromFBXVector4(position,meshToMutate.scale);
+			
+
+			for (int l = 0; l < mesh->GetElementUVCount(); l++)
+			{
+				FbxGeometryElementUV *elementUV = mesh->GetElementUV(l);
+				FbxVector2 uv;
+				switch (elementUV->GetMappingMode())
+				{
+				default:
+					break;
+				case FbxGeometryElement::eByControlPoint:
+					switch (elementUV->GetReferenceMode())
+					{
+					default:
+						break;
+					case FbxGeometryElement::eDirect:
+						uv = elementUV->GetDirectArray().GetAt(controlPointIndex);
+						break;
+					case FbxGeometryElement::eIndexToDirect:
+					{
+						int id = elementUV->GetIndexArray().GetAt(controlPointIndex);
+						uv = elementUV->GetDirectArray().GetAt(id);
+					}
+					break;
+					}
+					break;
+				case 	FbxGeometryElement::eByPolygonVertex:
+				{
+					int textureUVIndex = mesh->GetTextureUVIndex(i, j);
+					switch (elementUV->GetReferenceMode())
+					{
+					default:
+						break;
+
+					case FbxGeometryElement::eDirect:
+					case FbxGeometryElement::eIndexToDirect:
+						uv = elementUV->GetDirectArray().GetAt(textureUVIndex);
+						break;
+
+					}
+				}
+					break;
+				}
+				unique_vertex.Tex = ConvertFromFBXVector2(uv);
+				unique_vertex.Tex.y = 1 - unique_vertex.Tex.y;
+			}
+
+			for (int l = 0; l < mesh->GetElementNormalCount(); l++)
+			{
+				FbxGeometryElementNormal* elementNormal = mesh->GetElementNormal(l);
+					FbxVector4 normal;
+				if (elementNormal->GetMappingMode() == FbxGeometryElement::eByPolygonVertex)
+				{
+					switch (elementNormal->GetReferenceMode())
+					{
+					default:
+						break;
+					case FbxGeometryElement ::eDirect:
+						normal = elementNormal->GetDirectArray().GetAt(vertexId);
+						break;
+					case FbxGeometryElement::eIndexToDirect:
+					{
+						int id = elementNormal->GetIndexArray().GetAt(vertexId);
+						normal = elementNormal->GetDirectArray().GetAt(id);
+					}
+					break;
+					}
+				}
+
+				unique_vertex.Normal = ConvertFromFBXVector4(normal);
+
+			}
+
+			int index = int(vertices.size());
+			indices.push_back(index);
+			vertices.push_back(unique_vertex);
+			vertexId++;
+
+		}
+
+
+	}
+	meshToMutate.vertices = new SimpleVertex[ vertices.size()];
+	meshToMutate.indices = new int[indices.size()];
+
+	for (int i = 0; i < vertices.size(); i++)
+	{
+		meshToMutate.vertices[i] = vertices[i];
+	}
+
+	for (int i = 0; i < indices.size(); i++)
+	{
+		meshToMutate.indices[i] = indices[i];
+	}
+
+	//meshToMutate.indices = indices.data();
+	meshToMutate.numVertices = vertices.size();
+	meshToMutate.numIndices = indices.size();
+}
+
+void ProcessMesh(FbxNode* Node, MeshStruct &meshToMutate)
+{
+	FbxMesh* mesh = (FbxMesh*)Node->GetNodeAttribute();
+	string MeshName = (char*)Node->GetName();
+	ProcessPolygons(mesh, meshToMutate);
+}
+
+void ProcessContent(FbxNode* Node, MeshStruct &meshToMutate)
+{
+	FbxNodeAttribute::EType attributeType;
+
+	if (Node->GetNodeAttribute() != NULL)
+	{
+		attributeType = (Node->GetNodeAttribute()->GetAttributeType());
+
+		switch (attributeType)
+		{
+		case fbxsdk::FbxNodeAttribute::eUnknown:
+			break;
+		case fbxsdk::FbxNodeAttribute::eNull:
+			break;
+		case fbxsdk::FbxNodeAttribute::eMarker:
+			break;
+		case fbxsdk::FbxNodeAttribute::eSkeleton:
+			break;
+		case fbxsdk::FbxNodeAttribute::eMesh:
+			ProcessMesh(Node,meshToMutate);
+			break;
+		case fbxsdk::FbxNodeAttribute::eNurbs:
+			break;
+		case fbxsdk::FbxNodeAttribute::ePatch:
+			break;
+		case fbxsdk::FbxNodeAttribute::eCamera:
+			break;
+		case fbxsdk::FbxNodeAttribute::eCameraStereo:
+			break;
+		case fbxsdk::FbxNodeAttribute::eCameraSwitcher:
+			break;
+		case fbxsdk::FbxNodeAttribute::eLight:
+			break;
+		case fbxsdk::FbxNodeAttribute::eOpticalReference:
+			break;
+		case fbxsdk::FbxNodeAttribute::eOpticalMarker:
+			break;
+		case fbxsdk::FbxNodeAttribute::eNurbsCurve:
+			break;
+		case fbxsdk::FbxNodeAttribute::eTrimNurbsSurface:
+			break;
+		case fbxsdk::FbxNodeAttribute::eBoundary:
+			break;
+		case fbxsdk::FbxNodeAttribute::eNurbsSurface:
+			break;
+		case fbxsdk::FbxNodeAttribute::eShape:
+			break;
+		case fbxsdk::FbxNodeAttribute::eLODGroup:
+			break;
+		case fbxsdk::FbxNodeAttribute::eSubDiv:
+			break;
+		case fbxsdk::FbxNodeAttribute::eCachedEffect:
+			break;
+		case fbxsdk::FbxNodeAttribute::eLine:
+			break;
+		default:
+			break;
+		}
+
+
+	}
+}
+
+void ProcessFbxMesh2(FbxNode * Node, MeshStruct & meshToMutate, vector<string>& texList)
+{
+	if (Node)
+	{
+		int c = Node->GetChildCount();
+		for (int i = 0; i < Node->GetChildCount(); i++)
+		{
+			ProcessContent(Node->GetChild(i), meshToMutate);
+		}
+	}
+}
+
+
+
+
 

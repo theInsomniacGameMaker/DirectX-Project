@@ -17,6 +17,9 @@ Mesh::Mesh(string fileName, float scale, ID3D11Device* &myDevice, ID3D11ShaderRe
 	FbxIOSettings *ios = FbxIOSettings::Create(lSdkManager, IOSROOT);
 	lSdkManager->SetIOSettings(ios);
 
+	// Create a new scene so that it can be populated by the imported file.
+	FbxScene* lScene = FbxScene::Create(lSdkManager, "");
+
 	// Create an importer using the SDK manager.
 	FbxImporter* lImporter = FbxImporter::Create(lSdkManager, "");
 
@@ -25,16 +28,21 @@ Mesh::Mesh(string fileName, float scale, ID3D11Device* &myDevice, ID3D11ShaderRe
 		exit(-1);
 	}
 
-	// Create a new scene so that it can be populated by the imported file.
-	FbxScene* lScene = FbxScene::Create(lSdkManager, "myScene");
-
 	// Import the contents of the file into the scene.
 	lImporter->Import(lScene);
 
 	// The file is imported, so get rid of the importer.
 	lImporter->Destroy();
+	/*FbxGeometryConverter converter(lSdkManager);
+	if (!converter.Triangulate(lScene, true))return;
+	if (!converter.SplitMeshesPerMaterial(lScene, true))return;*/
+
 	myMesh.scale = scale;
 	ProcessFbxMesh(lScene->GetRootNode(), myMesh, myDevice, myTextureRV);
+	//vector<string> texFiles;
+	//MeshStruct newMeshStruct;
+	//ProcessFbxMesh2(lScene->GetRootNode(), myMesh, texFiles);
+	int debug = 0;
 }
 
 SimpleVertex* Mesh::GetVertices()
