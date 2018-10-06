@@ -33,6 +33,7 @@ class LetsDrawSomeStuff
 	ID3D11PixelShader*			myPixelShader = nullptr;
 	ID3D11PixelShader*			mySolidPixelShader = nullptr;
 	ID3D11PixelShader*			SKYMAP_PS;
+	ID3D11PixelShader*			myPixelShaderMultitexturing;
 
 	ID3D11GeometryShader*		myGeometryShader = nullptr;
 
@@ -74,6 +75,8 @@ class LetsDrawSomeStuff
 
 
 	ID3D11ShaderResourceView*	myTextureRVSkyBox;
+	ID3D11ShaderResourceView*	myTextureRVPMT1;
+	ID3D11ShaderResourceView*	myTextureRVPMT2;
 
 	ID3D11DepthStencilState* DSLessEqual;
 	ID3D11RasterizerState* RSBackFaceCull;
@@ -182,6 +185,7 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			myDevice->CreatePixelShader(Trivial_PS, sizeof(Trivial_PS), nullptr, &myPixelShader);
 			myDevice->CreatePixelShader(SolidPS, sizeof(SolidPS), nullptr, &mySolidPixelShader);
 			myDevice->CreatePixelShader(PS_SkyBox, sizeof(PS_SkyBox), nullptr, &SKYMAP_PS);
+			myDevice->CreatePixelShader(PS_Multitexturing, sizeof(PS_Multitexturing), nullptr, &myPixelShaderMultitexturing);
 
 			//D3D11_SO_DECLARATION_ENTRY pDecl[] =
 			//{
@@ -195,6 +199,11 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			//	sizeof(pDecl), NULL, 0, 0, NULL, &pStreamOutGS);
 			//myDevice->CreateGeometryShader(GS_PointToQuad, sizeof(GS_PointToQuad), nullptr, &myGeometryShader);
 #pragma endregion
+
+			hr = CreateDDSTextureFromFile(myDevice, L"Assets\\PirateBox.dds", nullptr, &myTextureRVPMT1);
+			hr = CreateDDSTextureFromFile(myDevice, L"Assets\\Brick.dds", nullptr, &myTextureRVPMT2);
+
+
 
 #pragma region CREATE_INPUT_LAYOUT
 			// Define the input layout
@@ -839,7 +848,9 @@ void LetsDrawSomeStuff::Render()
 #pragma region DRAW_INSTANCED_BOX
 			myContext->UpdateSubresource(myInstanceConstantBuffer, 0, nullptr, &iCb, 0, 0);
 			myContext->VSSetShader(myVertexShaderInstance, nullptr, 0);
-			myContext->PSSetShaderResources(0, 1, &myTextureRVBox);
+			myContext->PSSetShader(myPixelShaderMultitexturing, nullptr, 0);
+			myContext->PSSetShaderResources(0, 1, &myTextureRVPMT1);
+			myContext->PSSetShaderResources(1, 1, &myTextureRVPMT2);
 			myContext->VSSetConstantBuffers(1, 1, &myInstanceConstantBuffer);
 
 			myContext->IASetVertexBuffers(0, 1, &boxVertexBuffer, stride, offset);

@@ -25,6 +25,7 @@ using namespace std;
 #include "VS_SkyBox.csh"
 #include "VS_Instance.csh"
 #include "VS_PositionModifier.csh"
+#include "PS_Multitexturing.csh"
 #include "GS_PointToQuad.csh"
 
 #define CHARIZARD_MESH 1
@@ -32,7 +33,7 @@ using namespace std;
 #define SPACESHIP 0
 #define PROCEDURAL_SPIRAL 1
 #define WIREFRAME 0
-#define DIRECTIONAL_LIGHT_ON 0
+#define DIRECTIONAL_LIGHT_ON 1
 #define NON_MOUSE_CAMERA_MOVEMENT 1
 #define DEBUGGER 0
 
