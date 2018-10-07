@@ -22,15 +22,14 @@ void CreateSpiral()
 	{
 		for (int j = 0; j < 360; j++)
 		{
-			SimpleVertex s;
-			sphereVertices[p].Pos.x = sin(DegToRad(j))*2;
-			sphereVertices[p].Pos.y = cos(DegToRad(j))*2;
+			sphereVertices[p].Pos.x = (float)sin(DegToRad((float)j))*2.0f;
+			sphereVertices[p].Pos.y = (float)cos(DegToRad((float)j))*2.0f;
 
-			float n = i * 360 + j;
-			float d = 360 * 17;
-
+			float n = i * 360.0f + j;
+			float d = 360.0f * 17;
+			 
 			float ratio = n / d;
-			sphereVertices[p].Pos.z = NormalLerp(1.0f, 10.0f, ratio);
+			sphereVertices[p].Pos.z = NormalLerp(1, 10, ratio);
 			//sphereVertices[p].Pos = s;
 			p++;
 		}

@@ -668,14 +668,14 @@ void LetsDrawSomeStuff::Render()
 			lCb.lights[2].Range.x = 6.0f;
 			lCb.lights[2].Color = XMFLOAT4(0, 0, 1, 1);
 
-			lCb.lights[3].Position = XMFLOAT4(sin(timer.TotalTime()*2),10.0f, cos(timer.TotalTime()*2),3.0f);
+			lCb.lights[3].Position = XMFLOAT4(sin((float)timer.TotalTime()*2),10.0f, cos((float)timer.TotalTime()*2),3.0f);
 			lCb.lights[3].Direction = XMFLOAT4(0.0f, -1.0f, 0.0f, 10.0f);
 			lCb.lights[3].Range.x = 0.9f;
 			lCb.lights[3].Range.y = 0.8f;
 			lCb.lights[3].Color = XMFLOAT4(0, 1, 0, 1);
-
+			 
 			lCb.lights[4].Position = XMFLOAT4(0.0f, 10.0f, 0, 3.0f);
-			lCb.lights[4].Direction = XMFLOAT4(sin(timer.TotalTime()) / 3, -1.0f, 0.0f, 10.0f);
+			lCb.lights[4].Direction = XMFLOAT4(sin((float)timer.TotalTime()) / 3, -1.0f, 0.0f, 10.0f);
 			lCb.lights[4].Range.x = 0.9f;
 			lCb.lights[4].Range.y = 0.8f;
 			lCb.lights[4].Color = XMFLOAT4(1, 1, 1, 1);
@@ -892,29 +892,29 @@ void LetsDrawSomeStuff::CameraMovement()
 
 	if (GetAsyncKeyState('E'))
 	{
-		moveY += timer.Delta()*5.0f;
+		moveY += (float)timer.Delta()*5.0f;
 	}
 	else if (GetAsyncKeyState('Q'))
 	{
-		moveY -= timer.Delta()*5.0f;
+		moveY -= (float)timer.Delta()*5.0f;
 	}
 
 	if (GetAsyncKeyState('W'))
 	{
-		moveZ += timer.Delta()*5.0f;
+		moveZ +=(float) timer.Delta()*5.0f;
 	}
 	else if (GetAsyncKeyState('S'))
 	{
-		moveZ -= timer.Delta()*5.0f;
+		moveZ -= (float)timer.Delta()*5.0f;
 	}
 
 	if (GetAsyncKeyState('D'))
 	{
-		moveX += timer.Delta()*5.0f;
+		moveX += (float)timer.Delta()*5.0f;
 	}
 	else if (GetAsyncKeyState('A'))
 	{
-		moveX -= timer.Delta()*5.0f;
+		moveX -= (float)timer.Delta()*5.0f;
 	}
 
 #pragma endregion
@@ -922,12 +922,12 @@ void LetsDrawSomeStuff::CameraMovement()
 #pragma region FOV_ZOOMING
 	if (GetAsyncKeyState(VK_UP))
 	{
-		fov += (10 * timer.Delta());
+		fov += (10.0f * (float)timer.Delta());
 		projectionMatrix = XMMatrixPerspectiveFovLH(XMConvertToRadians(fov), width / (FLOAT)height, 0.01f, 100.0f);
 	}
 	else if (GetAsyncKeyState(VK_DOWN))
 	{
-		fov -= (10 * timer.Delta());
+		fov -= (10 * (float)timer.Delta());
 		projectionMatrix = XMMatrixPerspectiveFovLH(XMConvertToRadians(fov), width / (FLOAT)height, 0.01f, 100.0f);
 	}
 #pragma endregion
@@ -936,29 +936,29 @@ void LetsDrawSomeStuff::CameraMovement()
 
 	if (GetAsyncKeyState('O'))
 	{
-		camRoll += 1 * timer.Delta();
+		camRoll += 1 * (float)timer.Delta();
 	}
 	else if (GetAsyncKeyState('U'))
 	{
-		camRoll -= 1 * timer.Delta();
+		camRoll -= 1 * (float)timer.Delta();
 	}
 
 	if (GetAsyncKeyState('I'))
 	{
-		camPitch += 1 * timer.Delta();
+		camPitch += 1 * (float)timer.Delta();
 	}
 	else if (GetAsyncKeyState('K'))
 	{
-		camPitch -= 1 * timer.Delta();
+		camPitch -= 1 * (float)timer.Delta();
 	}
 
 	if (GetAsyncKeyState('J'))
 	{
-		camYaw += 1 * timer.Delta();
+		camYaw += 1 * (float)timer.Delta();
 	}
 	else if (GetAsyncKeyState('L'))
 	{
-		camYaw -= 1 * timer.Delta();
+		camYaw -= 1 * (float)timer.Delta();
 	}
 #pragma endregion
 
