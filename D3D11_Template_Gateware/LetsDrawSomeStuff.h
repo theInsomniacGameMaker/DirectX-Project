@@ -35,7 +35,7 @@ class LetsDrawSomeStuff
 	ID3D11PixelShader*			SKYMAP_PS;
 	ID3D11PixelShader*			myPixelShaderMultitexturing;
 
-	ID3D11GeometryShader*		myGeometryShader = nullptr;
+	//ID3D11GeometryShader*		myGeometryShader = nullptr;
 
 	ID3D11InputLayout*			myVertexLayout = nullptr;
 
@@ -76,7 +76,6 @@ class LetsDrawSomeStuff
 
 	ID3D11ShaderResourceView*	myTextureRVSkyBox;
 	ID3D11ShaderResourceView*	myTextureRVPMT[2];
-	ID3D11ShaderResourceView*	myTextureRVPMT2;
 
 	ID3D11DepthStencilState* DSLessEqual;
 	ID3D11RasterizerState* RSBackFaceCull;
@@ -506,6 +505,17 @@ LetsDrawSomeStuff::~LetsDrawSomeStuff()
 	mySolidPixelShader->Release();
 	myVertexLayout->Release();
 
+	SKYMAP_VS->Release();
+	myVertexShaderInstance->Release();
+	myVertexShaderWave->Release();
+	SKYMAP_PS->Release();
+	myPixelShaderMultitexturing->Release();
+
+	myTextureRVSkyBox->Release();
+	myTextureRVPMT[0]->Release();
+	myTextureRVPMT[1]->Release();
+	myLightConstantBuffer->Release();
+	myInstanceConstantBuffer->Release();
 #if CHARIZARD_MESH
 	if (charizardVertexBuffer)charizardVertexBuffer->Release();
 	if (charizardIndexBuffer)charizardIndexBuffer->Release();
@@ -528,6 +538,9 @@ LetsDrawSomeStuff::~LetsDrawSomeStuff()
 	bulbVertexBuffer->Release();
 	bulbIndexBuffer->Release();
 	myTextureRVBulb->Release();
+
+	skyBoxIndexBuffer->Release();
+	skyBoxVertexBuffer->Release();
 
 	myConstantBuffer->Release();
 
@@ -557,6 +570,8 @@ LetsDrawSomeStuff::~LetsDrawSomeStuff()
 	spaceShip.LateDestructor();
 	ground.LateDestructor();
 	bulb.LateDestructor();
+	charizard.LateDestructor();
+	skyBox.LateDestructor();
 
 	delete[] hFilePyramid.vertices;
 
@@ -948,26 +963,26 @@ void LetsDrawSomeStuff::CameraMovement()
 #pragma endregion
 
 
-		XMMATRIX camRotationMatrix =XMMatrixTranspose(XMMatrixRotationRollPitchYaw(camPitch, camYaw, camRoll));
-		At = XMVector3TransformCoord(FORWARD, camRotationMatrix);
-		At = XMVector3Normalize(At);
+	XMMATRIX camRotationMatrix = XMMatrixTranspose(XMMatrixRotationRollPitchYaw(camPitch, camYaw, camRoll));
+	At = XMVector3TransformCoord(FORWARD, camRotationMatrix);
+	At = XMVector3Normalize(At);
 
-		
-		XMVECTOR camRight = XMVector3TransformCoord(RIGHT, camRotationMatrix);
-		XMVECTOR camForward = XMVector3TransformCoord(FORWARD, camRotationMatrix);
-		XMVECTOR camUp = XMVector3Cross(camForward, camRight);
 
-		Eye += moveX * camRight;
-		Eye+= moveZ * camForward;
-		Eye+= moveY * camUp;
+	XMVECTOR camRight = XMVector3TransformCoord(RIGHT, camRotationMatrix);
+	XMVECTOR camForward = XMVector3TransformCoord(FORWARD, camRotationMatrix);
+	XMVECTOR camUp = XMVector3Cross(camForward, camRight);
 
-		moveX = 0.0f;
-		moveZ = 0.0f;
-		moveY = 0;
+	Eye += moveX * camRight;
+	Eye += moveZ * camForward;
+	Eye += moveY * camUp;
 
-		At = Eye + At;
+	moveX = 0.0f;
+	moveZ = 0.0f;
+	moveY = 0;
 
-		viewMatrix = XMMatrixLookAtLH(Eye, At, camUp);
+	At = Eye + At;
+
+	viewMatrix = XMMatrixLookAtLH(Eye, At, camUp);
 	
 }
 
