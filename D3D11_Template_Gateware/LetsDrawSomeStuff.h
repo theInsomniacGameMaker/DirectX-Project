@@ -99,6 +99,9 @@ class LetsDrawSomeStuff
 	XMVECTOR At;
 	XMVECTOR Up;
 
+	float moveX, moveY, moveZ;
+	XMVECTOR camPosition;
+
 	float camYaw, camPitch, camRoll;
 #if DEBUGGER
 	ID3D11Debug *DebugDevice;
@@ -132,7 +135,6 @@ public:
 	//Camera Movement
 	void CameraMovement();
 
-	bool InitDirectInput(HINSTANCE hInstance);
 };
 
 // Init
@@ -663,10 +665,6 @@ void LetsDrawSomeStuff::Render()
 			lCb.lights[4].Range.y = 0.8f;
 			lCb.lights[4].Color = XMFLOAT4(1, 1, 1, 1);
 
-
-
-
-
 #pragma region ROTATE_DIRECTIONAL_LIGHT
 			// Rotate the a matrix
 			XMMATRIX mRotate = XMMatrixRotationY(-2.0f * t);
@@ -843,7 +841,6 @@ void LetsDrawSomeStuff::Render()
 			myContext->UpdateSubresource(myConstantBuffer, 0, nullptr, &cb, 0, 0);
 
 			myContext->IASetVertexBuffers(0, 1, &pyramidVertexBuffer, stride, offset);
-			//myContext->IASetIndexBuffer(pyramidIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
 			myContext->Draw((unsigned int)hFilePyramid.numVertices, 0);
 #pragma endregion
 
@@ -852,7 +849,6 @@ void LetsDrawSomeStuff::Render()
 			myContext->VSSetShader(myVertexShaderInstance, nullptr, 0);
 			myContext->PSSetShader(myPixelShaderMultitexturing, nullptr, 0);
 			myContext->PSSetShaderResources(0, 2, myTextureRVPMT);
-			//myContext->PSSetShaderResources(1, 1, &myTextureRVPMT2);
 			myContext->VSSetConstantBuffers(1, 1, &myInstanceConstantBuffer);
 
 			myContext->IASetVertexBuffers(0, 1, &boxVertexBuffer, stride, offset);
@@ -881,38 +877,31 @@ void LetsDrawSomeStuff::CameraMovement()
 
 	if (GetAsyncKeyState('E'))
 	{
-		Eye += (UP*(float)timer.Delta() * 5.0f);
-		At += (UP*(float)timer.Delta() * 5.0f);
+		moveY += timer.Delta()*5.0f;
 	}
 	else if (GetAsyncKeyState('Q'))
 	{
-		Eye -= (UP*(float)timer.Delta() * 5.0f);
-		At -= (UP*(float)timer.Delta() * 5.0f);
+		moveY -= timer.Delta()*5.0f;
 	}
 
 	if (GetAsyncKeyState('W'))
 	{
-		Eye += (FORWARD*(float)timer.Delta() * 5.0f);
-		At += (FORWARD*(float)timer.Delta() * 5.0f);
-
+		moveZ += timer.Delta()*5.0f;
 	}
 	else if (GetAsyncKeyState('S'))
 	{
-		Eye -= (FORWARD*(float)timer.Delta() * 5.0f);
-		At -= (FORWARD*(float)timer.Delta() * 5.0f);
+		moveZ -= timer.Delta()*5.0f;
 	}
 
 	if (GetAsyncKeyState('D'))
 	{
-		Eye += (RIGHT*(float)timer.Delta()* 5.0f);
-		At += (RIGHT*(float)timer.Delta()* 5.0f);
-
+		moveX += timer.Delta()*5.0f;
 	}
 	else if (GetAsyncKeyState('A'))
 	{
-		Eye -= (RIGHT *(float)timer.Delta()* 5.0f);
-		At -= (RIGHT*(float)timer.Delta()* 5.0f);
+		moveX -= timer.Delta()*5.0f;
 	}
+
 #pragma endregion
 
 #pragma region FOV_ZOOMING
@@ -958,32 +947,28 @@ void LetsDrawSomeStuff::CameraMovement()
 	}
 #pragma endregion
 
-	viewMatrix = XMMatrixLookAtLH(Eye, At, Up);
-	viewMatrix*= XMMatrixRotationRollPitchYaw(camPitch, camYaw, camRoll);
+
+		XMMATRIX camRotationMatrix =XMMatrixTranspose(XMMatrixRotationRollPitchYaw(camPitch, camYaw, camRoll));
+		At = XMVector3TransformCoord(FORWARD, camRotationMatrix);
+		At = XMVector3Normalize(At);
+
+		
+		XMVECTOR camRight = XMVector3TransformCoord(RIGHT, camRotationMatrix);
+		XMVECTOR camForward = XMVector3TransformCoord(FORWARD, camRotationMatrix);
+		XMVECTOR camUp = XMVector3Cross(camForward, camRight);
+
+		Eye += moveX * camRight;
+		Eye+= moveZ * camForward;
+		Eye+= moveY * camUp;
+
+		moveX = 0.0f;
+		moveZ = 0.0f;
+		moveY = 0;
+
+		At = Eye + At;
+
+		viewMatrix = XMMatrixLookAtLH(Eye, At, camUp);
+	
 }
 
-//bool LetsDrawSomeStuff::InitDirectInput(HINSTANCE hInstance)
-//{
-//	 DirectInput8Create(hInstance,
-//		DIRECTINPUT_VERSION,
-//		IID_IDirectInput8,
-//		(void**)&DirectInput,
-//		NULL);
-//
-//	DirectInput->CreateDevice(GUID_SysKeyboard,
-//		&DIKeyboard,
-//		NULL);
-//
-//	 DirectInput->CreateDevice(GUID_SysMouse,
-//	&DIMouse,
-//	NULL);
-//
-//	 DIKeyboard->SetDataFormat(&c_dfDIKeyboard);
-//	 DIKeyboard->SetCooperativeLevel(hwnd, DISCL_FOREGROUND | DISCL_NONEXCLUSIVE);
-//
-//	 DIMouse->SetDataFormat(&c_dfDIMouse);
-//	 DIMouse->SetCooperativeLevel(hwnd, DISCL_EXCLUSIVE | DISCL_NOWINKEY | DISCL_FOREGROUND);
-//
-//	return true;
-//}
 
