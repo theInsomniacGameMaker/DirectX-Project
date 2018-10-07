@@ -8,7 +8,7 @@
 #include "Mesh.h"
 #include "Misc.h"
 #include "XTime.h"
-#include "SkyBox.h"
+
 // Simple Container class to make life easier/cleaner
 class LetsDrawSomeStuff
 {
@@ -637,7 +637,7 @@ void LetsDrawSomeStuff::Render()
 			//animate cube
 			worldMatrix = XMMatrixRotationY(t);
 
-		
+
 			ConstantBuffer cb;
 			cb.mWorld = XMMatrixTranspose(worldMatrix);
 			cb.mView = XMMatrixTranspose(viewMatrix);
@@ -653,7 +653,7 @@ void LetsDrawSomeStuff::Render()
 #if DIRECTIONAL_LIGHT_ON
 			lCb.lights[0].Color = XMFLOAT4(0.5f, 0.5f, 0.5f, 1.0f);
 #else
-			lCb.lights[0].Color =XMFLOAT4(0, 0, 0, 0);
+			lCb.lights[0].Color = XMFLOAT4(0, 0, 0, 0);
 #endif
 
 			lCb.lights[1].Position = XMFLOAT4(0, 0, 0, 1);
@@ -668,12 +668,12 @@ void LetsDrawSomeStuff::Render()
 			lCb.lights[2].Range.x = 6.0f;
 			lCb.lights[2].Color = XMFLOAT4(0, 0, 1, 1);
 
-			lCb.lights[3].Position = XMFLOAT4(sin((float)timer.TotalTime()*2),10.0f, cos((float)timer.TotalTime()*2),3.0f);
+			lCb.lights[3].Position = XMFLOAT4(sin((float)timer.TotalTime() * 2), 10.0f, cos((float)timer.TotalTime() * 2), 3.0f);
 			lCb.lights[3].Direction = XMFLOAT4(0.0f, -1.0f, 0.0f, 10.0f);
 			lCb.lights[3].Range.x = 0.9f;
 			lCb.lights[3].Range.y = 0.8f;
 			lCb.lights[3].Color = XMFLOAT4(0, 1, 0, 1);
-			 
+
 			lCb.lights[4].Position = XMFLOAT4(0.0f, 10.0f, 0, 3.0f);
 			lCb.lights[4].Direction = XMFLOAT4(sin((float)timer.TotalTime()) / 3, -1.0f, 0.0f, 10.0f);
 			lCb.lights[4].Range.x = 0.9f;
@@ -699,8 +699,8 @@ void LetsDrawSomeStuff::Render()
 			myContext->PSSetConstantBuffers(0, 1, &myConstantBuffer);
 			myContext->PSSetConstantBuffers(1, 1, &myLightConstantBuffer);
 			myContext->PSSetSamplers(0, 1, &mySamplerLinear);
-		/*	myContext->GSSetShader(myGeometryShader, nullptr, 0);
-			myContext->GSSetConstantBuffers(0, 1, &myConstantBuffer);*/
+			/*	myContext->GSSetShader(myGeometryShader, nullptr, 0);
+				myContext->GSSetConstantBuffers(0, 1, &myConstantBuffer);*/
 
 			UINT stride[] = { sizeof(SimpleVertex) };
 			UINT offset[] = { 0 };
@@ -823,7 +823,7 @@ void LetsDrawSomeStuff::Render()
 			myContext->PSSetShaderResources(0, 1, &myTextureRVBulb);
 			myContext->PSSetSamplers(0, 1, &mySamplerLinear);
 
-			worldMatrix = XMMatrixTranslationFromVector(XMVECTOR{ lCb.lights[2].Position.x, lCb.lights[2].Position.y, lCb.lights[2].Position.z, 1});
+			worldMatrix = XMMatrixTranslationFromVector(XMVECTOR{ lCb.lights[2].Position.x, lCb.lights[2].Position.y, lCb.lights[2].Position.z, 1 });
 			cb.mWorld = XMMatrixTranspose(worldMatrix);
 
 			myContext->UpdateSubresource(myConstantBuffer, 0, nullptr, &cb, 0, 0);
@@ -901,7 +901,7 @@ void LetsDrawSomeStuff::CameraMovement()
 
 	if (GetAsyncKeyState('W'))
 	{
-		moveZ +=(float) timer.Delta()*5.0f;
+		moveZ += (float)timer.Delta()*5.0f;
 	}
 	else if (GetAsyncKeyState('S'))
 	{
@@ -983,7 +983,7 @@ void LetsDrawSomeStuff::CameraMovement()
 	At = Eye + At;
 
 	viewMatrix = XMMatrixLookAtLH(Eye, At, camUp);
-	
+
 }
 
 
