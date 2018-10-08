@@ -62,6 +62,7 @@
       <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="TextureRenderer.cpp" />
+    <ClCompile Include="D3DObject.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Declarations.h">
@@ -92,6 +93,7 @@
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="TextureRenderer.h" />
+    <ClInclude Include="D3DObject.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Gateware Source">

@@ -144,6 +144,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="D3DObject.h" />
     <ClInclude Include="DDSTextureLoader.h" />
     <ClInclude Include="Declarations.h" />
     <ClInclude Include="FBXLoader.h" />
@@ -156,6 +157,7 @@
     <ClInclude Include="XTime.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="D3DObject.cpp" />
     <ClCompile Include="DDSTextureLoader.cpp" />
     <ClCompile Include="FBXLoader.cpp" />
     <ClCompile Include="Gateware Redistribution R5d\Source\G_Audio\GAudio.cpp" />
