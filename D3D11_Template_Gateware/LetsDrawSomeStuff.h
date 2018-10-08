@@ -32,8 +32,9 @@ class LetsDrawSomeStuff
 
 	ID3D11PixelShader*			myPixelShader = nullptr;
 	ID3D11PixelShader*			mySolidPixelShader = nullptr;
-	ID3D11PixelShader*			SKYMAP_PS;
-	ID3D11PixelShader*			myPixelShaderMultitexturing;
+	ID3D11PixelShader*			SKYMAP_PS=nullptr;
+	ID3D11PixelShader*			myPixelShaderMultitexturing=nullptr;
+	ID3D11PixelShader*			myPixelShaderNoLighting = nullptr;
 
 	//ID3D11GeometryShader*		myGeometryShader = nullptr;
 
@@ -190,6 +191,7 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			myDevice->CreatePixelShader(SolidPS, sizeof(SolidPS), nullptr, &mySolidPixelShader);
 			myDevice->CreatePixelShader(PS_SkyBox, sizeof(PS_SkyBox), nullptr, &SKYMAP_PS);
 			myDevice->CreatePixelShader(PS_Multitexturing, sizeof(PS_Multitexturing), nullptr, &myPixelShaderMultitexturing);
+			myDevice->CreatePixelShader(PS_NoLighting, sizeof(PS_NoLighting), nullptr, &myPixelShaderNoLighting);
 
 			//D3D11_SO_DECLARATION_ENTRY pDecl[] =
 			//{
@@ -708,17 +710,6 @@ void LetsDrawSomeStuff::Render()
 			UINT stride[] = { sizeof(SimpleVertex) };
 			UINT offset[] = { 0 };
 
-
-			cb.mView = XMMatrixTranspose(XMMatrixTranslationFromVector(XMVECTOR{ 5,0,0,0 }));
-			myContext->UpdateSubresource(myConstantBuffer, 0, nullptr, &cb, 0, 0);
-
-			textureRenderer->Clear(myContext, myDepthStencilView, XMFLOAT4(1, 1, 1, 1));
-			textureRenderer->BeginRender(myContext);
-			
-
-			cb.mView = XMMatrixTranspose(viewMatrix);
-			myContext->UpdateSubresource(myConstantBuffer, 0, nullptr, &cb, 0, 0);
-
 #pragma region SKYBOX_RENDER
 
 			cb.mWorld = XMMatrixTranslationFromVector(Eye);
@@ -804,20 +795,54 @@ void LetsDrawSomeStuff::Render()
 			myContext->DrawIndexed(box.GetNumberOfIndices(), 0, 0);
 #endif 
 
+			XMVECTOR newEye = XMVectorSet(100.0f, 1.0f, -10.0f, 0.0f);
+			XMVECTOR newAt = XMVectorSet(100.0f, 1.0f, 0.0f, 0.0f);
+			XMVECTOR newUp = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+			cb.mView = XMMatrixTranspose( XMMatrixLookAtLH(newEye, newAt, newUp));			
+			myContext->UpdateSubresource(myConstantBuffer, 0, nullptr, &cb, 0, 0);
+
+			textureRenderer->Clear(myContext, myDepthStencilView, XMFLOAT4(1, 1, 1, 1));
+			textureRenderer->BeginRender(myContext);
+
+
 #if SPACESHIP
+			XMVECTOR spaceShipPosition = { 0,0,0,0 };
+			worldMatrix =( XMMatrixTranslationFromVector(spaceShipPosition)*XMMatrixRotationX(timer.TotalTime()));
+			cb.mWorld = XMMatrixTranspose(worldMatrix);
+			cb.mView = XMMatrixTranspose(viewMatrix);
+			myContext->UpdateSubresource(myConstantBuffer, 0, nullptr, &cb, 0, 0);
+			
 			myContext->VSSetShader(myVertexShader, nullptr, 0);
 			myContext->PSSetShaderResources(0, 1, &myTextureRVSpaceShip);
-			myContext->PSSetShader(myPixelShader, nullptr, 0);
-
-			cb.mWorld = XMMatrixTranspose(worldMatrix);
-			myContext->UpdateSubresource(myConstantBuffer, 0, nullptr, &cb, 0, 0);
+			myContext->PSSetShader(myPixelShaderNoLighting, nullptr, 0);
 
 			myContext->IASetVertexBuffers(0, 1, &spaceshipVertexBuffer, stride, offset);
 
 			myContext->IASetIndexBuffer(spaceshipIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
 			myContext->DrawIndexed(spaceShip.GetNumberOfIndices(), 0, 0);
-
 #endif 
+
+
+			textureRenderer->EndRender(myContext);
+
+			XMVECTOR displayPosition = { 0,0,-2,0 };
+			worldMatrix = (XMMatrixTranslationFromVector(displayPosition));
+			cb.mWorld = XMMatrixTranspose(worldMatrix);
+			cb.mView = XMMatrixTranspose( viewMatrix);
+			myContext->UpdateSubresource(myConstantBuffer, 0, nullptr, &cb, 0, 0);
+
+			myContext->VSSetShader(myVertexShader, nullptr, 0);
+			myContext->PSSetShader(myPixelShaderNoLighting, nullptr, 0);
+			myContext->PSSetShaderResources(0, 1, &textureRenderer->pCTexture);
+			myContext->IASetVertexBuffers(0, 1, &boxVertexBuffer, stride, offset);
+
+			myContext->IASetIndexBuffer(boxIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
+			myContext->DrawIndexed(box.GetNumberOfIndices(), 0, 0);
+
+			textureRenderer->pResView = { nullptr };
+			myContext->PSSetShaderResources(0, 1, &textureRenderer->pResView);
+
+
 #if PROCEDURAL_SPIRAL
 			XMVECTOR spiralPos = { 2,1,-1.5f,0 };
 			worldMatrix = XMMatrixTranslationFromVector(spiralPos);
@@ -888,19 +913,14 @@ void LetsDrawSomeStuff::Render()
 
 			myContext->DrawIndexedInstanced(box.GetNumberOfIndices(), 10, 0, 0, 0);
 #pragma endregion
+			cb.mView = XMMatrixTranspose(XMMatrixTranslationFromVector(XMVECTOR{ 5,0,0,0 }));
+			myContext->UpdateSubresource(myConstantBuffer, 0, nullptr, &cb, 0, 0);
 
-
-			textureRenderer->EndRender(myContext);
-			// temp = textureRenderer->GetTexture();
-			myContext->VSSetShader(myVertexShader, nullptr, 0);
-
-			myContext->PSSetShader(myPixelShader, nullptr, 0);
-			myContext->PSSetShaderResources(0, 1, &textureRenderer->pCTexture);
-			myContext->DrawIndexed(box.GetNumberOfIndices(), 0, 0);
 			
 
-			textureRenderer->pResView = { nullptr };
-			myContext->PSSetShaderResources(0, 1, &textureRenderer->pResView);
+
+
+			
 
 
 #pragma region LAST_STEP
@@ -908,7 +928,6 @@ void LetsDrawSomeStuff::Render()
 			// Present Backbuffer using Swapchain object
 			// Framerate is currently unlocked, we suggest "MSI Afterburner" to track your current FPS and memory usage.
 			mySwapChain->Present(0, 0); // set first argument to 1 to enable vertical refresh sync with display
-
 			myRenderTargetView->Release(); // Free any temp DX handles aquired this frame  
 #pragma endregion
 

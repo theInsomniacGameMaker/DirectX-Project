@@ -26,11 +26,12 @@ using namespace std;
 #include "VS_Instance.csh"
 #include "VS_PositionModifier.csh"
 #include "PS_Multitexturing.csh"
+#include "PS_NoLighting.csh"
 #include "GS_PointToQuad.csh"
 
 #define CHARIZARD_MESH 1
 #define BOX_MESH 1
-#define SPACESHIP 0
+#define SPACESHIP 1
 #define PROCEDURAL_SPIRAL 1 
 #define WIREFRAME 0
 #define DIRECTIONAL_LIGHT_ON 1
