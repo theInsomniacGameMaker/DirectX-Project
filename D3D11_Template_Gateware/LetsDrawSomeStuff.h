@@ -8,7 +8,7 @@
 #include "Mesh.h"
 #include "Misc.h"
 #include "XTime.h"
-
+#include "TextureRenderer.h"
 // Simple Container class to make life easier/cleaner
 class LetsDrawSomeStuff
 {
@@ -76,6 +76,7 @@ class LetsDrawSomeStuff
 
 	ID3D11ShaderResourceView*	myTextureRVSkyBox;
 	ID3D11ShaderResourceView*	myTextureRVPMT[2];
+	ID3D11ShaderResourceView*	temp;
 
 	ID3D11DepthStencilState* DSLessEqual;
 	ID3D11RasterizerState* RSBackFaceCull;
@@ -100,6 +101,8 @@ class LetsDrawSomeStuff
 
 	float moveX, moveY, moveZ;
 	XMVECTOR camPosition;
+
+	TextureRenderer *textureRenderer;
 
 	float camYaw, camPitch, camRoll;
 #if DEBUGGER
@@ -204,7 +207,7 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			hr = CreateDDSTextureFromFile(myDevice, L"Assets\\PirateBox.dds", nullptr, &myTextureRVPMT[0]);
 			hr = CreateDDSTextureFromFile(myDevice, L"Assets\\Brick.dds", nullptr, &myTextureRVPMT[1]);
 
-
+			textureRenderer = new TextureRenderer(myDevice, width, height);
 
 #pragma region CREATE_INPUT_LAYOUT
 			// Define the input layout
@@ -705,6 +708,17 @@ void LetsDrawSomeStuff::Render()
 			UINT stride[] = { sizeof(SimpleVertex) };
 			UINT offset[] = { 0 };
 
+
+			cb.mView = XMMatrixTranspose(XMMatrixTranslationFromVector(XMVECTOR{ 5,0,0,0 }));
+			myContext->UpdateSubresource(myConstantBuffer, 0, nullptr, &cb, 0, 0);
+
+			textureRenderer->Clear(myContext, myDepthStencilView, XMFLOAT4(1, 1, 1, 1));
+			textureRenderer->BeginRender(myContext);
+			
+
+			cb.mView = XMMatrixTranspose(viewMatrix);
+			myContext->UpdateSubresource(myConstantBuffer, 0, nullptr, &cb, 0, 0);
+
 #pragma region SKYBOX_RENDER
 
 			cb.mWorld = XMMatrixTranslationFromVector(Eye);
@@ -728,6 +742,8 @@ void LetsDrawSomeStuff::Render()
 			myContext->UpdateSubresource(myConstantBuffer, 0, nullptr, &cb, 0, 0);
 			myContext->VSSetShader(myVertexShader, nullptr, 0);
 			myContext->PSSetShader(myPixelShader, nullptr, 0);
+
+
 
 #if SPACESHIP
 			myContext->PSSetShaderResources(0, 1, &myTextureRVSpaceShip);
@@ -850,7 +866,7 @@ void LetsDrawSomeStuff::Render()
 #pragma endregion
 
 #pragma region H_FILE_PYRAMID
-			XMVECTOR pyramidPosition = { 0,3,0,0 };
+			XMVECTOR pyramidPosition = { 5,3,0,0 };
 			worldMatrix = XMMatrixTranslationFromVector(pyramidPosition);
 			cb.mWorld = XMMatrixTranspose(worldMatrix);
 			myContext->UpdateSubresource(myConstantBuffer, 0, nullptr, &cb, 0, 0);
@@ -872,6 +888,20 @@ void LetsDrawSomeStuff::Render()
 
 			myContext->DrawIndexedInstanced(box.GetNumberOfIndices(), 10, 0, 0, 0);
 #pragma endregion
+
+
+			textureRenderer->EndRender(myContext);
+			// temp = textureRenderer->GetTexture();
+			myContext->VSSetShader(myVertexShader, nullptr, 0);
+
+			myContext->PSSetShader(myPixelShader, nullptr, 0);
+			myContext->PSSetShaderResources(0, 1, &textureRenderer->pCTexture);
+			myContext->DrawIndexed(box.GetNumberOfIndices(), 0, 0);
+			
+
+			textureRenderer->pResView = { nullptr };
+			myContext->PSSetShaderResources(0, 1, &textureRenderer->pResView);
+
 
 #pragma region LAST_STEP
 
