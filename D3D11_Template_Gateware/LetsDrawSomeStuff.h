@@ -147,6 +147,8 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 
 			spaceShip = new D3DObject("Galaga Fighter.fbx", 1.0f / 4, myDevice, myContext, myVertexShader, myPixelShader, myConstantBuffer);
 
+			textureRenderer = new TextureRenderer(myDevice, width, height);
+
 			myContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 			CreateConstantBuffers();
@@ -205,6 +207,8 @@ LetsDrawSomeStuff::~LetsDrawSomeStuff()
 	delete bulb;
 	delete ground;
 	delete spaceShip;
+
+	delete textureRenderer;
 
 	myRenderTargetView->Release();
 	myDevice->Release();
@@ -280,9 +284,10 @@ void LetsDrawSomeStuff::Render()
 			box->Render();
 #endif 
 
+			textureRenderer->Clear();
+			textureRenderer->BeginRender();
 #if SPACESHIP
-
-			spaceShip->SetPosition(XMVECTOR{ 0,2,0,0 }, cb, myConstantBuffer);
+			spaceShip->SetPosition(XMVECTOR{ 10,2,0,0 }, cb, myConstantBuffer);
 			spaceShip->Render();
 #endif 
 			bulb->SetPosition(XMVECTOR{ lCb.lights[2].Position.x, lCb.lights[2].Position.y, lCb.lights[2].Position.z, 1 }, cb, myConstantBuffer);
