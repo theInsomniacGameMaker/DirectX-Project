@@ -9,6 +9,7 @@
 #include "Misc.h"
 #include "XTime.h"
 #include "TextureRenderer.h"
+#include "D3DObject.h"
 // Simple Container class to make life easier/cleaner
 class LetsDrawSomeStuff
 {
@@ -104,6 +105,7 @@ class LetsDrawSomeStuff
 	XMVECTOR camPosition;
 
 	TextureRenderer *textureRenderer;
+	D3DObject *feraligtr;
 
 	float camYaw, camPitch, camRoll;
 #if DEBUGGER
@@ -279,6 +281,8 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			InitData.pSysMem = skyBox.GetIndices();
 			myDevice->CreateBuffer(&bd, &InitData, &skyBoxIndexBuffer);
 #pragma endregion
+
+			feraligtr = new D3DObject("Feraligatr.fbx", 5.0f, myDevice, myContext, myVertexShader, myPixelShader, myConstantBuffer);
 
 #pragma region CHARIZARD_INIT
 #if CHARIZARD_MESH
@@ -734,7 +738,7 @@ void LetsDrawSomeStuff::Render()
 			myContext->VSSetShader(myVertexShader, nullptr, 0);
 			myContext->PSSetShader(myPixelShader, nullptr, 0);
 
-
+			feraligtr->Render();
 
 #if SPACESHIP
 			myContext->PSSetShaderResources(0, 1, &myTextureRVSpaceShip);
@@ -911,7 +915,7 @@ void LetsDrawSomeStuff::Render()
 
 			myContext->IASetIndexBuffer(boxIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
 
-			myContext->DrawIndexedInstanced(box.GetNumberOfIndices(), 10, 0, 0, 0);
+			//myContext->DrawIndexedInstanced(box.GetNumberOfIndices(), 10, 0, 0, 0);
 #pragma endregion
 			cb.mView = XMMatrixTranspose(XMMatrixTranslationFromVector(XMVECTOR{ 5,0,0,0 }));
 			myContext->UpdateSubresource(myConstantBuffer, 0, nullptr, &cb, 0, 0);

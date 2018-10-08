@@ -29,10 +29,10 @@ using namespace std;
 #include "PS_NoLighting.csh"
 #include "GS_PointToQuad.csh"
 
-#define CHARIZARD_MESH 1
+#define CHARIZARD_MESH 0
 #define BOX_MESH 1
 #define SPACESHIP 1
-#define PROCEDURAL_SPIRAL 1 
+#define PROCEDURAL_SPIRAL 0 
 #define WIREFRAME 0
 #define DIRECTIONAL_LIGHT_ON 1
 #define NON_MOUSE_CAMERA_MOVEMENT 1
