@@ -1,6 +1,4 @@
 #pragma once
-#pragma comment (lib, "dinput8.lib")
-#pragma comment (lib, "dxguid.lib")
 
 #include <atlbase.h>
 #include <windows.h>

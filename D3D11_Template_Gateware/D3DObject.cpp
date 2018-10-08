@@ -56,7 +56,7 @@ void D3DObject::Render()
 	m_Context->DrawIndexed(m_Mesh.GetNumberOfIndices(), 0, 0);
 }
 
-void D3DObject::RenderIndexed(int numberOfInstances, ID3D11Buffer* &perInstanceBuffer)
+void D3DObject::RenderInstanced(int numberOfInstances, ID3D11Buffer* &perInstanceBuffer)
 {
 	m_Context->VSSetShader(m_VertexShader, nullptr, 0);
 	m_Context->PSSetShader(m_PixelShader, nullptr, 0);
@@ -78,6 +78,16 @@ void D3DObject::RenderIndexedMulitexture(ID3D11ShaderResourceView* textureRVs[])
 	m_Context->DrawIndexed(m_Mesh.GetNumberOfIndices(), 0, 0);
 }
 
+void D3DObject::UpdateVS(ID3D11VertexShader *& vertexShader)
+{
+	m_VertexShader = vertexShader;
+}
+
+void D3DObject::UpdatePS(ID3D11PixelShader *& pixelShader)
+{
+	m_PixelShader = pixelShader;
+}
+
 void D3DObject::UpdateTexture(string textureName)
 {
 	textureName = "Assets\\" + textureName + ".dds";
@@ -91,12 +101,16 @@ void D3DObject::UpdateTexture(ID3D11ShaderResourceView *&textureRV)
 	m_TextureRV = textureRV;
 }
 
-
-
 //Will set the position of the object
 void D3DObject::SetPosition(XMVECTOR position, ConstantBuffer &constantBuffer, ID3D11Buffer* &perObjectBuffer)
 {
 	constantBuffer.mWorld = XMMatrixTranspose(XMMatrixTranslationFromVector(position));
+	m_Context->UpdateSubresource(perObjectBuffer, 0, nullptr, &constantBuffer, 0, 0);
+}
+
+void D3DObject::SetPosition(XMMATRIX position, ConstantBuffer & constantBuffer, ID3D11Buffer *& perObjectBuffer)
+{
+	constantBuffer.mWorld = XMMatrixTranspose((position));
 	m_Context->UpdateSubresource(perObjectBuffer, 0, nullptr, &constantBuffer, 0, 0);
 }
 

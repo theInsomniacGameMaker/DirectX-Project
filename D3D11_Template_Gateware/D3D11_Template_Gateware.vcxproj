@@ -176,7 +176,6 @@
     <ClCompile Include="Gateware Redistribution R5d\Source\G_System\GWindow.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Mesh.cpp" />
-    <ClCompile Include="SkyBox.cpp" />
     <ClCompile Include="TextureRenderer.cpp" />
     <ClCompile Include="XTime.cpp" />
   </ItemGroup>
@@ -227,6 +226,7 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="ExampleCode.cpp" />
+    <Text Include="LegacyCode.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
