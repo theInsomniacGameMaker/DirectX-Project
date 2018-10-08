@@ -42,9 +42,6 @@ class LetsDrawSomeStuff
 	ID3D11InputLayout*			myVertexLayout = nullptr;
 	ID3D11ShaderResourceView*	myTextureRVPMT[2];
 
-
-	XMMATRIX sphereWorld;
-
 	ID3D11Buffer*				myConstantBuffer = nullptr;
 	ID3D11Buffer*				myInstanceConstantBuffer = nullptr;
 	ID3D11Buffer*				myLightConstantBuffer = nullptr;
@@ -582,4 +579,3 @@ void LetsDrawSomeStuff::SetupWVP()
 	// Initialize the projection matrix
 	projectionMatrix = XMMatrixPerspectiveFovLH(XMConvertToRadians(fov), width / (FLOAT)height, 0.01f, 100.0f);
 }
-
