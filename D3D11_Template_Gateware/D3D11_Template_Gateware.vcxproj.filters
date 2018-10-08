@@ -90,9 +90,6 @@
     <ClInclude Include="test pyramid.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="SkyBox.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
     <ClInclude Include="D3DObject.h">
       <Filter>Headers</Filter>
     </ClInclude>

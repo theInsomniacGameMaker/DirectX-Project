@@ -151,7 +151,6 @@
     <ClInclude Include="LetsDrawSomeStuff.h" />
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="Misc.h" />
-    <ClInclude Include="SkyBox.h" />
     <ClInclude Include="test pyramid.h" />
     <ClInclude Include="TextureRenderer.h" />
     <ClInclude Include="XTime.h" />
