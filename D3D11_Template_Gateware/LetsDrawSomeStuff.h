@@ -106,6 +106,9 @@ class LetsDrawSomeStuff
 
 	TextureRenderer *textureRenderer;
 	D3DObject *feraligtr;
+	D3DObject *SkyBox;
+	D3DObject *ground;
+	D3DObject* box;
 
 	float camYaw, camPitch, camRoll;
 #if DEBUGGER
@@ -121,8 +124,8 @@ class LetsDrawSomeStuff
 
 	XTime timer;
 	Mesh charizard;
-	Mesh box;
-	Mesh ground;
+	//Mesh box;
+	//Mesh ground;
 	Mesh bulb;
 	Mesh spaceShip;
 	//SkyBox skyBox;
@@ -182,18 +185,18 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 #pragma endregion
 
 #pragma region CREATING_SHADERS
-
-			HRESULT hr = myDevice->CreateVertexShader(Trivial_VS, sizeof(Trivial_VS), nullptr, &myVertexShader);
+			HRESULT hr;
+			hr = myDevice->CreateVertexShader(Trivial_VS, sizeof(Trivial_VS), nullptr, &myVertexShader);
 			hr = myDevice->CreateVertexShader(VS_UVModifier, sizeof(VS_UVModifier), nullptr, &myVertexShaderUV);
 			hr = myDevice->CreateVertexShader(VS_SkyBox, sizeof(VS_SkyBox), nullptr, &SKYMAP_VS);
 			hr = myDevice->CreateVertexShader(VS_Instance, sizeof(VS_Instance), nullptr, &myVertexShaderInstance);
 			hr = myDevice->CreateVertexShader(VS_PositionModifier, sizeof(VS_PositionModifier), nullptr, &myVertexShaderWave);
 
-			myDevice->CreatePixelShader(Trivial_PS, sizeof(Trivial_PS), nullptr, &myPixelShader);
-			myDevice->CreatePixelShader(SolidPS, sizeof(SolidPS), nullptr, &mySolidPixelShader);
-			myDevice->CreatePixelShader(PS_SkyBox, sizeof(PS_SkyBox), nullptr, &SKYMAP_PS);
-			myDevice->CreatePixelShader(PS_Multitexturing, sizeof(PS_Multitexturing), nullptr, &myPixelShaderMultitexturing);
-			myDevice->CreatePixelShader(PS_NoLighting, sizeof(PS_NoLighting), nullptr, &myPixelShaderNoLighting);
+			hr = myDevice->CreatePixelShader(Trivial_PS, sizeof(Trivial_PS), nullptr, &myPixelShader);
+			hr = myDevice->CreatePixelShader(SolidPS, sizeof(SolidPS), nullptr, &mySolidPixelShader);
+			hr = myDevice->CreatePixelShader(PS_SkyBox, sizeof(PS_SkyBox), nullptr, &SKYMAP_PS);
+			hr = myDevice->CreatePixelShader(PS_Multitexturing, sizeof(PS_Multitexturing), nullptr, &myPixelShaderMultitexturing);
+			hr = myDevice->CreatePixelShader(PS_NoLighting, sizeof(PS_NoLighting), nullptr, &myPixelShaderNoLighting);
 
 			//D3D11_SO_DECLARATION_ENTRY pDecl[] =
 			//{
@@ -246,6 +249,16 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 #endif  
 #pragma endregion
 
+			feraligtr = new D3DObject("Feraligatr.fbx", 5.0f, myDevice, myContext, myVertexShader, myPixelShader, myConstantBuffer);
+
+			SkyBox = new D3DObject("SkyBox.fbx", 10.0f, myDevice, myContext, SKYMAP_VS, SKYMAP_PS, myConstantBuffer);
+			SkyBox->UpdateTexture("OutputCube");
+
+			ground = new D3DObject("Ground.fbx", 10.0f, myDevice, myContext, myVertexShaderWave, myPixelShader, myConstantBuffer);
+
+			box = new D3DObject("cube.fbx", 1 / 50.0f, myDevice, myContext, myVertexShader, myPixelShaderMultitexturing, myConstantBuffer);
+			
+
 #pragma region  PYRAMID_INIT
 			LoadFromHeader();
 			bd = {};
@@ -261,28 +274,27 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 #pragma endregion
 
 #pragma region SKY_BOX_INIT
-			skyBox = Mesh("SkyBox.fbx", 10.0f, myDevice, myTextureRVSkyBox);
-			hr = CreateDDSTextureFromFile(myDevice, L"Assets\\OutputCube.dds", nullptr, &myTextureRVSkyBox);
-			bd.Usage = D3D11_USAGE_DEFAULT;
-			bd.ByteWidth = sizeof(SimpleVertex) * skyBox.GetNumberOfVertices();
-			bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-			bd.CPUAccessFlags = 0;
+			//skyBox = Mesh("SkyBox.fbx", 10.0f, myDevice, myTextureRVSkyBox);
+			//hr = CreateDDSTextureFromFile(myDevice, L"Assets\\OutputCube.dds", nullptr, &myTextureRVSkyBox);
+			//bd.Usage = D3D11_USAGE_DEFAULT;
+			//bd.ByteWidth = sizeof(SimpleVertex) * skyBox.GetNumberOfVertices();
+			//bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+			//bd.CPUAccessFlags = 0;
 
-			//setting subresource data
-			InitData.pSysMem = skyBox.GetVertices();
-			myDevice->CreateBuffer(&bd, &InitData, &skyBoxVertexBuffer);
+			////setting subresource data
+			//InitData.pSysMem = skyBox.GetVertices();
+			//myDevice->CreateBuffer(&bd, &InitData, &skyBoxVertexBuffer);
 
-			// Set vertex buffer
+			//// Set vertex buffer
 
-			bd.Usage = D3D11_USAGE_DEFAULT;
-			bd.ByteWidth = sizeof(int) * skyBox.GetNumberOfIndices();
-			bd.BindFlags = D3D11_BIND_INDEX_BUFFER;
-			bd.CPUAccessFlags = 0;
-			InitData.pSysMem = skyBox.GetIndices();
-			myDevice->CreateBuffer(&bd, &InitData, &skyBoxIndexBuffer);
+			//bd.Usage = D3D11_USAGE_DEFAULT;
+			//bd.ByteWidth = sizeof(int) * skyBox.GetNumberOfIndices();
+			//bd.BindFlags = D3D11_BIND_INDEX_BUFFER;
+			//bd.CPUAccessFlags = 0;
+			//InitData.pSysMem = skyBox.GetIndices();
+			//myDevice->CreateBuffer(&bd, &InitData, &skyBoxIndexBuffer);
 #pragma endregion
 
-			feraligtr = new D3DObject("Feraligatr.fbx", 5.0f, myDevice, myContext, myVertexShader, myPixelShader, myConstantBuffer);
 
 #pragma region CHARIZARD_INIT
 #if CHARIZARD_MESH
@@ -328,25 +340,25 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 
 #pragma region BOX_INIT
 #if BOX_MESH
-			box = Mesh("cube.fbx", 1 / 50.f, myDevice, myTextureRVBox);
-			bd = {};
-			bd.Usage = D3D11_USAGE_DEFAULT;
-			bd.ByteWidth = sizeof(SimpleVertex) *box.GetNumberOfVertices();
-			bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-			bd.CPUAccessFlags = 0;
+			//box = Mesh("cube.fbx", 1 / 50.f, myDevice, myTextureRVBox);
+			//bd = {};
+			//bd.Usage = D3D11_USAGE_DEFAULT;
+			//bd.ByteWidth = sizeof(SimpleVertex) *box.GetNumberOfVertices();
+			//bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+			//bd.CPUAccessFlags = 0;
 
-			//setting subresource data
-			InitData = {};
-			InitData.pSysMem = box.GetVertices();
-			myDevice->CreateBuffer(&bd, &InitData, &boxVertexBuffer);
+			////setting subresource data
+			//InitData = {};
+			//InitData.pSysMem = box.GetVertices();
+			//myDevice->CreateBuffer(&bd, &InitData, &boxVertexBuffer);
 
 
-			bd.Usage = D3D11_USAGE_DEFAULT;
-			bd.ByteWidth = sizeof(int) * box.GetNumberOfIndices();
-			bd.BindFlags = D3D11_BIND_INDEX_BUFFER;
-			bd.CPUAccessFlags = 0;
-			InitData.pSysMem = box.GetIndices();
-			myDevice->CreateBuffer(&bd, &InitData, &boxIndexBuffer);
+			//bd.Usage = D3D11_USAGE_DEFAULT;
+			//bd.ByteWidth = sizeof(int) * box.GetNumberOfIndices();
+			//bd.BindFlags = D3D11_BIND_INDEX_BUFFER;
+			//bd.CPUAccessFlags = 0;
+			//InitData.pSysMem = box.GetIndices();
+			//myDevice->CreateBuffer(&bd, &InitData, &boxIndexBuffer);
 
 #endif  
 #pragma endregion
@@ -409,25 +421,26 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 #pragma endregion
 
 #pragma region GROUND_INIT
-			ground = Mesh("Ground.fbx", 10, myDevice, myTextureRVBase);
 
-			bd = {};
-			bd.Usage = D3D11_USAGE_DEFAULT;
-			bd.ByteWidth = sizeof(SimpleVertex) *ground.GetNumberOfVertices();
-			bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-			bd.CPUAccessFlags = 0;
+			//ground = Mesh("Ground.fbx", 10, myDevice, myTextureRVBase);
 
-			//setting subresource data
-			InitData = {};
-			InitData.pSysMem = ground.GetVertices();
-			myDevice->CreateBuffer(&bd, &InitData, &groundVertexBuffer);
+			//bd = {};
+			//bd.Usage = D3D11_USAGE_DEFAULT;
+			//bd.ByteWidth = sizeof(SimpleVertex) *ground.GetNumberOfVertices();
+			//bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+			//bd.CPUAccessFlags = 0;
 
-			bd.Usage = D3D11_USAGE_DEFAULT;
-			bd.ByteWidth = sizeof(int) * ground.GetNumberOfIndices();
-			bd.BindFlags = D3D11_BIND_INDEX_BUFFER;
-			bd.CPUAccessFlags = 0;
-			InitData.pSysMem = ground.GetIndices();
-			myDevice->CreateBuffer(&bd, &InitData, &groundIndexBuffer);
+			////setting subresource data
+			//InitData = {};
+			//InitData.pSysMem = ground.GetVertices();
+			//myDevice->CreateBuffer(&bd, &InitData, &groundVertexBuffer);
+
+			//bd.Usage = D3D11_USAGE_DEFAULT;
+			//bd.ByteWidth = sizeof(int) * ground.GetNumberOfIndices();
+			//bd.BindFlags = D3D11_BIND_INDEX_BUFFER;
+			//bd.CPUAccessFlags = 0;
+			//InitData.pSysMem = ground.GetIndices();
+			//myDevice->CreateBuffer(&bd, &InitData, &groundIndexBuffer);
 #pragma endregion
 
 #pragma region SET_TOPOLOGY
@@ -520,7 +533,7 @@ LetsDrawSomeStuff::~LetsDrawSomeStuff()
 	SKYMAP_PS->Release();
 	myPixelShaderMultitexturing->Release();
 
-	myTextureRVSkyBox->Release();
+	/*myTextureRVSkyBox->Release();*/
 	myTextureRVPMT[0]->Release();
 	myTextureRVPMT[1]->Release();
 	myLightConstantBuffer->Release();
@@ -541,15 +554,15 @@ LetsDrawSomeStuff::~LetsDrawSomeStuff()
 	if (spiralVertexBuffer)spiralVertexBuffer->Release();
 #endif
 
-	groundVertexBuffer->Release();
-	groundIndexBuffer->Release();
-	if (myTextureRVBase)myTextureRVBase->Release();
+	//groundVertexBuffer->Release();
+	//groundIndexBuffer->Release();
+	//if (myTextureRVBase)myTextureRVBase->Release();
 	bulbVertexBuffer->Release();
 	bulbIndexBuffer->Release();
 	myTextureRVBulb->Release();
 
-	skyBoxIndexBuffer->Release();
-	skyBoxVertexBuffer->Release();
+	//skyBoxIndexBuffer->Release();
+	//skyBoxVertexBuffer->Release();
 
 	myConstantBuffer->Release();
 
@@ -575,19 +588,24 @@ LetsDrawSomeStuff::~LetsDrawSomeStuff()
 	DebugDevice->ReportLiveDeviceObjects(D3D11_RLDO_DETAIL);
 #endif
 
-	box.LateDestructor();
+	/*box.LateDestructor();*/
 	spaceShip.LateDestructor();
-	ground.LateDestructor();
+	//ground.LateDestructor();
 	bulb.LateDestructor();
 	charizard.LateDestructor();
 	skyBox.LateDestructor();
 
 	delete[] hFilePyramid.vertices;
 
+	delete feraligtr;
+	delete SkyBox;
+
 	myRenderTargetView->Release();
 	myDevice->Release();
 	mySwapChain->Release();
 	myContext->Release();
+
+
 }
 
 // Draw
@@ -716,19 +734,19 @@ void LetsDrawSomeStuff::Render()
 
 #pragma region SKYBOX_RENDER
 
-			cb.mWorld = XMMatrixTranslationFromVector(Eye);
-			myContext->PSSetShaderResources(0, 1, &myTextureRVSkyBox);
-			myContext->UpdateSubresource(myConstantBuffer, 0, nullptr, &cb, 0, 0);
-			myContext->VSSetShader(SKYMAP_VS, nullptr, 0);
-			myContext->PSSetShader(SKYMAP_PS, nullptr, 0);
+			//cb.mWorld = XMMatrixTranslationFromVector(Eye);
+			//myContext->PSSetShaderResources(0, 1, &myTextureRVSkyBox);
+			//myContext->UpdateSubresource(myConstantBuffer, 0, nullptr, &cb, 0, 0);
+			//myContext->VSSetShader(SKYMAP_VS, nullptr, 0);
+			//myContext->PSSetShader(SKYMAP_PS, nullptr, 0);
 
-			myContext->IASetVertexBuffers(0, 1, &skyBoxVertexBuffer, stride, offset);
-			// Set index buffer
-			myContext->IASetIndexBuffer(skyBoxIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
+			//myContext->IASetVertexBuffers(0, 1, &skyBoxVertexBuffer, stride, offset);
+			//// Set index buffer
+			//myContext->IASetIndexBuffer(skyBoxIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
 
-			myContext->DrawIndexed(skyBox.GetNumberOfIndices(), 0, 0);
-
-
+			//myContext->DrawIndexed(skyBox.GetNumberOfIndices(), 0, 0);
+			SkyBox->SetPosition(Eye, cb,myConstantBuffer);
+			SkyBox->Render();
 			myContext->ClearDepthStencilView(myDepthStencilView, D3D11_CLEAR_DEPTH, 1, 0); // clear it to Z exponential Far.
 
 #pragma endregion
@@ -738,7 +756,11 @@ void LetsDrawSomeStuff::Render()
 			myContext->VSSetShader(myVertexShader, nullptr, 0);
 			myContext->PSSetShader(myPixelShader, nullptr, 0);
 
+			feraligtr->SetRotatingPosition(XMVECTOR{ 0,0,0,0 }, cb, myConstantBuffer, timer.TotalTime());
 			feraligtr->Render();
+
+			ground->SetPosition(XMVECTOR{ 0,-0.5,0,0 }, cb, myConstantBuffer);
+			ground->Render();
 
 #if SPACESHIP
 			myContext->PSSetShaderResources(0, 1, &myTextureRVSpaceShip);
@@ -764,7 +786,7 @@ void LetsDrawSomeStuff::Render()
 
 #pragma region BOX_RENDER
 #if BOX_MESH
-			myContext->VSSetShader(myVertexShaderUV, nullptr, 0);
+			/*myContext->VSSetShader(myVertexShaderUV, nullptr, 0);
 			myContext->PSSetShaderResources(0, 1, &myTextureRVBox);
 
 			XMVECTOR boxPosition = { -3, 0.0f,0,0 };
@@ -774,29 +796,31 @@ void LetsDrawSomeStuff::Render()
 			myContext->IASetVertexBuffers(0, 1, &boxVertexBuffer, stride, offset);
 
 			myContext->IASetIndexBuffer(boxIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
-			myContext->DrawIndexed(box.GetNumberOfIndices(), 0, 0);
+			myContext->DrawIndexed(box.GetNumberOfIndices(), 0, 0);*/
+			box->SetPosition(XMVECTOR{ -2,0,0,1 }, cb, myConstantBuffer);
+			box->RenderIndexedMulitexture(myTextureRVPMT);
 #endif
 
 #pragma endregion
 
 #if DIRECTIONAL_LIGHT_ON
-			myContext->VSSetShader(myVertexShader, nullptr, 0);
-			myContext->PSSetShaderResources(0, 1, &myTextureRVBox);
-			myContext->PSSetShader(mySolidPixelShader, nullptr, 0);
+			//myContext->VSSetShader(myVertexShader, nullptr, 0);
+			//myContext->PSSetShaderResources(0, 1, &myTextureRVBox);
+			//myContext->PSSetShader(mySolidPixelShader, nullptr, 0);
 
-			XMMATRIX mLight = XMMatrixTranslationFromVector(5.0f * XMLoadFloat4(&lCb.lights[1].Direction));
-			XMMATRIX mLightScale = XMMatrixScaling(0.2f, 0.2f, 0.2f);
-			mLight = mLightScale * mLight;
+			//XMMATRIX mLight = XMMatrixTranslationFromVector(5.0f * XMLoadFloat4(&lCb.lights[1].Direction));
+			//XMMATRIX mLightScale = XMMatrixScaling(0.2f, 0.2f, 0.2f);
+			//mLight = mLightScale * mLight;
 
-			// Update the world variable to reflect the current light
-			cb.mWorld = XMMatrixTranspose(mLight);
-			cb.vOutputColor = lCb.lights[1].Color;
-			myContext->UpdateSubresource(myConstantBuffer, 0, nullptr, &cb, 0, 0);
+			//// Update the world variable to reflect the current light
+			//cb.mWorld = XMMatrixTranspose(mLight);
+			//cb.vOutputColor = lCb.lights[1].Color;
+			//myContext->UpdateSubresource(myConstantBuffer, 0, nullptr, &cb, 0, 0);
 
-			myContext->IASetVertexBuffers(0, 1, &boxVertexBuffer, stride, offset);
+			//myContext->IASetVertexBuffers(0, 1, &boxVertexBuffer, stride, offset);
 
-			myContext->IASetIndexBuffer(boxIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
-			myContext->DrawIndexed(box.GetNumberOfIndices(), 0, 0);
+			//myContext->IASetIndexBuffer(boxIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
+			//myContext->DrawIndexed(box.GetNumberOfIndices(), 0, 0);
 #endif 
 
 			XMVECTOR newEye = XMVectorSet(100.0f, 1.0f, -10.0f, 0.0f);
@@ -827,7 +851,7 @@ void LetsDrawSomeStuff::Render()
 #endif 
 
 
-			textureRenderer->EndRender(myContext);
+			/*textureRenderer->EndRender(myContext);
 
 			XMVECTOR displayPosition = { 0,0,-2,0 };
 			worldMatrix = (XMMatrixTranslationFromVector(displayPosition));
@@ -844,7 +868,7 @@ void LetsDrawSomeStuff::Render()
 			myContext->DrawIndexed(box.GetNumberOfIndices(), 0, 0);
 
 			textureRenderer->pResView = { nullptr };
-			myContext->PSSetShaderResources(0, 1, &textureRenderer->pResView);
+			myContext->PSSetShaderResources(0, 1, &textureRenderer->pResView);*/
 
 
 #if PROCEDURAL_SPIRAL
@@ -880,18 +904,18 @@ void LetsDrawSomeStuff::Render()
 #pragma endregion
 
 #pragma region GROUND_RENDER			
-			//Rendering ground
-			XMVECTOR groundPosition = { 0,-1,0,0 };
-			worldMatrix = XMMatrixTranslationFromVector(groundPosition);
-			cb.mWorld = XMMatrixTranspose(worldMatrix);
-			myContext->PSSetShaderResources(0, 1, &myTextureRVBase);
-			myContext->VSSetShader(myVertexShaderWave, nullptr, 0);
-			myContext->UpdateSubresource(myConstantBuffer, 0, nullptr, &cb, 0, 0);
+			////Rendering ground
+			//XMVECTOR groundPosition = { 0,-1,0,0 };
+			//worldMatrix = XMMatrixTranslationFromVector(groundPosition);
+			//cb.mWorld = XMMatrixTranspose(worldMatrix);
+			//myContext->PSSetShaderResources(0, 1, &myTextureRVBase);
+			//myContext->VSSetShader(myVertexShaderWave, nullptr, 0);
+			//myContext->UpdateSubresource(myConstantBuffer, 0, nullptr, &cb, 0, 0);
 
-			myContext->IASetVertexBuffers(0, 1, &groundVertexBuffer, stride, offset);
-			// Set index buffer
-			myContext->IASetIndexBuffer(groundIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
-			myContext->DrawIndexed(ground.GetNumberOfIndices(), 0, 0);
+			//myContext->IASetVertexBuffers(0, 1, &groundVertexBuffer, stride, offset);
+			//// Set index buffer
+			//myContext->IASetIndexBuffer(groundIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
+			//myContext->DrawIndexed(ground.GetNumberOfIndices(), 0, 0);
 #pragma endregion
 
 #pragma region H_FILE_PYRAMID
