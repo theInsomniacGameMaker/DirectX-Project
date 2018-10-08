@@ -70,7 +70,7 @@ class LetsDrawSomeStuff
 	LightConstantBuffer lCb;
 	ConstantBuffer cb;
 
-	XTime timer;
+	XTime xTimer;
 
 	float camYaw, camPitch, camRoll;
 	float moveX, moveY, moveZ;
@@ -158,7 +158,7 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 
 			SetupWVP();
 
-			timer.Restart();
+			xTimer.Restart();
 		}
 	}
 }
@@ -221,7 +221,7 @@ void LetsDrawSomeStuff::Render()
 {
 	if (mySurface) // valid?
 	{
-		timer.Signal();
+		xTimer.Signal();
 		// this could be changed during resolution edits, get it every frame
 		ID3D11RenderTargetView *myRenderTargetView = nullptr;
 		ID3D11DepthStencilView *myDepthStencilView = nullptr;
@@ -259,7 +259,7 @@ void LetsDrawSomeStuff::Render()
 			skyBox->Render();
 			myContext->ClearDepthStencilView(myDepthStencilView, D3D11_CLEAR_DEPTH, 1, 0); // clear it to Z exponential Far.
 		
-			feraligtr->SetRotatingPosition(XMVECTOR{ 0,0,0,0 }, cb, myConstantBuffer, (float)timer.TotalTime());
+			feraligtr->SetRotatingPosition(XMVECTOR{ 0,0,0,0 }, cb, myConstantBuffer, (float)xTimer.TotalTime());
 			feraligtr->Render();
 
 			ground->SetPosition(XMVECTOR{ 0,-0.5,0,0 }, cb, myConstantBuffer);
@@ -311,29 +311,29 @@ void LetsDrawSomeStuff::CameraMovement()
 
 	if (GetAsyncKeyState('E'))
 	{
-		moveY += (float)timer.Delta()*5.0f;
+		moveY += (float)xTimer.Delta()*5.0f;
 	}
 	else if (GetAsyncKeyState('Q'))
 	{
-		moveY -= (float)timer.Delta()*5.0f;
+		moveY -= (float)xTimer.Delta()*5.0f;
 	}
 
 	if (GetAsyncKeyState('W'))
 	{
-		moveZ += (float)timer.Delta()*5.0f;
+		moveZ += (float)xTimer.Delta()*5.0f;
 	}
 	else if (GetAsyncKeyState('S'))
 	{
-		moveZ -= (float)timer.Delta()*5.0f;
+		moveZ -= (float)xTimer.Delta()*5.0f;
 	}
 
 	if (GetAsyncKeyState('D'))
 	{
-		moveX += (float)timer.Delta()*5.0f;
+		moveX += (float)xTimer.Delta()*5.0f;
 	}
 	else if (GetAsyncKeyState('A'))
 	{
-		moveX -= (float)timer.Delta()*5.0f;
+		moveX -= (float)xTimer.Delta()*5.0f;
 	}
 
 #pragma endregion
@@ -341,12 +341,12 @@ void LetsDrawSomeStuff::CameraMovement()
 #pragma region FOV_ZOOMING
 	if (GetAsyncKeyState(VK_UP))
 	{
-		fov += (10.0f * (float)timer.Delta());
+		fov += (10.0f * (float)xTimer.Delta());
 		projectionMatrix = XMMatrixPerspectiveFovLH(XMConvertToRadians(fov), width / (FLOAT)height, 0.01f, 100.0f);
 	}
 	else if (GetAsyncKeyState(VK_DOWN))
 	{
-		fov -= (10 * (float)timer.Delta());
+		fov -= (10 * (float)xTimer.Delta());
 		projectionMatrix = XMMatrixPerspectiveFovLH(XMConvertToRadians(fov), width / (FLOAT)height, 0.01f, 100.0f);
 	}
 #pragma endregion
@@ -355,29 +355,29 @@ void LetsDrawSomeStuff::CameraMovement()
 
 	if (GetAsyncKeyState('O'))
 	{
-		camRoll += 1 * (float)timer.Delta();
+		camRoll += 1 * (float)xTimer.Delta();
 	}
 	else if (GetAsyncKeyState('U'))
 	{
-		camRoll -= 1 * (float)timer.Delta();
+		camRoll -= 1 * (float)xTimer.Delta();
 	}
 
 	if (GetAsyncKeyState('I'))
 	{
-		camPitch += 1 * (float)timer.Delta();
+		camPitch += 1 * (float)xTimer.Delta();
 	}
 	else if (GetAsyncKeyState('K'))
 	{
-		camPitch -= 1 * (float)timer.Delta();
+		camPitch -= 1 * (float)xTimer.Delta();
 	}
 
 	if (GetAsyncKeyState('J'))
 	{
-		camYaw += 1 * (float)timer.Delta();
+		camYaw += 1 * (float)xTimer.Delta();
 	}
 	else if (GetAsyncKeyState('L'))
 	{
-		camYaw -= 1 * (float)timer.Delta();
+		camYaw -= 1 * (float)xTimer.Delta();
 	}
 #pragma endregion
 
@@ -457,11 +457,11 @@ void LetsDrawSomeStuff::UpdateLightBuffer()
 	lCb.lights[1].Color = XMFLOAT4(0, 0, 0, 0);
 #endif 
 
-	lCb.lights[2].Position = XMFLOAT4(0, (sin((float)timer.TotalTime()) * 5), 0, 2);
+	lCb.lights[2].Position = XMFLOAT4(0, (sin((float)xTimer.TotalTime()) * 5), 0, 2);
 	lCb.lights[2].Range.x = 6.0f;
 	lCb.lights[2].Color = XMFLOAT4(0, 0, 1, 1);
 
-	lCb.lights[3].Position = XMFLOAT4(sin((float)timer.TotalTime() * 2), 2.0f, cos((float)timer.TotalTime() * 2), 3.0f);
+	lCb.lights[3].Position = XMFLOAT4(sin((float)xTimer.TotalTime() * 2), 2.0f, cos((float)xTimer.TotalTime() * 2), 3.0f);
 	lCb.lights[3].Direction = XMFLOAT4(0.0f, -1.0f, 0.0f, 10.0f);
 	lCb.lights[3].Range.x = 0.9f;
 	lCb.lights[3].Range.y = 0.8f;
@@ -474,7 +474,7 @@ void LetsDrawSomeStuff::UpdateLightBuffer()
 	lCb.lights[4].Color = XMFLOAT4(1, 1, 1, 1);
 
 	// Rotate the a matrix
-	XMMATRIX mRotate = XMMatrixRotationY(-2.0f * (float)timer.TotalTime());
+	XMMATRIX mRotate = XMMatrixRotationY(-2.0f * (float)xTimer.TotalTime());
 	//store the ligh dir in a XMFloat 
 	XMVECTOR newLightDir = XMLoadFloat4(&lCb.lights[1].Direction);
 	//transform the light dir by the roatation matrix made
@@ -492,7 +492,7 @@ void LetsDrawSomeStuff::UpdateConstantBuffer()
 	cb.mWorld = XMMatrixTranspose(worldMatrix);
 	cb.mView = XMMatrixTranspose(viewMatrix);
 	cb.mProjection = XMMatrixTranspose(projectionMatrix);
-	cb.time.x = (float)timer.TotalTime();
+	cb.time.x = (float)xTimer.TotalTime();
 	cb.vOutputColor = XMFLOAT4(0, 0, 0, 0);
 	myContext->UpdateSubresource(myConstantBuffer, 0, nullptr, &cb, 0, 0);
 }
