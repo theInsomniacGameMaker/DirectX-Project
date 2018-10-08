@@ -58,10 +58,12 @@
     <ClCompile Include="XTime.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="SkyBox.cpp">
+    <ClCompile Include="D3DObject.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="TextureRenderer.cpp" />
+    <ClCompile Include="TextureRenderer.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Declarations.h">
@@ -91,7 +93,12 @@
     <ClInclude Include="SkyBox.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="TextureRenderer.h" />
+    <ClInclude Include="D3DObject.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="TextureRenderer.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Gateware Source">
@@ -144,5 +151,6 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="ExampleCode.cpp" />
+    <Text Include="LegacyCode.txt" />
   </ItemGroup>
 </Project>
