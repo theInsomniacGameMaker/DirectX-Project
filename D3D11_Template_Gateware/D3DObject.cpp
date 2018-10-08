@@ -65,5 +65,8 @@ void D3DObject::SetPosition(XMVECTOR position, ConstantBuffer &constantBuffer)
 
 D3DObject::~D3DObject()
 {
+	m_VertexBuffer->Release();
+	m_IndexBuffer->Release();
+	m_TextureRV->Release();
 	m_Mesh.LateDestructor();
 }
