@@ -335,7 +335,7 @@ void LetsDrawSomeStuff::Render()
 
 			UpdateCamera();
 
-			quad2->UpdateTexture(textureRenderer->pCTexture);
+			quad2->UpdateTexture(textureRenderer->finalTexture);
 			quad2->SetPosition(XMVECTOR{ 0, 0, -3, 1 }, cb, myConstantBuffer);
 			quad2->RenderIndexed();
 

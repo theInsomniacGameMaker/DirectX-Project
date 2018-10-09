@@ -36,7 +36,7 @@ TextureRenderer::TextureRenderer(ID3D11Device *pDevice, int width, int height)
 	pDevice->CreateTexture2D(&depthStencilDesc, NULL, &depthStencilBuffer);
 	pDevice->CreateDepthStencilView(depthStencilBuffer, NULL, &depthStencilView);
 
-	HRESULT hr = pDevice->CreateTexture2D(&textureDesc, nullptr, &pTexture);
+	HRESULT hr = pDevice->CreateTexture2D(&textureDesc, nullptr, &texture);
 
 	// Setup the description of the render target view.
 	ZeroMemory(&renderTargetViewDesc, sizeof(renderTargetViewDesc));
@@ -44,7 +44,7 @@ TextureRenderer::TextureRenderer(ID3D11Device *pDevice, int width, int height)
 	renderTargetViewDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
 	renderTargetViewDesc.Texture2D.MipSlice = 0;
 
-	hr = pDevice->CreateRenderTargetView(pTexture, &renderTargetViewDesc, &pRenderTargetView);
+	hr = pDevice->CreateRenderTargetView(texture, &renderTargetViewDesc, &renderTargetView);
 	
 
 	ZeroMemory(&shaderResourceViewDesc, sizeof(shaderResourceViewDesc));
@@ -53,13 +53,13 @@ TextureRenderer::TextureRenderer(ID3D11Device *pDevice, int width, int height)
 	shaderResourceViewDesc.Texture2D.MostDetailedMip = 0;
 	shaderResourceViewDesc.Texture2D.MipLevels = 1;
 
-	hr = pDevice->CreateShaderResourceView(pTexture, &shaderResourceViewDesc, &pResView);
+	hr = pDevice->CreateShaderResourceView(texture, &shaderResourceViewDesc, &pResView);
 	
 	rttEye = XMVectorSet(100, 0, -3, 0);
 	rttAt = XMVectorSet(100, 0, 0, 0);
 	rttUp = XMVectorSet(0, 1, 0, 0);
 
-	pCTexture =  (pResView);
+	finalTexture =  (pResView);
 }
 
 TextureRenderer::TextureRenderer()
@@ -69,15 +69,14 @@ TextureRenderer::TextureRenderer()
 
 TextureRenderer::~TextureRenderer()
 {
-	if (pCTexture)
+	if (finalTexture)
 	{
-		pCTexture->Release();
-		pCTexture = 0;
+		finalTexture->Release();
+		finalTexture = 0;
 	}
-	/*if(pResView)
-		pResView->Release();*/
-	pRenderTargetView->Release();
-	pTexture->Release();
+	
+	renderTargetView->Release();
+	texture->Release();
 }
 
 void TextureRenderer::Clear(ID3D11DeviceContext *pDeviceContext, ID3D11DepthStencilView *pDepth,
@@ -87,7 +86,7 @@ void TextureRenderer::Clear(ID3D11DeviceContext *pDeviceContext, ID3D11DepthSten
 		clearColor.x, clearColor.y, clearColor.z, clearColor.w
 	};
 
-	pDeviceContext->ClearRenderTargetView(pRenderTargetView, color);
+	pDeviceContext->ClearRenderTargetView(renderTargetView, color);
 	pDeviceContext->ClearDepthStencilView(depthStencilView, D3D11_CLEAR_DEPTH, 1, 0); // clear it to Z exponential Far.
 }
 
@@ -100,9 +99,9 @@ void TextureRenderer::MoveCamera(ConstantBuffer &cb, ID3D11Buffer *& constantBuf
 void TextureRenderer::BeginRender(ID3D11DeviceContext *pDeviceContext)
 {
 	ID3D11DepthStencilView *pDepthStencil = nullptr;
-	pDeviceContext->OMGetRenderTargets(1, &pTarget, &mainDepthStencilView);
+	pDeviceContext->OMGetRenderTargets(1, &renderTargetView, &mainDepthStencilView);
 
-	pDeviceContext->OMSetRenderTargets(1, &pRenderTargetView, depthStencilView);
+	pDeviceContext->OMSetRenderTargets(1, &renderTargetView, depthStencilView);
 }
 
 void TextureRenderer::EndRender(ID3D11DeviceContext *pDeviceContext)
@@ -110,7 +109,7 @@ void TextureRenderer::EndRender(ID3D11DeviceContext *pDeviceContext)
 	ID3D11DepthStencilView *pDepthStencil = nullptr;
 	pDeviceContext->OMGetRenderTargets(0, nullptr, &pDepthStencil);
 
-	pDeviceContext->OMSetRenderTargets(1, &pTarget, mainDepthStencilView);
+	pDeviceContext->OMSetRenderTargets(1, &renderTargetView, mainDepthStencilView);
 }
 
 
