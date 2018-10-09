@@ -27,6 +27,8 @@ using namespace std;
 #include "PS_NoLighting.csh"
 #include "GS_PointToQuad.csh"
 #include "VS_PassThrough.csh"
+#include "VS_Reflective.csh"
+#include "PS_Reflective.csh"
 
 #define CHARIZARD_MESH 0
 #define BOX_MESH 1

@@ -148,6 +148,12 @@
     <FxCompile Include="VS_PassThrough.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
+    <FxCompile Include="PS_Reflective.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="VS_Reflective.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ExampleCode.cpp" />
