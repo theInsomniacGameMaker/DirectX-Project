@@ -287,15 +287,15 @@ void LetsDrawSomeStuff::Render()
 			myContext->ClearDepthStencilView(myDepthStencilView, D3D11_CLEAR_DEPTH, 1, 0); // clear it to Z exponential Far.
 
 			feraligtr->SetRotatingPosition(XMVECTOR{ 0,0,0,0 }, cb, myConstantBuffer, (float)xTimer.TotalTime());
-			//feraligtr->RenderIndexed();
+			feraligtr->RenderIndexed();
 
 			ground->SetPosition(XMVECTOR{ 0,-0.5,0,0 }, cb, myConstantBuffer);
-			//ground->RenderIndexed();
+			ground->RenderIndexed();
 
 			box->SetPosition(XMVECTOR{ -5,0,0,1 }, cb, myConstantBuffer);
 			box->UpdateVS(myVertexShader);
 			box->UpdatePS(myPixelShaderMultitexturing);
-			//box->RenderIndexedMulitexture(myTextureRVPMT);
+			box->RenderIndexedMulitexture(myTextureRVPMT);
 
 			reflectiveCube->SetPosition(XMVECTOR{ 0,3.0f,-1.0f,0 }, cb, myConstantBuffer);
 			reflectiveCube->RenderIndexed();
@@ -312,15 +312,15 @@ void LetsDrawSomeStuff::Render()
 			box->RenderIndexed();
 #endif 
 			quad1->SetPosition(XMVECTOR{ 3, 0, 0, 0 }, cb, myConstantBuffer);
-			//quad1->RenderIndexed(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST, myContext);
+			quad1->RenderIndexed(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST, myContext);
 
 			bulb->SetPosition(XMVECTOR{ lCb.lights[2].Position.x, lCb.lights[2].Position.y, lCb.lights[2].Position.z, 1 }, cb, myConstantBuffer);
-			//bulb->RenderIndexed();
+			bulb->RenderIndexed();
 
 			myContext->UpdateSubresource(myInstanceConstantBuffer, 0, nullptr, &iCb, 0, 0);
 			box->UpdateVS(myVertexShaderInstance);
 			box->UpdatePS(myPixelShaderMultitexturing);
-			//box->RenderInstanced(10, myInstanceConstantBuffer);
+			box->RenderInstanced(10, myInstanceConstantBuffer);
 
 			//myContext->UpdateSubresource(myConstantBuffer, 0, nullptr, &cb, 0, 0);
 
@@ -329,7 +329,7 @@ void LetsDrawSomeStuff::Render()
 			textureRenderer->BeginRender(myContext);
 #if SPACESHIP
 			spaceShip->SetPosition(XMVECTOR{ 100,0,5,0 }, cb, myConstantBuffer);
-			//spaceShip->RenderIndexed();
+			spaceShip->RenderIndexed();
 #endif 
 			textureRenderer->EndRender(myContext);
 
@@ -511,7 +511,7 @@ void LetsDrawSomeStuff::UpdateLightBuffer()
 	lCb.lights[3].Color = XMFLOAT4(0, 1, 0, 1);
 
 	lCb.lights[4].Position = XMFLOAT4(3.0f, 2.0f, 0, 3.0f);
-	lCb.lights[4].Direction = XMFLOAT4(0, -1.0f, 0.0f, 10.0f);
+	lCb.lights[4].Direction = XMFLOAT4(sin((float)xTimer.TotalTime()), -1.0f, 0.0f, 10.0f);
 	lCb.lights[4].Range.x = 0.9f;
 	lCb.lights[4].Range.y = 0.8f;
 	lCb.lights[4].Range.z = 10.0f;
