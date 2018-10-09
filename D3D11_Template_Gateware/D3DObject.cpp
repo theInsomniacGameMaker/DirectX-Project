@@ -46,7 +46,7 @@ D3DObject::D3DObject(string fileName, float scale, ID3D11Device* &myDevice, ID3D
 }
 
 
-void D3DObject::Render()
+void D3DObject::RenderIndexed()
 {
 	m_Context->VSSetShader(m_VertexShader, nullptr, 0);
 	m_Context->PSSetShader(m_PixelShader, nullptr, 0);

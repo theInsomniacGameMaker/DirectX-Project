@@ -6,7 +6,6 @@ TextureRenderer::TextureRenderer(ID3D11Device *pDevice, int width, int height)
 	D3D11_RENDER_TARGET_VIEW_DESC renderTargetViewDesc;
 	D3D11_SHADER_RESOURCE_VIEW_DESC shaderResourceViewDesc;
 
-
 	ZeroMemory(&textureDesc, sizeof(textureDesc));
 	textureDesc.Width = width;
 	textureDesc.Height = height;
@@ -85,8 +84,8 @@ void TextureRenderer::Clear(ID3D11DeviceContext *pDeviceContext, ID3D11DepthSten
 	};
 
 	pDeviceContext->ClearRenderTargetView(pRenderTargetView, color);
-	if (pDepth)
-		pDeviceContext->ClearDepthStencilView(pDepth, D3D11_CLEAR_DEPTH, 1.0f, 0);
+	/*if (pDepth)
+		pDeviceContext->ClearDepthStencilView(pDepth, D3D11_CLEAR_DEPTH, 1.0f, 0);*/
 }
 
 void TextureRenderer::BeginRender(ID3D11DeviceContext *pDeviceContext)
@@ -104,4 +103,5 @@ void TextureRenderer::EndRender(ID3D11DeviceContext *pDeviceContext)
 
 	pDeviceContext->OMSetRenderTargets(1, &pTarget, pDepthStencil);
 }
+
 

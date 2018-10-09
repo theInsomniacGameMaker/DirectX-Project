@@ -20,7 +20,7 @@ class D3DObject
 public:
 	D3DObject();
 	D3DObject(string fileName, float scale, ID3D11Device* &myDevice, ID3D11DeviceContext* &myContext, ID3D11VertexShader* &vertexShader, ID3D11PixelShader* &pixelShader, ID3D11Buffer* &perObjectBuffer);
-	void Render();
+	void RenderIndexed();
 	void RenderInstanced(int numberOfInstances, ID3D11Buffer* &perInstanceBuffer);
 	void RenderIndexedMulitexture(ID3D11ShaderResourceView * textureRVs[]);
 	void UpdateVS(ID3D11VertexShader *& vertexShader);

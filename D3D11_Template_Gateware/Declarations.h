@@ -26,6 +26,7 @@ using namespace std;
 #include "PS_Multitexturing.csh"
 #include "PS_NoLighting.csh"
 #include "GS_PointToQuad.csh"
+#include "VS_PassThrough.csh"
 
 #define CHARIZARD_MESH 0
 #define BOX_MESH 1
