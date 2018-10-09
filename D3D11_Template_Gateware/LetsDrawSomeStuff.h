@@ -39,6 +39,7 @@ class LetsDrawSomeStuff
 	ID3D11PixelShader*			myPixelShaderNoLighting = nullptr;
 
 	ID3D11GeometryShader*		myGeometryShader = nullptr;
+	ID3D11GeometryShader*		nullGeometryShader = nullptr;
 
 	ID3D11InputLayout*			myVertexLayout = nullptr;
 	ID3D11ShaderResourceView*	myTextureRVPMT[2];
@@ -65,6 +66,8 @@ class LetsDrawSomeStuff
 	D3DObject* bulb;
 	D3DObject* spaceShip;
 	D3DObject* quad;
+	D3DObject* quad1;
+	D3DObject* quad2;
 
 	InstanceConstantBuffer iCb;
 	LightConstantBuffer lCb;
@@ -72,9 +75,6 @@ class LetsDrawSomeStuff
 
 	XTime xTimer;
 
-	SimpleVertex point[1];
-	ID3D11Buffer* pointVertexBuffer = nullptr;
-	ID3D11Buffer* pointIndexBuffer = nullptr;
 
 	float camYaw, camPitch, camRoll;
 	float moveX, moveY, moveZ;
@@ -113,6 +113,8 @@ public:
 	void CreateSampler();
 	//Setting up World, View and Projection Matrices
 	void SetupWVP();
+	//Update the camera
+	void UpdateCamera();
 
 };
 
@@ -141,44 +143,27 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 
 			CreateInputLayout();
 
-			feraligtr = new D3DObject("Feraligatr.fbx", 5.0f, myDevice, myContext, myVertexShader, myPixelShader, myConstantBuffer);
+			feraligtr = new D3DObject("Feraligatr.fbx", 5.0f, myDevice, myContext, myVertexShader, myPixelShader, nullGeometryShader, myConstantBuffer);
 
-			skyBox = new D3DObject("SkyBox.fbx", 10.0f, myDevice, myContext, SKYMAP_VS, SKYMAP_PS, myConstantBuffer);
+			skyBox = new D3DObject("SkyBox.fbx", 10.0f, myDevice, myContext, SKYMAP_VS, SKYMAP_PS, nullGeometryShader, myConstantBuffer);
 			skyBox->UpdateTexture("OutputCube");
 
-			ground = new D3DObject("Ground.fbx", 10.0f, myDevice, myContext, myVertexShaderWave, myPixelShader, myConstantBuffer);
+			ground = new D3DObject("Ground.fbx", 10.0f, myDevice, myContext, myVertexShaderWave, myPixelShader, nullGeometryShader, myConstantBuffer);
 
-			box = new D3DObject("cube.fbx", 1 / 50.0f, myDevice, myContext, myVertexShader, myPixelShaderMultitexturing, myConstantBuffer);
+			box = new D3DObject("cube.fbx", 1 / 50.0f, myDevice, myContext, myVertexShader, myPixelShaderMultitexturing, nullGeometryShader, myConstantBuffer);
 			
-			bulb = new D3DObject("Bulb.fbx", 1.0f / 5, myDevice, myContext, myVertexShader, myPixelShader, myConstantBuffer);
+			bulb = new D3DObject("Bulb.fbx", 1.0f / 5, myDevice, myContext, myVertexShader, myPixelShader, nullGeometryShader, myConstantBuffer);
 
-			spaceShip = new D3DObject("Galaga Fighter.fbx", 1.0f / 4, myDevice, myContext, myVertexShader, myPixelShader, myConstantBuffer);
+			spaceShip = new D3DObject("Galaga Fighter.fbx", 1.0f / 4, myDevice, myContext, myVertexShader, myPixelShader, nullGeometryShader, myConstantBuffer);
 
-			quad = new D3DObject("Q.fbx", 1.0f, myDevice, myContext, myVertexShader, myPixelShaderNoLighting, myConstantBuffer);
+			quad = new D3DObject("Q.fbx", 1.0f, myDevice, myContext, myVertexShader, myPixelShaderNoLighting, nullGeometryShader, myConstantBuffer);
+
+			quad1 = new D3DObject("Q.fbx", 5.0f, myDevice, myContext, myVertexShaderPassThrough, myPixelShaderNoLighting, myGeometryShader, myConstantBuffer);
+			
+			quad2 = new D3DObject("Q.fbx", 1.0f, myDevice, myContext, myVertexShader, myPixelShaderNoLighting,nullGeometryShader, myConstantBuffer);
 
 			textureRenderer = new TextureRenderer(myDevice, width, height);
-
-			D3D11_BUFFER_DESC bd = {};
-			D3D11_SUBRESOURCE_DATA InitData = {};
-			
-			point[0].Pos = { 0,0,0 };
-			point[0].Normal = { 0,0,0 };
-			point[0].Tex = { 0,0 };
-
-			//Desc Vertex Buffer
-			bd.Usage = D3D11_USAGE_DEFAULT;
-			bd.ByteWidth = sizeof(SimpleVertex) * 1;
-			bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-			bd.CPUAccessFlags = 0;
-
-			//Subresource
-			InitData.pSysMem = &point;
-
-			//Create Vertex Buffer
-			myDevice->CreateBuffer(&bd, &InitData, &pointVertexBuffer);
-
-
-			
+		
 			myContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 			CreateConstantBuffers();
@@ -279,7 +264,6 @@ void LetsDrawSomeStuff::Render()
 			UpdateConstantBuffer();
 			UpdateLightBuffer();
 
-			ID3D11GeometryShader* pNullGeoShader = nullptr;
 
 			myContext->VSSetShader(myVertexShader, nullptr, 0);
 			myContext->VSSetConstantBuffers(0, 1, &myConstantBuffer);
@@ -287,11 +271,10 @@ void LetsDrawSomeStuff::Render()
 			myContext->PSSetConstantBuffers(0, 1, &myConstantBuffer);
 			myContext->PSSetConstantBuffers(1, 1, &myLightConstantBuffer);
 			myContext->PSSetSamplers(0, 1, &mySamplerLinear);
-			myContext->GSSetShader(pNullGeoShader, nullptr, 0);
+			myContext->GSSetShader(nullGeometryShader, nullptr, 0);
+			myContext->GSSetShader(myGeometryShader, nullptr, 0);
 			myContext->GSSetConstantBuffers(0, 1, &myConstantBuffer);
 
-
-			
 			skyBox->SetPosition(Eye, cb, myConstantBuffer);
 			skyBox->RenderIndexed();
 			myContext->ClearDepthStencilView(myDepthStencilView, D3D11_CLEAR_DEPTH, 1, 0); // clear it to Z exponential Far.
@@ -319,18 +302,8 @@ void LetsDrawSomeStuff::Render()
 			myContext->UpdateSubresource(myConstantBuffer, 0, nullptr, &cb, 0, 0);
 			box->RenderIndexed();
 #endif 
-
-
-
-			myContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
-			myContext->GSSetShader(myGeometryShader, nullptr, 0);
-			box->UpdateVS(myVertexShaderPassThrough);
-			box->UpdatePS(myPixelShader);
-			box->SetPosition(XMVECTOR{ 3, 0, 0, 0 }, cb, myConstantBuffer);
-			box->RenderIndexed();
-			myContext->GSSetShader(pNullGeoShader, nullptr, 0);
-			myContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
+			quad1->SetPosition(XMVECTOR{ 3, 0, 0, 0 }, cb, myConstantBuffer);
+			quad1->RenderIndexed(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST, myContext);
 
 			bulb->SetPosition(XMVECTOR{ lCb.lights[2].Position.x, lCb.lights[2].Position.y, lCb.lights[2].Position.z, 1 }, cb, myConstantBuffer);
 			bulb->RenderIndexed();
@@ -351,17 +324,11 @@ void LetsDrawSomeStuff::Render()
 #endif 
 			textureRenderer->EndRender(myContext);
 
+			UpdateCamera();
 
-			viewMatrix = XMMatrixLookAtLH(Eye, At, Up); 
-			cb.mView = XMMatrixTranspose(viewMatrix);
-			myContext->UpdateSubresource(myConstantBuffer, 0, nullptr, &cb, 0, 0);
-
-			quad->UpdateTexture(textureRenderer->pCTexture);
-			quad->SetPosition(XMVECTOR{ 0, 0, -3, 1 }, cb, myConstantBuffer);
-			quad->RenderIndexed();
-
-			//			myContext->GSSetShader(pNullGeoShader, nullptr, 0);
-
+			quad2->UpdateTexture(textureRenderer->pCTexture);
+			quad2->SetPosition(XMVECTOR{ 0, 0, -3, 1 }, cb, myConstantBuffer);
+			quad2->RenderIndexed();
 
 			// Present Backbuffer using Swapchain object
 			// Framerate is currently unlocked, we suggest "MSI Afterburner" to track your current FPS and memory usage.
@@ -469,7 +436,6 @@ void LetsDrawSomeStuff::CameraMovement()
 	At = Eye + At;
 
 	viewMatrix = XMMatrixLookAtLH(Eye, At, Up);
-
 }
 
 void LetsDrawSomeStuff::CreateConstantBuffers()
@@ -651,4 +617,10 @@ void LetsDrawSomeStuff::SetupWVP()
 
 	// Initialize the projection matrix
 	projectionMatrix = XMMatrixPerspectiveFovLH(XMConvertToRadians(fov), width / (FLOAT)height, 0.01f, 100.0f);
+}
+
+void LetsDrawSomeStuff::UpdateCamera()
+{
+	cb.mView = XMMatrixTranspose(viewMatrix);
+	myContext->UpdateSubresource(myConstantBuffer, 0, nullptr, &cb, 0, 0);
 }

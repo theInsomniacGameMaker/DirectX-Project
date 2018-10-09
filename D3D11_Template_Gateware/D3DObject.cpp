@@ -6,12 +6,15 @@ D3DObject::D3DObject()
 {
 }
 
-D3DObject::D3DObject(string fileName, float scale, ID3D11Device* &myDevice, ID3D11DeviceContext* &myContext, ID3D11VertexShader* &vertexShader, ID3D11PixelShader* &pixelShader, ID3D11Buffer* &perObjectBuffer)
+D3DObject::D3DObject(string fileName, float scale, ID3D11Device* &myDevice, ID3D11DeviceContext* &myContext, 
+	ID3D11VertexShader* &vertexShader, ID3D11PixelShader* &pixelShader, 
+	ID3D11GeometryShader* &geoShader, ID3D11Buffer* &perObjectBuffer)
 {
 	m_Device = myDevice;
 	m_Context = myContext;
 	m_VertexShader = vertexShader;
 	m_PixelShader = pixelShader;
+	m_GeometryShader = geoShader;
 	m_PerObjectBuffer = perObjectBuffer;
 	m_Mesh = Mesh(fileName, scale, m_Device, m_TextureRV);
 
@@ -50,16 +53,31 @@ void D3DObject::RenderIndexed()
 {
 	m_Context->VSSetShader(m_VertexShader, nullptr, 0);
 	m_Context->PSSetShader(m_PixelShader, nullptr, 0);
+	m_Context->GSSetShader(m_GeometryShader, nullptr, 0);
 	m_Context->PSSetShaderResources(0, 1, &m_TextureRV);
 	m_Context->IASetVertexBuffers(0, 1, &m_VertexBuffer, stride, offset);
 	m_Context->IASetIndexBuffer(m_IndexBuffer, DXGI_FORMAT_R32_UINT, 0);
 	m_Context->DrawIndexed(m_Mesh.GetNumberOfIndices(), 0, 0);
 }
 
+void D3DObject::RenderIndexed(D3D_PRIMITIVE_TOPOLOGY topology, ID3D11DeviceContext* &context)
+{
+	context->IASetPrimitiveTopology(topology);
+	m_Context->VSSetShader(m_VertexShader, nullptr, 0);
+	m_Context->PSSetShader(m_PixelShader, nullptr, 0);
+	m_Context->GSSetShader(m_GeometryShader, nullptr, 0);
+	m_Context->PSSetShaderResources(0, 1, &m_TextureRV);
+	m_Context->IASetVertexBuffers(0, 1, &m_VertexBuffer, stride, offset);
+	m_Context->IASetIndexBuffer(m_IndexBuffer, DXGI_FORMAT_R32_UINT, 0);
+	m_Context->DrawIndexed(m_Mesh.GetNumberOfIndices(), 0, 0);
+	context->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+}
+
 void D3DObject::RenderInstanced(int numberOfInstances, ID3D11Buffer* &perInstanceBuffer)
 {
 	m_Context->VSSetShader(m_VertexShader, nullptr, 0);
 	m_Context->PSSetShader(m_PixelShader, nullptr, 0);
+	m_Context->GSSetShader(m_GeometryShader, nullptr, 0);
 	m_Context->PSSetShaderResources(0, 1, &m_TextureRV);
 	m_Context->IASetVertexBuffers(0, 1, &m_VertexBuffer, stride, offset);
 	m_Context->IASetIndexBuffer(m_IndexBuffer, DXGI_FORMAT_R32_UINT, 0);
@@ -71,6 +89,7 @@ void D3DObject::RenderIndexedMulitexture(ID3D11ShaderResourceView* textureRVs[])
 {
 	m_Context->VSSetShader(m_VertexShader, nullptr, 0);
 	m_Context->PSSetShader(m_PixelShader, nullptr, 0);
+	m_Context->GSSetShader(m_GeometryShader, nullptr, 0);
 	//harcoding number of SRVs to 2
 	m_Context->PSSetShaderResources(0, 2, textureRVs);
 	m_Context->IASetVertexBuffers(0, 1, &m_VertexBuffer, stride, offset);
@@ -86,6 +105,11 @@ void D3DObject::UpdateVS(ID3D11VertexShader *& vertexShader)
 void D3DObject::UpdatePS(ID3D11PixelShader *& pixelShader)
 {
 	m_PixelShader = pixelShader;
+}
+
+void D3DObject::UpdateGS(ID3D11GeometryShader *& geoShader)
+{
+	m_GeometryShader = geoShader;
 }
 
 void D3DObject::UpdateTexture(string textureName)
