@@ -25,15 +25,19 @@ public:
 		ID3D11GeometryShader* &geoShader, ID3D11Buffer* &perObjectBuffer);	
 	void RenderIndexed();
 	void RenderIndexed(D3D_PRIMITIVE_TOPOLOGY topology, ID3D11DeviceContext *& context);
+	void RenderIndexedWithDynamicSRV(ID3D11ShaderResourceView* &textureRV);
 	void RenderInstanced(int numberOfInstances, ID3D11Buffer* &perInstanceBuffer);
 	void RenderIndexedMulitexture(ID3D11ShaderResourceView * textureRVs[]);
-	void UpdateVS(ID3D11VertexShader *& vertexShader);
-	void UpdatePS(ID3D11PixelShader*& pixelShader);
-	void UpdateGS(ID3D11GeometryShader *& geoShader);
+	void UpdateVS(ID3D11VertexShader * vertexShader);
+	void UpdatePS(ID3D11PixelShader* pixelShader);
+	void UpdateGS(ID3D11GeometryShader * geoShader);
 	void UpdateTexture(string textureName);
+	//do not use this unless you know what you are doing
 	void UpdateTexture(ID3D11ShaderResourceView* &textureRV);
 	void SetPosition(XMVECTOR position, ConstantBuffer &constantBuffer, ID3D11Buffer* &perObjectBuffer);
 	void SetPosition(XMMATRIX position, ConstantBuffer &constantBuffer, ID3D11Buffer* &perObjectBuffer);
+	void SetLocalRotation(XMVECTOR position, ConstantBuffer & constantBuffer, ID3D11Buffer *& perObjectBuffer, float factor);
+	void SetLocalRotation(XMVECTOR position, ConstantBuffer & constantBuffer, ID3D11Buffer *& perObjectBuffer, float factorY, float factorX);
 	void SetRotatingPosition(XMVECTOR position, ConstantBuffer &constantBuffer, ID3D11Buffer* &perObjectBuffer, float rotationMatrixFactor);
 	void SetRotatingPosition(XMVECTOR position, ConstantBuffer & constantBuffer, ID3D11Buffer *& perObjectBuffer, float rotationMatrixYFactor, float rotationMatrixXFactor);
 	ID3D11PixelShader* GetPixelShader() { return m_PixelShader; }

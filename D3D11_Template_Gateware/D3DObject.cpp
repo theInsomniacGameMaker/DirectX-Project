@@ -73,6 +73,17 @@ void D3DObject::RenderIndexed(D3D_PRIMITIVE_TOPOLOGY topology, ID3D11DeviceConte
 	context->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 }
 
+void D3DObject::RenderIndexedWithDynamicSRV(ID3D11ShaderResourceView *& textureRV)
+{
+	m_Context->VSSetShader(m_VertexShader, nullptr, 0);
+	m_Context->PSSetShader(m_PixelShader, nullptr, 0);
+	m_Context->GSSetShader(m_GeometryShader, nullptr, 0);
+	m_Context->PSSetShaderResources(0, 1, &textureRV);
+	m_Context->IASetVertexBuffers(0, 1, &m_VertexBuffer, stride, offset);
+	m_Context->IASetIndexBuffer(m_IndexBuffer, DXGI_FORMAT_R32_UINT, 0);
+	m_Context->DrawIndexed(m_Mesh.GetNumberOfIndices(), 0, 0);
+}
+
 void D3DObject::RenderInstanced(int numberOfInstances, ID3D11Buffer* &perInstanceBuffer)
 {
 	m_Context->VSSetShader(m_VertexShader, nullptr, 0);
@@ -97,17 +108,17 @@ void D3DObject::RenderIndexedMulitexture(ID3D11ShaderResourceView* textureRVs[])
 	m_Context->DrawIndexed(m_Mesh.GetNumberOfIndices(), 0, 0);
 }
 
-void D3DObject::UpdateVS(ID3D11VertexShader *& vertexShader)
+void D3DObject::UpdateVS(ID3D11VertexShader * vertexShader)
 {
 	m_VertexShader = vertexShader;
 }
 
-void D3DObject::UpdatePS(ID3D11PixelShader *& pixelShader)
+void D3DObject::UpdatePS(ID3D11PixelShader * pixelShader)
 {
 	m_PixelShader = pixelShader;
 }
 
-void D3DObject::UpdateGS(ID3D11GeometryShader *& geoShader)
+void D3DObject::UpdateGS(ID3D11GeometryShader * geoShader)
 {
 	m_GeometryShader = geoShader;
 }
@@ -138,6 +149,18 @@ void D3DObject::SetPosition(XMMATRIX position, ConstantBuffer & constantBuffer, 
 	m_Context->UpdateSubresource(perObjectBuffer, 0, nullptr, &constantBuffer, 0, 0);
 }
 
+void D3DObject::SetLocalRotation(XMVECTOR position, ConstantBuffer & constantBuffer, ID3D11Buffer *& perObjectBuffer, float factor)
+{
+	constantBuffer.mWorld = XMMatrixTranspose(XMMatrixRotationY(factor)*(XMMatrixTranslationFromVector(position)));
+	m_Context->UpdateSubresource(perObjectBuffer, 0, nullptr, &constantBuffer, 0, 0);
+}
+
+void D3DObject::SetLocalRotation(XMVECTOR position, ConstantBuffer & constantBuffer, ID3D11Buffer *& perObjectBuffer, float factorY, float factorX)
+{
+	constantBuffer.mWorld = XMMatrixTranspose(XMMatrixRotationY(factorY)*XMMatrixRotationX(factorX)*(XMMatrixTranslationFromVector(position)));
+	m_Context->UpdateSubresource(perObjectBuffer, 0, nullptr, &constantBuffer, 0, 0);
+}
+
 void D3DObject::SetRotatingPosition(XMVECTOR position, ConstantBuffer &constantBuffer, ID3D11Buffer* &perObjectBuffer, float rotationMatrixFactor)
 {
 	constantBuffer.mWorld = XMMatrixTranspose(XMMatrixTranslationFromVector(position)*XMMatrixRotationY(rotationMatrixFactor));
@@ -159,5 +182,6 @@ D3DObject::~D3DObject()
 		m_TextureRV->Release();
 		m_TextureRV = 0;
 	}
+	
 	m_Mesh.LateDestructor();
 }

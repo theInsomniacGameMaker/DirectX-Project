@@ -7,15 +7,14 @@ public:
 	TextureRenderer();
 	TextureRenderer(ID3D11Device *pDevice, int width, int height);
 	~TextureRenderer();
-	ID3D11ShaderResourceView *finalTexture;
+	ID3D11ShaderResourceView *pCTexture;
 	ID3D11ShaderResourceView *pResView;
 
 private:
-	ID3D11RenderTargetView *renderTargetView;
-	ID3D11Texture2D *texture;
-	ID3D11RenderTargetView *renderTargetView;
+	ID3D11RenderTargetView *pRenderTargetView;
+	ID3D11Texture2D *pTexture;
+	ID3D11RenderTargetView *pTarget;
 	ID3D11DepthStencilView* depthStencilView;
-	ID3D11DepthStencilView* mainDepthStencilView;
 	ID3D11Texture2D* depthStencilBuffer;
 	XMVECTOR rttEye;
 	XMVECTOR rttAt ;
@@ -23,10 +22,9 @@ private:
 
 public:
 	void BeginRender(ID3D11DeviceContext* pDeviceContext);
-	void EndRender(ID3D11DeviceContext *pDeviceContext);
-	void Clear(ID3D11DeviceContext *pDeviceContext, ID3D11DepthStencilView *pDepth,
+	void EndRender(ID3D11DeviceContext * pDeviceContext, ID3D11RenderTargetView * mainRenderTargetView, ID3D11DepthStencilView * mainDepthStencilView);	void Clear(ID3D11DeviceContext *pDeviceContext, ID3D11DepthStencilView *pDepth,
 		XMFLOAT4 clearColor);
 	void MoveCamera(ConstantBuffer & cb, ID3D11Buffer *& constantBuffer, ID3D11DeviceContext *& pDeviceContext);
-	ID3D11ShaderResourceView* GetTexture() { return finalTexture; }
+	ID3D11ShaderResourceView* GetTexture() { return pCTexture; }
 };
 

@@ -162,7 +162,7 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 
 			quad1 = new D3DObject("Q.fbx", 5.0f, myDevice, myContext, myVertexShaderPassThrough, myPixelShaderNoLighting, myGeometryShader, myConstantBuffer);
 
-			quad2 = new D3DObject("Q.fbx", 1.0f, myDevice, myContext, myVertexShader, myPixelShaderNoLighting, nullGeometryShader, myConstantBuffer);
+			quad2 = new D3DObject("cube.fbx", 1.0/50.0f, myDevice, myContext, myVertexShader, myPixelShaderNoLighting, nullGeometryShader, myConstantBuffer);
 
 			reflectiveCube = new D3DObject("utah-teapot.fbx", 0.1f, myDevice, myContext, myVertexShaderReflective, myPixelShaderReflective, nullGeometryShader, myConstantBuffer);
 			reflectiveCube->UpdateTexture("OutputCube");
@@ -192,13 +192,17 @@ LetsDrawSomeStuff::~LetsDrawSomeStuff()
 	myPixelShader->Release();
 	mySolidPixelShader->Release();
 	myVertexLayout->Release();
-
+	myVertexShaderReflective->Release();
 	SKYMAP_VS->Release();
 	myVertexShaderInstance->Release();
 	myVertexShaderWave->Release();
+	myVertexShaderPassThrough->Release();
+
 	SKYMAP_PS->Release();
 	myPixelShaderMultitexturing->Release();
 	myPixelShaderNoLighting->Release();
+	myPixelShaderReflective->Release();
+	myGeometryShader->Release();
 
 	myTextureRVPMT[0]->Release();
 	myTextureRVPMT[1]->Release();
@@ -230,6 +234,7 @@ LetsDrawSomeStuff::~LetsDrawSomeStuff()
 	delete quad;
 	delete quad1;
 	delete quad2;
+	delete reflectiveCube;
 	delete textureRenderer;
 
 	myRenderTargetView->Release();
@@ -286,7 +291,7 @@ void LetsDrawSomeStuff::Render()
 			skyBox->RenderIndexed();
 			myContext->ClearDepthStencilView(myDepthStencilView, D3D11_CLEAR_DEPTH, 1, 0); // clear it to Z exponential Far.
 
-			feraligtr->SetRotatingPosition(XMVECTOR{ 0,0,0,0 }, cb, myConstantBuffer, (float)xTimer.TotalTime());
+			feraligtr->SetLocalRotation(XMVECTOR{ 5,0,2,0 }, cb, myConstantBuffer, (float)xTimer.TotalTime());
 			feraligtr->RenderIndexed();
 
 			ground->SetPosition(XMVECTOR{ 0,-0.5,0,0 }, cb, myConstantBuffer);
@@ -297,7 +302,7 @@ void LetsDrawSomeStuff::Render()
 			box->UpdatePS(myPixelShaderMultitexturing);
 			box->RenderIndexedMulitexture(myTextureRVPMT);
 
-			reflectiveCube->SetRotatingPosition(XMVECTOR{ 0,3.0f,0.0f,0 }, cb, myConstantBuffer, xTimer.TotalTime()/2,(float)xTimer.TotalTime()/2);
+			reflectiveCube->SetLocalRotation(XMVECTOR{ 0,5.0f,0.0f,0 }, cb, myConstantBuffer, xTimer.TotalTime()/2,(float)xTimer.TotalTime()/2);
 			reflectiveCube->RenderIndexed();
 
 #if DIRECTIONAL_LIGHT_ON
@@ -328,16 +333,16 @@ void LetsDrawSomeStuff::Render()
 			textureRenderer->Clear(myContext, nullptr, XMFLOAT4(1, 1, 1, 1));
 			textureRenderer->BeginRender(myContext);
 #if SPACESHIP
-			spaceShip->SetPosition(XMVECTOR{ 100,0,5,0 }, cb, myConstantBuffer);
+			spaceShip->SetLocalRotation(XMVECTOR{ 100,0,0,0 }, cb, myConstantBuffer,xTimer.TotalTime(), xTimer.TotalTime());
 			spaceShip->RenderIndexed();
 #endif 
-			textureRenderer->EndRender(myContext);
+			textureRenderer->EndRender(myContext, myRenderTargetView, myDepthStencilView);
 
 			UpdateCamera();
 
-			quad2->UpdateTexture(textureRenderer->finalTexture);
-			quad2->SetPosition(XMVECTOR{ 0, 0, -3, 1 }, cb, myConstantBuffer);
-			quad2->RenderIndexed();
+			//quad2->UpdateTexture(textureRenderer->pCTexture);
+			quad2->SetPosition(XMVECTOR{ 5, 2, -3, 1 }, cb, myConstantBuffer);
+			//quad2->RenderIndexedWithDynamicSRV(textureRenderer->pCTexture);
 
 			// Present Backbuffer using Swapchain object
 			// Framerate is currently unlocked, we suggest "MSI Afterburner" to track your current FPS and memory usage.

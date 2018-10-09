@@ -31,8 +31,8 @@ SKYMAP_VS_OUTPUT main(VS_INPUT input)
 
 	//Set Pos to xyww instead of xyzw, so that z will always be 1 (furthest from camera)
 	output.Pos = mul(input.Pos, World);
-	output.Pos = mul(input.Pos, View);
-	output.Pos = mul(input.Pos, Projection);
+	output.Pos = mul(output.Pos, View);
+	output.Pos = mul(output.Pos, Projection);
 	output.Tex = input.Pos;
 	return output;
 }
