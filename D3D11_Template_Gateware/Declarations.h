@@ -34,7 +34,7 @@ using namespace std;
 #define BOX_MESH 1
 #define SPACESHIP 1
 #define DIRECTIONAL_LIGHT_ON 1
-#define DEBUGGER 1
+#define DEBUGGER 0
 
 static const XMVECTOR UP = { 0,1,0,0 };
 static const XMVECTOR RIGHT = { 1,0,0,0 };

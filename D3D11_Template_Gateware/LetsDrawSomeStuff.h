@@ -16,44 +16,44 @@ class LetsDrawSomeStuff
 	// variables here
 	GW::GRAPHICS::GDirectX11Surface* mySurface = nullptr;
 	// Gettting these handles from GDirectX11Surface will increase their internal refrence counts, be sure to "Release()" them when done!
-	ID3D11Device* myDevice = nullptr;
-	IDXGISwapChain* mySwapChain = nullptr;
-	ID3D11DeviceContext* myContext = nullptr;
+	CComPtr<ID3D11Device> myDevice = nullptr;
+	CComPtr<IDXGISwapChain> mySwapChain = nullptr;
+	CComPtr<ID3D11DeviceContext> myContext = nullptr;
 
 	// TODO: Add your own D3D11 variables here (be sure to "Release()" them when done!)
 	D3D_DRIVER_TYPE				myDriverType = D3D_DRIVER_TYPE_NULL;
 	D3D_FEATURE_LEVEL			myFeatureLevel = D3D_FEATURE_LEVEL_11_0;
-	ID3D11RenderTargetView*		myRenderTargetView = nullptr;
+	CComPtr < ID3D11RenderTargetView>		myRenderTargetView = nullptr;
 
-	ID3D11VertexShader*			myVertexShader = nullptr;
-	ID3D11VertexShader*			myVertexShaderUV = nullptr;
-	ID3D11VertexShader*			SKYMAP_VS = nullptr;
-	ID3D11VertexShader*			myVertexShaderInstance = nullptr;
-	ID3D11VertexShader*			myVertexShaderWave = nullptr;
-	ID3D11VertexShader*			myVertexShaderPassThrough = nullptr;
-	ID3D11VertexShader*			myVertexShaderReflective = nullptr;
+	CComPtr<ID3D11VertexShader>		myVertexShader = nullptr;
+	CComPtr<ID3D11VertexShader>		myVertexShaderUV = nullptr;
+	CComPtr<ID3D11VertexShader>		SKYMAP_VS = nullptr;
+	CComPtr<ID3D11VertexShader>		myVertexShaderInstance = nullptr;
+	CComPtr<ID3D11VertexShader>		myVertexShaderWave = nullptr;
+	CComPtr<ID3D11VertexShader>		myVertexShaderPassThrough = nullptr;
+	CComPtr<ID3D11VertexShader>		myVertexShaderReflective = nullptr;
 
-	ID3D11PixelShader*			myPixelShader = nullptr;
-	ID3D11PixelShader*			mySolidPixelShader = nullptr;
-	ID3D11PixelShader*			SKYMAP_PS = nullptr;
-	ID3D11PixelShader*			myPixelShaderMultitexturing = nullptr;
-	ID3D11PixelShader*			myPixelShaderNoLighting = nullptr;
-	ID3D11PixelShader*			myPixelShaderReflective = nullptr;
+	CComPtr<ID3D11PixelShader>			myPixelShader = nullptr;
+	CComPtr<ID3D11PixelShader>			mySolidPixelShader = nullptr;
+	CComPtr<ID3D11PixelShader>			SKYMAP_PS = nullptr;
+	CComPtr<ID3D11PixelShader>			myPixelShaderMultitexturing = nullptr;
+	CComPtr<ID3D11PixelShader>			myPixelShaderNoLighting = nullptr;
+	CComPtr<ID3D11PixelShader>			myPixelShaderReflective = nullptr;
 
-	ID3D11GeometryShader*		myGeometryShader = nullptr;
-	ID3D11GeometryShader*		nullGeometryShader = nullptr;
+	CComPtr<ID3D11GeometryShader>		myGeometryShader = nullptr;
+	CComPtr<ID3D11GeometryShader>		nullGeometryShader = nullptr;
 
-	ID3D11InputLayout*			myVertexLayout = nullptr;
-	ID3D11ShaderResourceView*	myTextureRVPMT[2];
+	CComPtr < ID3D11InputLayout>			myVertexLayout = nullptr;
+	CComPtr < ID3D11ShaderResourceView>	myTextureRVPMT[2];
 
-	ID3D11Buffer*				myConstantBuffer = nullptr;
-	ID3D11Buffer*				myInstanceConstantBuffer = nullptr;
-	ID3D11Buffer*				myLightConstantBuffer = nullptr;
+	CComPtr<ID3D11Buffer>				myConstantBuffer = nullptr;
+	CComPtr<ID3D11Buffer>				myInstanceConstantBuffer = nullptr;
+	CComPtr<ID3D11Buffer>				myLightConstantBuffer = nullptr;
 	XMMATRIX					worldMatrix;
 	XMMATRIX					viewMatrix;
 	XMMATRIX					projectionMatrix;
 
-	ID3D11SamplerState*			mySamplerLinear = nullptr;
+	CComPtr < ID3D11SamplerState>			mySamplerLinear = nullptr;
 
 	XMVECTOR Eye;
 	XMVECTOR At;
@@ -130,9 +130,9 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 		if (G_SUCCESS(GW::GRAPHICS::CreateGDirectX11Surface(attatchPoint, GW::GRAPHICS::DEPTH_BUFFER_SUPPORT, &mySurface)))
 		{
 			// Grab handles to all DX11 base interfaces
-			mySurface->GetDevice((void**)&myDevice);
-			mySurface->GetSwapchain((void**)&mySwapChain);
-			mySurface->GetContext((void**)&myContext);
+			mySurface->GetDevice((void**)&myDevice.p);
+			mySurface->GetSwapchain((void**)&mySwapChain.p);
+			mySurface->GetContext((void**)&myContext.p);
 
 			SetupRenderTargetView();
 
@@ -187,7 +187,7 @@ LetsDrawSomeStuff::~LetsDrawSomeStuff()
 {
 	//Release DX Objects aquired from the surface
 
-	myVertexShader->Release();
+	/*myVertexShader->Release();
 	myVertexShaderUV->Release();
 	myPixelShader->Release();
 	mySolidPixelShader->Release();
@@ -209,9 +209,9 @@ LetsDrawSomeStuff::~LetsDrawSomeStuff()
 
 	myLightConstantBuffer->Release();
 	myInstanceConstantBuffer->Release();
-	myConstantBuffer->Release();
+	myConstantBuffer->Release();*/
 
-	if (mySamplerLinear)mySamplerLinear->Release();
+	//if (mySamplerLinear)mySamplerLinear->Release();
 
 	if (mySurface) // Free Gateware Interface
 	{
@@ -237,10 +237,10 @@ LetsDrawSomeStuff::~LetsDrawSomeStuff()
 	delete reflectiveCube;
 	delete textureRenderer;
 
-	myRenderTargetView->Release();
+	/*myRenderTargetView->Release();
 	myDevice->Release();
 	mySwapChain->Release();
-	myContext->Release();
+	myContext->Release();*/
 
 }
 
@@ -278,14 +278,14 @@ void LetsDrawSomeStuff::Render()
 
 
 			myContext->VSSetShader(myVertexShader, nullptr, 0);
-			myContext->VSSetConstantBuffers(0, 1, &myConstantBuffer);
+			myContext->VSSetConstantBuffers(0, 1, &myConstantBuffer.p);
 			myContext->PSSetShader(myPixelShader, nullptr, 0);
-			myContext->PSSetConstantBuffers(0, 1, &myConstantBuffer);
-			myContext->PSSetConstantBuffers(1, 1, &myLightConstantBuffer);
-			myContext->PSSetSamplers(0, 1, &mySamplerLinear);
+			myContext->PSSetConstantBuffers(0, 1, &myConstantBuffer.p);
+			myContext->PSSetConstantBuffers(1, 1, &myLightConstantBuffer.p);
+			myContext->PSSetSamplers(0, 1, &mySamplerLinear.p);
 			myContext->GSSetShader(nullGeometryShader, nullptr, 0);
 			myContext->GSSetShader(myGeometryShader, nullptr, 0);
-			myContext->GSSetConstantBuffers(0, 1, &myConstantBuffer);
+			myContext->GSSetConstantBuffers(0, 1, &myConstantBuffer.p);
 
 			skyBox->SetPosition(Eye, cb, myConstantBuffer);
 			skyBox->RenderIndexed();
@@ -317,7 +317,7 @@ void LetsDrawSomeStuff::Render()
 			box->RenderIndexed();
 #endif 
 			quad1->SetPosition(XMVECTOR{ 3, 0, 0, 0 }, cb, myConstantBuffer);
-			quad1->RenderIndexed(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST, myContext);
+			quad1->RenderIndexed(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
 
 			bulb->SetPosition(XMVECTOR{ lCb.lights[2].Position.x, lCb.lights[2].Position.y, lCb.lights[2].Position.z, 1 }, cb, myConstantBuffer);
 			bulb->RenderIndexed();
@@ -568,7 +568,7 @@ void LetsDrawSomeStuff::SetupRenderTargetView()
 	myDevice->CreateRenderTargetView(myBackBuffer, nullptr, &myRenderTargetView);
 	myBackBuffer->Release();
 
-	myContext->OMSetRenderTargets(1, &myRenderTargetView, nullptr);
+	myContext->OMSetRenderTargets(1, &myRenderTargetView.p, nullptr);
 }
 
 void LetsDrawSomeStuff::CreateShaders()

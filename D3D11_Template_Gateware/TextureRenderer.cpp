@@ -67,11 +67,11 @@ TextureRenderer::TextureRenderer()
 
 TextureRenderer::~TextureRenderer()
 {
-	if (pCTexture)
-	{
-		pCTexture->Release();
-		pCTexture = 0;
-	}
+	//if (pCTexture)
+	//{
+	//	//pCTexture->Release();
+	//	pCTexture = 0;
+	//}
 	/*
 	ID3D11RenderTargetView *pRenderTargetView;
 	ID3D11Texture2D *pTexture;
@@ -80,17 +80,16 @@ TextureRenderer::~TextureRenderer()
 	ID3D11DepthStencilView* mainDepthStencilView;
 	ID3D11Texture2D* depthStencilBuffer;*/
 
-	pRenderTargetView->Release();
+	/*pRenderTargetView->Release();
 	pTexture->Release();
 	depthStencilView->Release();
-	depthStencilBuffer->Release();
+	depthStencilBuffer->Release();*/
 	//mainDepthStencilView->Release();
 	//pTarget->Release();
 
 }
 
-void TextureRenderer::Clear(ID3D11DeviceContext *pDeviceContext, ID3D11DepthStencilView *pDepth,
-	XMFLOAT4 clearColor)
+void TextureRenderer::Clear(CComPtr < ID3D11DeviceContext> pDeviceContext, CComPtr < ID3D11DepthStencilView >pDepth, XMFLOAT4 clearColor)
 {
 	float color[] = {
 		clearColor.x, clearColor.y, clearColor.z, clearColor.w
@@ -100,25 +99,25 @@ void TextureRenderer::Clear(ID3D11DeviceContext *pDeviceContext, ID3D11DepthSten
 	pDeviceContext->ClearDepthStencilView(depthStencilView, D3D11_CLEAR_DEPTH, 1, 0); // clear it to Z exponential Far.
 }
 
-void TextureRenderer::MoveCamera(ConstantBuffer &cb, ID3D11Buffer *& constantBuffer, ID3D11DeviceContext *&pDeviceContext)
+void TextureRenderer::MoveCamera(ConstantBuffer & cb, CComPtr < ID3D11Buffer >& constantBuffer, CComPtr < ID3D11DeviceContext >& pDeviceContext)
 {
 	cb.mView = XMMatrixTranspose(XMMatrixLookAtLH(rttEye, rttAt, rttUp));
 	pDeviceContext->UpdateSubresource(constantBuffer, 0, nullptr, &cb, 0, 0);
 }
 
-void TextureRenderer::BeginRender(ID3D11DeviceContext *pDeviceContext)
+void TextureRenderer::BeginRender(CComPtr < ID3D11DeviceContext> pDeviceContext)
 {
 	//ID3D11DepthStencilView *pDepthStencil = nullptr;
 	//pDeviceContext->OMGetRenderTargets(1, &pTarget, &mainDepthStencilView);
 
-	pDeviceContext->OMSetRenderTargets(1, &pRenderTargetView, depthStencilView);
+	pDeviceContext->OMSetRenderTargets(1, &pRenderTargetView.p, depthStencilView);
 }
 
-void TextureRenderer::EndRender(ID3D11DeviceContext *pDeviceContext,ID3D11RenderTargetView* mainRenderTargetView, ID3D11DepthStencilView* mainDepthStencilView)
+void TextureRenderer::EndRender(CComPtr < ID3D11DeviceContext > pDeviceContext, CComPtr < ID3D11RenderTargetView > mainRenderTargetView, CComPtr < ID3D11DepthStencilView > mainDepthStencilView)
 {
 	//ID3D11DepthStencilView *pDepthStencil = nullptr;
 	pDeviceContext->OMGetRenderTargets(0, nullptr, nullptr);
-	pDeviceContext->OMSetRenderTargets(1, &mainRenderTargetView, mainDepthStencilView);
+	pDeviceContext->OMSetRenderTargets(1, &mainRenderTargetView.p, mainDepthStencilView);
 }
 
 
