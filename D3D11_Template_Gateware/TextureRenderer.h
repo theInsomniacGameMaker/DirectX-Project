@@ -15,6 +15,8 @@ private:
 	ID3D11Texture2D *pTexture;
 	ID3D11RenderTargetView *pTarget;
 	ID3D11DepthStencilView* depthStencilView;
+	ID3D11DepthStencilView* mainDepthStencilView;
+	ID3D11Texture2D* depthStencilBuffer;
 	XMVECTOR rttEye;
 	XMVECTOR rttAt ;
 	XMVECTOR rttUp ;
