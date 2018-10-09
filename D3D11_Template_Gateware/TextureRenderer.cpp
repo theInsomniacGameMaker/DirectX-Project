@@ -67,27 +67,13 @@ TextureRenderer::~TextureRenderer()
 {
 	if (pCTexture)
 	{
-		delete pCTexture;
-		pCTexture = nullptr;
+		pCTexture->Release();
+		pCTexture = 0;
 	}
-
-	if (pResView)
-	{
-		pResView->Release();
-		pResView = 0;
-	}
-
-	if (pRenderTargetView)
-	{
-		pRenderTargetView->Release();
-		pRenderTargetView = 0;
-	}
-
-	if (pTexture)
-	{
-		pTexture->Release();
-		pTexture = 0;
-	}
+	/*if(pResView)
+		pResView->Release();*/
+	pRenderTargetView->Release();
+	pTexture->Release();
 }
 
 void TextureRenderer::Clear(ID3D11DeviceContext *pDeviceContext, ID3D11DepthStencilView *pDepth,

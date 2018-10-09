@@ -222,8 +222,10 @@ LetsDrawSomeStuff::~LetsDrawSomeStuff()
 	delete bulb;
 	delete ground;
 	delete spaceShip;
-
-	//delete textureRenderer;
+	delete quad;
+	delete quad1;
+	delete quad2;
+	delete textureRenderer;
 
 	myRenderTargetView->Release();
 	myDevice->Release();
@@ -313,7 +315,7 @@ void LetsDrawSomeStuff::Render()
 			box->UpdatePS(myPixelShaderMultitexturing);
 			box->RenderInstanced(10, myInstanceConstantBuffer);
 
-			myContext->UpdateSubresource(myConstantBuffer, 0, nullptr, &cb, 0, 0);
+			//myContext->UpdateSubresource(myConstantBuffer, 0, nullptr, &cb, 0, 0);
 
 			textureRenderer->MoveCamera(cb, myConstantBuffer, myContext);
 			textureRenderer->Clear(myContext, nullptr, XMFLOAT4(1, 1, 1, 1));

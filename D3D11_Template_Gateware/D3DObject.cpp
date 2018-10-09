@@ -148,6 +148,10 @@ D3DObject::~D3DObject()
 {
 	m_VertexBuffer->Release();
 	m_IndexBuffer->Release();
-	m_TextureRV->Release();
+	if (m_TextureRV)
+	{
+		m_TextureRV->Release();
+		m_TextureRV = 0;
+	}
 	m_Mesh.LateDestructor();
 }
