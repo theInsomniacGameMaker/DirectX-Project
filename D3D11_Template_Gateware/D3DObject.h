@@ -35,6 +35,7 @@ public:
 	void SetPosition(XMVECTOR position, ConstantBuffer &constantBuffer, ID3D11Buffer* &perObjectBuffer);
 	void SetPosition(XMMATRIX position, ConstantBuffer &constantBuffer, ID3D11Buffer* &perObjectBuffer);
 	void SetRotatingPosition(XMVECTOR position, ConstantBuffer &constantBuffer, ID3D11Buffer* &perObjectBuffer, float rotationMatrixFactor);
+	void SetRotatingPosition(XMVECTOR position, ConstantBuffer & constantBuffer, ID3D11Buffer *& perObjectBuffer, float rotationMatrixYFactor, float rotationMatrixXFactor);
 	ID3D11PixelShader* GetPixelShader() { return m_PixelShader; }
 	~D3DObject();
 

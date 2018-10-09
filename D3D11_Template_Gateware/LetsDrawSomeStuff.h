@@ -230,7 +230,7 @@ LetsDrawSomeStuff::~LetsDrawSomeStuff()
 	delete quad;
 	delete quad1;
 	delete quad2;
-	//delete textureRenderer;
+	delete textureRenderer;
 
 	myRenderTargetView->Release();
 	myDevice->Release();
@@ -297,7 +297,7 @@ void LetsDrawSomeStuff::Render()
 			box->UpdatePS(myPixelShaderMultitexturing);
 			box->RenderIndexedMulitexture(myTextureRVPMT);
 
-			reflectiveCube->SetPosition(XMVECTOR{ 0,3.0f,-1.0f,0 }, cb, myConstantBuffer);
+			reflectiveCube->SetRotatingPosition(XMVECTOR{ 0,3.0f,0.0f,0 }, cb, myConstantBuffer, xTimer.TotalTime()/2,(float)xTimer.TotalTime()/2);
 			reflectiveCube->RenderIndexed();
 
 #if DIRECTIONAL_LIGHT_ON
@@ -337,7 +337,7 @@ void LetsDrawSomeStuff::Render()
 
 			quad2->UpdateTexture(textureRenderer->pCTexture);
 			quad2->SetPosition(XMVECTOR{ 0, 0, -3, 1 }, cb, myConstantBuffer);
-			//quad2->RenderIndexed();
+			quad2->RenderIndexed();
 
 			// Present Backbuffer using Swapchain object
 			// Framerate is currently unlocked, we suggest "MSI Afterburner" to track your current FPS and memory usage.
