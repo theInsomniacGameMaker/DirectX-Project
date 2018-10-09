@@ -65,7 +65,7 @@ float4 main(PS_INPUT input) : SV_Target
 			float spotFactor = (surfaceRatio > lights[i].Range.y) ? 1 : 0;
 			float lightRatio = saturate(dot(lightToPixelVec, input.Norm));
 			float3 spotLightColor = spotFactor*lightRatio*lights[i].Color*baseTexture;
-			//spotLightColor *= (1.0 - saturate(length(lights[i].Position - input.wPos) / lights[i].Range.z));
+			spotLightColor *= (1.0 - saturate(length(lights[i].Position - input.wPos) / lights[i].Range.z));
 			spotLightColor *= (1.0 - saturate((lights[i].Range.x - surfaceRatio) / (lights[i].Range.x - lights[i].Range.y)));
 			finalColor += float4(spotLightColor,1);
 		}

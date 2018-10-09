@@ -313,7 +313,7 @@ void LetsDrawSomeStuff::Render()
 			myContext->UpdateSubresource(myInstanceConstantBuffer, 0, nullptr, &iCb, 0, 0);
 			box->UpdateVS(myVertexShaderInstance);
 			box->UpdatePS(myPixelShaderMultitexturing);
-			box->RenderInstanced(10, myInstanceConstantBuffer);
+			//box->RenderInstanced(10, myInstanceConstantBuffer);
 
 			//myContext->UpdateSubresource(myConstantBuffer, 0, nullptr, &cb, 0, 0);
 
@@ -500,12 +500,14 @@ void LetsDrawSomeStuff::UpdateLightBuffer()
 	lCb.lights[3].Direction = XMFLOAT4(0.0f, -1.0f, 0.0f, 10.0f);
 	lCb.lights[3].Range.x = 0.9f;
 	lCb.lights[3].Range.y = 0.8f;
+	lCb.lights[3].Range.z = 10.0f;
 	lCb.lights[3].Color = XMFLOAT4(0, 1, 0, 1);
 
 	lCb.lights[4].Position = XMFLOAT4(3.0f, 2.0f, 0, 3.0f);
 	lCb.lights[4].Direction = XMFLOAT4(0, -1.0f, 0.0f, 10.0f);
 	lCb.lights[4].Range.x = 0.9f;
 	lCb.lights[4].Range.y = 0.8f;
+	lCb.lights[4].Range.z = 10.0f;
 	lCb.lights[4].Color = XMFLOAT4(1, 1, 1, 1);
 
 	// Rotate the a matrix
