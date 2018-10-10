@@ -35,19 +35,19 @@ struct PS_INPUT
 float4 main(PS_INPUT input) : SV_Target
 {
 	float4 finalColor = 0;
-	float4 pointLightColor = 0;
-	float4 directionalLigthColor = 0;
  	float4 baseTexture = txDiffuse.Sample(samLinear, input.Tex);
 
 	if (all(baseTexture == float4(0, 0, 0, 0)))
 	{
 		baseTexture = float4(0.5f, 0.5f, 0.5f, 1);
+		return baseTexture;
 	}
 
-	//make black and white
-	float grayScaleValue = baseTexture[0] + baseTexture[1] + baseTexture[2] + baseTexture[3];
-
-	finalColor = saturate(baseTexture);
-	finalColor.a = 1;
+	float grayScale = ((baseTexture.r+baseTexture.g+ baseTexture.b)/3.0f);
+	finalColor = float4(grayScale, grayScale, grayScale,1);
+	
+	//return float4(1, 0, 0, 1);
+	 finalColor =saturate(finalColor);
+	 finalColor.a = 1;
 	return finalColor;
 }

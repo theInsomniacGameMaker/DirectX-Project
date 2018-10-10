@@ -113,11 +113,18 @@ void TextureRenderer::BeginRender(CComPtr < ID3D11DeviceContext> pDeviceContext)
 	pDeviceContext->OMSetRenderTargets(1, &pRenderTargetView.p, depthStencilView);
 }
 
-void TextureRenderer::EndRender(CComPtr < ID3D11DeviceContext > pDeviceContext, CComPtr < ID3D11RenderTargetView > mainRenderTargetView, CComPtr < ID3D11DepthStencilView > mainDepthStencilView)
+void TextureRenderer::EndRender(CComPtr<ID3D11DeviceContext> pDeviceContext, CComPtr<ID3D11RenderTargetView> mainRenderTargetView, CComPtr<ID3D11DepthStencilView> mainDepthStencilView)
 {
 	//ID3D11DepthStencilView *pDepthStencil = nullptr;
 	pDeviceContext->OMGetRenderTargets(0, nullptr, nullptr);
 	pDeviceContext->OMSetRenderTargets(1, &mainRenderTargetView.p, mainDepthStencilView);
+	//pResView = {nullptr};
+	//pDeviceContext->PSSetShaderResources(0, 1, &pResView.p);
+}
+
+void TextureRenderer::ClearDPV(CComPtr < ID3D11DeviceContext> pDeviceContext)
+{
+	pDeviceContext->ClearDepthStencilView(depthStencilView, D3D11_CLEAR_DEPTH, 1, 0); // clear it to Z exponential Far.
 }
 
 

@@ -183,6 +183,18 @@ void D3DObject::SetRotatingPosition(XMVECTOR position, ConstantBuffer & constant
 	m_Context->UpdateSubresource(perObjectBuffer, 0, nullptr, &constantBuffer, 0, 0);
 }
 
+void D3DObject::Rotate(XMMATRIX rotationMatrix, ConstantBuffer &constantBuffer, CComPtr < ID3D11Buffer> &perObjectBuffer)
+{
+	constantBuffer.mWorld = XMMatrixTranspose(rotationMatrix*XMMatrixTranspose(constantBuffer.mWorld));
+	m_Context->UpdateSubresource(perObjectBuffer, 0, nullptr, &constantBuffer, 0, 0);
+}
+
+void D3DObject::RotateAndMove(XMMATRIX rotationMatrix, XMVECTOR position, ConstantBuffer & constantBuffer, CComPtr<ID3D11Buffer>& perObjectBuffer)
+{
+	constantBuffer.mWorld = XMMatrixTranspose(rotationMatrix*XMMatrixTranslationFromVector(position));
+	m_Context->UpdateSubresource(perObjectBuffer, 0, nullptr, &constantBuffer, 0, 0);
+}
+
 D3DObject::~D3DObject()
 {
 	/*m_VertexBuffer->Release();

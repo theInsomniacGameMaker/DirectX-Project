@@ -63,6 +63,7 @@ class LetsDrawSomeStuff
 
 
 	TextureRenderer *textureRenderer;
+	TextureRenderer *mainTextureRenderer;
 	D3DObject *feraligtr;
 	D3DObject *skyBox;
 	D3DObject *ground;
@@ -170,10 +171,10 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			reflectiveCube = new D3DObject("utah-teapot.fbx", 0.1f, myDevice, myContext, myVertexShaderReflective, myPixelShaderReflective, nullGeometryShader, myConstantBuffer);
 			reflectiveCube->UpdateTexture("OutputCube");
 
-			secondaryScreen = new D3DObject("Quad.fbx", 10.0f, myDevice, myContext, myVertexShaderScreenSpace, myPixelShaderPostProcessing, nullGeometryShader, myConstantBuffer);
+			secondaryScreen = new D3DObject("cube.fbx", 1/25.0f, myDevice, myContext, myVertexShaderScreenSpace, myPixelShaderPostProcessing, nullGeometryShader, myConstantBuffer);
 
 			textureRenderer = new TextureRenderer(myDevice, width, height);
-
+			mainTextureRenderer = new TextureRenderer(myDevice, width, height);
 			myContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 			CreateConstantBuffers();
@@ -292,10 +293,14 @@ void LetsDrawSomeStuff::Render()
 			myContext->GSSetShader(nullGeometryShader, nullptr, 0);
 			myContext->GSSetShader(myGeometryShader, nullptr, 0);
 			myContext->GSSetConstantBuffers(0, 1, &myConstantBuffer.p);
+			
+			mainTextureRenderer->Clear(myContext, myDepthStencilView, XMFLOAT4(0, 0, 0, 0));
+			mainTextureRenderer->BeginRender(myContext);
 
 			skyBox->SetPosition(Eye, cb, myConstantBuffer);
 			skyBox->RenderIndexed();
-			myContext->ClearDepthStencilView(myDepthStencilView, D3D11_CLEAR_DEPTH, 1, 0); // clear it to Z exponential Far.
+			//myContext->ClearDepthStencilView(myDepthStencilView, D3D11_CLEAR_DEPTH, 1, 0); // clear it to Z exponential Far.
+			mainTextureRenderer->ClearDPV(myContext);
 
 			feraligtr->SetLocalRotation(XMVECTOR{ 5,0,2,0 }, cb, myConstantBuffer, (float)xTimer.TotalTime());
 			feraligtr->RenderIndexed();
@@ -311,8 +316,7 @@ void LetsDrawSomeStuff::Render()
 			reflectiveCube->SetLocalRotation(XMVECTOR{ 0,5.0f,0.0f,0 }, cb, myConstantBuffer, (float)xTimer.TotalTime()/2.0f,(float)xTimer.TotalTime()/2.0f);
 			reflectiveCube->RenderIndexed();
 
-			secondaryScreen->SetPosition(XMVECTOR{ 0, 0, -4 }, cb, myConstantBuffer);
-			//secondaryScreen->RenderIndexed();
+			
 #if DIRECTIONAL_LIGHT_ON
 			box->UpdatePS(mySolidPixelShader);
 			box->UpdateVS(myVertexShader);
@@ -335,7 +339,6 @@ void LetsDrawSomeStuff::Render()
 			box->UpdatePS(myPixelShaderMultitexturing);
 			box->RenderInstanced(10, myInstanceConstantBuffer);
 
-			//myContext->UpdateSubresource(myConstantBuffer, 0, nullptr, &cb, 0, 0);
 
 			textureRenderer->MoveCamera(cb, myConstantBuffer, myContext);
 			textureRenderer->Clear(myContext, nullptr, XMFLOAT4(1, 1, 1, 1));
@@ -350,8 +353,17 @@ void LetsDrawSomeStuff::Render()
 
 			quad2->UpdateTexture(textureRenderer->pCTexture);
 			quad2->SetPosition(XMVECTOR{ 5, 2, -3, 1 }, cb, myConstantBuffer);
-			quad2->RenderIndexedWithDynamicSRV(textureRenderer->pCTexture);
+			//quad2->RenderIndexedWithDynamicSRV(textureRenderer->pCTexture);
 
+			mainTextureRenderer->EndRender(myContext, myRenderTargetView, myDepthStencilView);
+
+			secondaryScreen->SetPosition(XMVECTOR{ 0, 0, 3 }, cb, myConstantBuffer);
+			secondaryScreen->UpdateTexture(mainTextureRenderer->pCTexture);
+			//secondaryScreen->RotateAndMove(XMMatrixRotationX(60), XMVECTOR{ 0, 3, -1 }, cb, myConstantBuffer);
+			secondaryScreen->RenderIndexed();
+
+			mainTextureRenderer->pResView = { nullptr };
+			myContext->PSSetShaderResources(0, 1, &mainTextureRenderer->pResView.p);
 			// Present Backbuffer using Swapchain object
 			// Framerate is currently unlocked, we suggest "MSI Afterburner" to track your current FPS and memory usage.
 			mySwapChain->Present(0, 0); // set first argument to 1 to enable vertical refresh sync with display
@@ -596,8 +608,8 @@ void LetsDrawSomeStuff::CreateShaders()
 	hr = myDevice->CreatePixelShader(PS_SkyBox, sizeof(PS_SkyBox), nullptr, &SKYMAP_PS);
 	hr = myDevice->CreatePixelShader(PS_Multitexturing, sizeof(PS_Multitexturing), nullptr, &myPixelShaderMultitexturing);
 	hr = myDevice->CreatePixelShader(PS_NoLighting, sizeof(PS_NoLighting), nullptr, &myPixelShaderNoLighting);
-	hr = myDevice->CreatePixelShader(PS_Reflective, sizeof(PS_Reflective), nullptr, &myPixelShaderReflective.p);
-	hr = myDevice->CreatePixelShader(PS_PostProcessing, sizeof(PS_PostProcessing), nullptr, &myPixelShaderPostProcessing.p);
+	hr = myDevice->CreatePixelShader(PS_Reflective, sizeof(PS_Reflective), nullptr, &myPixelShaderReflective);
+	hr = myDevice->CreatePixelShader(PS_PostProcessing, sizeof(PS_PostProcessing), nullptr, &myPixelShaderPostProcessing);
 
 	hr = myDevice->CreateGeometryShader(GS_PointToQuad, sizeof(GS_PointToQuad), nullptr, &myGeometryShader);
 }

@@ -40,6 +40,8 @@ public:
 	void SetLocalRotation(XMVECTOR position, ConstantBuffer & constantBuffer, CComPtr < ID3D11Buffer >& perObjectBuffer, float factorY, float factorX);
 	void SetRotatingPosition(XMVECTOR position, ConstantBuffer &constantBuffer, CComPtr < ID3D11Buffer> &perObjectBuffer, float rotationMatrixFactor);
 	void SetRotatingPosition(XMVECTOR position, ConstantBuffer & constantBuffer, CComPtr < ID3D11Buffer >& perObjectBuffer, float rotationMatrixYFactor, float rotationMatrixXFactor);
+	void Rotate(XMMATRIX rotationMatrix, ConstantBuffer & constantBuffer, CComPtr<ID3D11Buffer>& perObjectBuffer);
+	void RotateAndMove(XMMATRIX rotationMatrix, XMVECTOR position, ConstantBuffer & constantBuffer, CComPtr<ID3D11Buffer>& perObjectBuffer);
 	ID3D11PixelShader* GetPixelShader() { return m_PixelShader; }
 	~D3DObject();
 
