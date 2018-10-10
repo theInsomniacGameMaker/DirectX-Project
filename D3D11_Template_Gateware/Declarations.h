@@ -29,6 +29,9 @@ using namespace std;
 #include "VS_PassThrough.csh"
 #include "VS_Reflective.csh"
 #include "PS_Reflective.csh"
+#include "PS_PostProcessing.csh"
+#include "VS_ScreenSpace.csh"
+
 
 #define CHARIZARD_MESH 0
 #define BOX_MESH 1

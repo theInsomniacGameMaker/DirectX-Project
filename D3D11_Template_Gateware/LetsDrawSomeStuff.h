@@ -32,13 +32,15 @@ class LetsDrawSomeStuff
 	CComPtr<ID3D11VertexShader>		myVertexShaderWave = nullptr;
 	CComPtr<ID3D11VertexShader>		myVertexShaderPassThrough = nullptr;
 	CComPtr<ID3D11VertexShader>		myVertexShaderReflective = nullptr;
+	CComPtr<ID3D11VertexShader>		myVertexShaderScreenSpace = nullptr;
 
-	CComPtr<ID3D11PixelShader>			myPixelShader = nullptr;
-	CComPtr<ID3D11PixelShader>			mySolidPixelShader = nullptr;
-	CComPtr<ID3D11PixelShader>			SKYMAP_PS = nullptr;
-	CComPtr<ID3D11PixelShader>			myPixelShaderMultitexturing = nullptr;
-	CComPtr<ID3D11PixelShader>			myPixelShaderNoLighting = nullptr;
-	CComPtr<ID3D11PixelShader>			myPixelShaderReflective = nullptr;
+	CComPtr<ID3D11PixelShader>		myPixelShader = nullptr;
+	CComPtr<ID3D11PixelShader>		mySolidPixelShader = nullptr;
+	CComPtr<ID3D11PixelShader>		SKYMAP_PS = nullptr;
+	CComPtr<ID3D11PixelShader>		myPixelShaderMultitexturing = nullptr;
+	CComPtr<ID3D11PixelShader>		myPixelShaderNoLighting = nullptr;
+	CComPtr<ID3D11PixelShader>		myPixelShaderReflective = nullptr;
+	CComPtr<ID3D11PixelShader>		myPixelShaderPostProcessing = nullptr;
 
 	CComPtr<ID3D11GeometryShader>		myGeometryShader = nullptr;
 	CComPtr<ID3D11GeometryShader>		nullGeometryShader = nullptr;
@@ -71,6 +73,7 @@ class LetsDrawSomeStuff
 	D3DObject* quad1;
 	D3DObject* quad2;
 	D3DObject* reflectiveCube;
+	D3DObject* secondaryScreen;
 
 	InstanceConstantBuffer iCb;
 	LightConstantBuffer lCb;
@@ -167,6 +170,8 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			reflectiveCube = new D3DObject("utah-teapot.fbx", 0.1f, myDevice, myContext, myVertexShaderReflective, myPixelShaderReflective, nullGeometryShader, myConstantBuffer);
 			reflectiveCube->UpdateTexture("OutputCube");
 
+			secondaryScreen = new D3DObject("Quad.fbx", 10.0f, myDevice, myContext, myVertexShaderScreenSpace, myPixelShaderPostProcessing, nullGeometryShader, myConstantBuffer);
+
 			textureRenderer = new TextureRenderer(myDevice, width, height);
 
 			myContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -235,6 +240,7 @@ LetsDrawSomeStuff::~LetsDrawSomeStuff()
 	delete quad1;
 	delete quad2;
 	delete reflectiveCube;
+	delete secondaryScreen;
 	delete textureRenderer;
 
 	/*myRenderTargetView->Release();
@@ -305,6 +311,8 @@ void LetsDrawSomeStuff::Render()
 			reflectiveCube->SetLocalRotation(XMVECTOR{ 0,5.0f,0.0f,0 }, cb, myConstantBuffer, (float)xTimer.TotalTime()/2.0f,(float)xTimer.TotalTime()/2.0f);
 			reflectiveCube->RenderIndexed();
 
+			secondaryScreen->SetPosition(XMVECTOR{ 0, 0, -4 }, cb, myConstantBuffer);
+			//secondaryScreen->RenderIndexed();
 #if DIRECTIONAL_LIGHT_ON
 			box->UpdatePS(mySolidPixelShader);
 			box->UpdateVS(myVertexShader);
@@ -340,9 +348,9 @@ void LetsDrawSomeStuff::Render()
 
 			UpdateCamera();
 
-			//quad2->UpdateTexture(textureRenderer->pCTexture);
+			quad2->UpdateTexture(textureRenderer->pCTexture);
 			quad2->SetPosition(XMVECTOR{ 5, 2, -3, 1 }, cb, myConstantBuffer);
-			//quad2->RenderIndexedWithDynamicSRV(textureRenderer->pCTexture);
+			quad2->RenderIndexedWithDynamicSRV(textureRenderer->pCTexture);
 
 			// Present Backbuffer using Swapchain object
 			// Framerate is currently unlocked, we suggest "MSI Afterburner" to track your current FPS and memory usage.
@@ -581,13 +589,15 @@ void LetsDrawSomeStuff::CreateShaders()
 	hr = myDevice->CreateVertexShader(VS_PositionModifier, sizeof(VS_PositionModifier), nullptr, &myVertexShaderWave);
 	hr = myDevice->CreateVertexShader(VS_PassThrough, sizeof(VS_PassThrough), nullptr, &myVertexShaderPassThrough);
 	hr = myDevice->CreateVertexShader(VS_Reflective, sizeof(VS_Reflective), nullptr, &myVertexShaderReflective);
+	hr = myDevice->CreateVertexShader(VS_ScreenSpace, sizeof(VS_ScreenSpace), nullptr, &myVertexShaderScreenSpace);
 
 	hr = myDevice->CreatePixelShader(Trivial_PS, sizeof(Trivial_PS), nullptr, &myPixelShader);
 	hr = myDevice->CreatePixelShader(SolidPS, sizeof(SolidPS), nullptr, &mySolidPixelShader);
 	hr = myDevice->CreatePixelShader(PS_SkyBox, sizeof(PS_SkyBox), nullptr, &SKYMAP_PS);
 	hr = myDevice->CreatePixelShader(PS_Multitexturing, sizeof(PS_Multitexturing), nullptr, &myPixelShaderMultitexturing);
 	hr = myDevice->CreatePixelShader(PS_NoLighting, sizeof(PS_NoLighting), nullptr, &myPixelShaderNoLighting);
-	hr = myDevice->CreatePixelShader(PS_Reflective, sizeof(PS_Reflective), nullptr, &myPixelShaderReflective);
+	hr = myDevice->CreatePixelShader(PS_Reflective, sizeof(PS_Reflective), nullptr, &myPixelShaderReflective.p);
+	hr = myDevice->CreatePixelShader(PS_PostProcessing, sizeof(PS_PostProcessing), nullptr, &myPixelShaderPostProcessing.p);
 
 	hr = myDevice->CreateGeometryShader(GS_PointToQuad, sizeof(GS_PointToQuad), nullptr, &myGeometryShader);
 }

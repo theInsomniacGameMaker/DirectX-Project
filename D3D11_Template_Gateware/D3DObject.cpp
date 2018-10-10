@@ -78,8 +78,8 @@ void D3DObject::RenderIndexedWithDynamicSRV(CComPtr<ID3D11ShaderResourceView>& t
 	m_Context->VSSetShader(m_VertexShader, nullptr, 0);
 	m_Context->PSSetShader(m_PixelShader, nullptr, 0);
 	m_Context->GSSetShader(m_GeometryShader, nullptr, 0);
-	m_Context->PSSetShaderResources(0, 1, &textureRV);
-	m_Context->IASetVertexBuffers(0, 1, &m_VertexBuffer, stride, offset);
+	m_Context->PSSetShaderResources(0, 1, &textureRV.p);
+	m_Context->IASetVertexBuffers(0, 1, &m_VertexBuffer.p, stride, offset);
 	m_Context->IASetIndexBuffer(m_IndexBuffer, DXGI_FORMAT_R32_UINT, 0);
 	m_Context->DrawIndexed(m_Mesh.GetNumberOfIndices(), 0, 0);
 }
@@ -142,7 +142,14 @@ void D3DObject::UpdateTexture(CComPtr < ID3D11ShaderResourceView> &textureRV)
 //Will set the position of the object
 void D3DObject::SetPosition(XMVECTOR position, ConstantBuffer &constantBuffer, CComPtr < ID3D11Buffer> &perObjectBuffer)
 {
-	constantBuffer.mWorld = XMMatrixTranspose(XMMatrixTranslationFromVector(position));
+	if (XMVector3Equal(position, XMVECTOR{ 0,0,0,0 }))
+	{
+		constantBuffer.mWorld = XMMatrixIdentity();
+	}
+	else
+	{
+		constantBuffer.mWorld = XMMatrixTranspose(XMMatrixTranslationFromVector(position));
+	}
 	m_Context->UpdateSubresource(perObjectBuffer, 0, nullptr, &constantBuffer, 0, 0);
 }
 
