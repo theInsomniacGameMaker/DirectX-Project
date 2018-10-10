@@ -162,7 +162,7 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 
 			quad1 = new D3DObject("Q.fbx", 5.0f, myDevice, myContext, myVertexShaderPassThrough, myPixelShaderNoLighting, myGeometryShader, myConstantBuffer);
 
-			quad2 = new D3DObject("cube.fbx", 1.0/50.0f, myDevice, myContext, myVertexShader, myPixelShaderNoLighting, nullGeometryShader, myConstantBuffer);
+			quad2 = new D3DObject("cube.fbx", 1/50.0f, myDevice, myContext, myVertexShader, myPixelShaderNoLighting, nullGeometryShader, myConstantBuffer);
 
 			reflectiveCube = new D3DObject("utah-teapot.fbx", 0.1f, myDevice, myContext, myVertexShaderReflective, myPixelShaderReflective, nullGeometryShader, myConstantBuffer);
 			reflectiveCube->UpdateTexture("OutputCube");
@@ -302,7 +302,7 @@ void LetsDrawSomeStuff::Render()
 			box->UpdatePS(myPixelShaderMultitexturing);
 			box->RenderIndexedMulitexture(myTextureRVPMT);
 
-			reflectiveCube->SetLocalRotation(XMVECTOR{ 0,5.0f,0.0f,0 }, cb, myConstantBuffer, xTimer.TotalTime()/2,(float)xTimer.TotalTime()/2);
+			reflectiveCube->SetLocalRotation(XMVECTOR{ 0,5.0f,0.0f,0 }, cb, myConstantBuffer, (float)xTimer.TotalTime()/2.0f,(float)xTimer.TotalTime()/2.0f);
 			reflectiveCube->RenderIndexed();
 
 #if DIRECTIONAL_LIGHT_ON
@@ -333,7 +333,7 @@ void LetsDrawSomeStuff::Render()
 			textureRenderer->Clear(myContext, nullptr, XMFLOAT4(1, 1, 1, 1));
 			textureRenderer->BeginRender(myContext);
 #if SPACESHIP
-			spaceShip->SetLocalRotation(XMVECTOR{ 100,0,0,0 }, cb, myConstantBuffer,xTimer.TotalTime(), xTimer.TotalTime());
+			spaceShip->SetLocalRotation(XMVECTOR{ 100,0,0,0 }, cb, myConstantBuffer,(float)xTimer.TotalTime(), (float)xTimer.TotalTime());
 			spaceShip->RenderIndexed();
 #endif 
 			textureRenderer->EndRender(myContext, myRenderTargetView, myDepthStencilView);
