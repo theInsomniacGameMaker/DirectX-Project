@@ -108,7 +108,7 @@ void TextureRenderer::MoveCamera(ConstantBuffer & cb, CComPtr < ID3D11Buffer >& 
 void TextureRenderer::BeginRender(CComPtr < ID3D11DeviceContext> pDeviceContext)
 {
 	//ID3D11DepthStencilView *pDepthStencil = nullptr;
-	//pDeviceContext->OMGetRenderTargets(1, &pTarget, &mainDepthStencilView);
+	pDeviceContext->OMGetRenderTargets(1, &pTarget.p, nullptr);
 
 	pDeviceContext->OMSetRenderTargets(1, &pRenderTargetView.p, depthStencilView);
 }
@@ -117,7 +117,7 @@ void TextureRenderer::EndRender(CComPtr<ID3D11DeviceContext> pDeviceContext, CCo
 {
 	//ID3D11DepthStencilView *pDepthStencil = nullptr;
 	pDeviceContext->OMGetRenderTargets(0, nullptr, nullptr);
-	pDeviceContext->OMSetRenderTargets(1, &mainRenderTargetView.p, mainDepthStencilView);
+	pDeviceContext->OMSetRenderTargets(1, &pTarget.p, mainDepthStencilView);
 	//pResView = {nullptr};
 	//pDeviceContext->PSSetShaderResources(0, 1, &pResView.p);
 }
