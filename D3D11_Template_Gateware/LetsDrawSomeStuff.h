@@ -175,9 +175,8 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			reflectiveCube = new D3DObject("utah-teapot.fbx", 0.1f, myDevice, myContext, myVertexShaderReflective, myPixelShaderReflective, nullGeometryShader, myConstantBuffer);
 			reflectiveCube->UpdateTexture("OutputCube");
 
-			secondaryScreen = new D3DObject("cube.fbx", 1/25.0f, myDevice, myContext, myVertexShader, myPixelShaderPostProcessing, nullGeometryShader, myConstantBuffer);
 
-			screenQuad = new ScreenQuad(myDevice, myContext, myVertexShaderScreenSpace, myPixelShaderNoLighting, nullGeometryShader);
+			screenQuad = new ScreenQuad(myDevice, myContext, myVertexShaderScreenSpace, myPixelShaderPostProcessing, nullGeometryShader);
 
 			textureRenderer = new TextureRenderer(myDevice, width, height);
 			mainTextureRenderer = new TextureRenderer(myDevice, width, height);
@@ -247,13 +246,13 @@ LetsDrawSomeStuff::~LetsDrawSomeStuff()
 	delete quad1;
 	delete quad2;
 	delete reflectiveCube;
-	delete secondaryScreen;
 	delete textureRenderer;
-
-	/*myRenderTargetView->Release();
-	myDevice->Release();
-	mySwapChain->Release();
-	myContext->Release();*/
+	delete mainTextureRenderer;
+	delete screenQuad;
+	myRenderTargetView.Release();
+	myDevice.Release();
+	mySwapChain.Release();
+	myContext.Release();
 
 }
 
@@ -264,8 +263,8 @@ void LetsDrawSomeStuff::Render()
 	{
 		xTimer.Signal();
 		// this could be changed during resolution edits, get it every frame
-		ID3D11RenderTargetView *myRenderTargetView = nullptr;
-		ID3D11DepthStencilView *myDepthStencilView = nullptr;
+		CComPtr<ID3D11RenderTargetView> myRenderTargetView = nullptr;
+		CComPtr<ID3D11DepthStencilView> myDepthStencilView = nullptr;
 		if (G_SUCCESS(mySurface->GetRenderTarget((void**)&myRenderTargetView)))
 		{
 			// Grab the Z Buffer if one was requested
@@ -273,11 +272,11 @@ void LetsDrawSomeStuff::Render()
 			{
 				myContext->ClearDepthStencilView(myDepthStencilView, D3D11_CLEAR_DEPTH, 1, 0); // clear it to Z exponential Far.
 
-				myDepthStencilView->Release();
+				myDepthStencilView.Release();
 			}
 
 			// Set active target for drawing, all array based D3D11 functions should use a syntax similar to below
-			ID3D11RenderTargetView* const targets[] = { myRenderTargetView };
+			ID3D11RenderTargetView* const targets[] = { myRenderTargetView.p };
 			myContext->OMSetRenderTargets(1, targets, myDepthStencilView);
 
 			// Clear the screen to dark green
@@ -301,7 +300,7 @@ void LetsDrawSomeStuff::Render()
 			myContext->GSSetConstantBuffers(0, 1, &myConstantBuffer.p);
 			
 			mainTextureRenderer->Clear(myContext, myDepthStencilView, XMFLOAT4(0, 0, 0, 0));
-			mainTextureRenderer->BeginRender(myContext);
+			mainTextureRenderer->BeginRender(myContext, myRenderTargetView);
 
 			skyBox->SetPosition(Eye, cb, myConstantBuffer);
 			skyBox->RenderIndexed();
@@ -312,15 +311,15 @@ void LetsDrawSomeStuff::Render()
 			feraligtr->RenderIndexed();
 
 			ground->SetPosition(XMVECTOR{ 0,-0.5,0,0 }, cb, myConstantBuffer);
-			//ground->RenderIndexed();
+			ground->RenderIndexed();
 
 			box->SetPosition(XMVECTOR{ -5,0,0,1 }, cb, myConstantBuffer);
 			box->UpdateVS(myVertexShader);
 			box->UpdatePS(myPixelShaderMultitexturing);
-			//box->RenderIndexedMulitexture(myTextureRVPMT);
+			box->RenderIndexedMulitexture(myTextureRVPMT);
 
 			reflectiveCube->SetLocalRotation(XMVECTOR{ 0,5.0f,0.0f,0 }, cb, myConstantBuffer, (float)xTimer.TotalTime()/2.0f,(float)xTimer.TotalTime()/2.0f);
-			//reflectiveCube->RenderIndexed();
+			reflectiveCube->RenderIndexed();
 
 			
 #if DIRECTIONAL_LIGHT_ON
@@ -335,20 +334,20 @@ void LetsDrawSomeStuff::Render()
 			box->RenderIndexed();
 #endif 
 			quad1->SetPosition(XMVECTOR{ 3, 0, 0, 0 }, cb, myConstantBuffer);
-			//quad1->RenderIndexed(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
+			quad1->RenderIndexed(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
 
 			bulb->SetPosition(XMVECTOR{ lCb.lights[2].Position.x, lCb.lights[2].Position.y, lCb.lights[2].Position.z, 1 }, cb, myConstantBuffer);
-			//bulb->RenderIndexed();
+			bulb->RenderIndexed();
 
 			myContext->UpdateSubresource(myInstanceConstantBuffer, 0, nullptr, &iCb, 0, 0);
 			box->UpdateVS(myVertexShaderInstance);
 			box->UpdatePS(myPixelShaderMultitexturing);
-			//box->RenderInstanced(10, myInstanceConstantBuffer);
+			box->RenderInstanced(10, myInstanceConstantBuffer);
 
 
 			textureRenderer->MoveCamera(cb, myConstantBuffer, myContext);
 			textureRenderer->Clear(myContext, nullptr, XMFLOAT4(1, 1, 1, 1));
-			textureRenderer->BeginRender(myContext);
+			textureRenderer->BeginRender(myContext, mainTextureRenderer->pRenderTargetView);
 #if SPACESHIP
 			spaceShip->SetLocalRotation(XMVECTOR{ 100,0,0,0 }, cb, myConstantBuffer,(float)xTimer.TotalTime(), (float)xTimer.TotalTime());
 			spaceShip->RenderIndexed();
@@ -363,10 +362,10 @@ void LetsDrawSomeStuff::Render()
 
 			mainTextureRenderer->EndRender(myContext, myRenderTargetView, myDepthStencilView);
 
-			secondaryScreen->SetPosition(XMVECTOR{ 0, 0, 3 }, cb, myConstantBuffer);
-			secondaryScreen->UpdateTexture(mainTextureRenderer->pCTexture);
-			//secondaryScreen->RotateAndMove(XMMatrixRotationX(60), XMVECTOR{ 0, 3, -1 }, cb, myConstantBuffer);
-			//secondaryScreen->RenderIndexed();
+			//secondaryScreen->SetPosition(XMVECTOR{ 0, 0, 3 }, cb, myConstantBuffer);
+			//secondaryScreen->UpdateTexture(mainTextureRenderer->pCTexture);
+			////secondaryScreen->RotateAndMove(XMMatrixRotationX(60), XMVECTOR{ 0, 3, -1 }, cb, myConstantBuffer);
+			////secondaryScreen->RenderIndexed();
 			screenQuad->UpdateTexture(mainTextureRenderer->pCTexture);
 			screenQuad->Render();
 
@@ -376,7 +375,7 @@ void LetsDrawSomeStuff::Render()
 			// Present Backbuffer using Swapchain object
 			// Framerate is currently unlocked, we suggest "MSI Afterburner" to track your current FPS and memory usage.
 			mySwapChain->Present(0, 0); // set first argument to 1 to enable vertical refresh sync with display
-			myRenderTargetView->Release(); // Free any temp DX handles aquired this frame  
+			myRenderTargetView.Release(); // Free any temp DX handles aquired this frame  
 
 		}
 	}

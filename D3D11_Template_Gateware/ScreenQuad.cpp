@@ -68,4 +68,9 @@ void ScreenQuad::UpdateTexture(CComPtr<ID3D11ShaderResourceView>& textureRV)
 ScreenQuad::~ScreenQuad()
 {
 	delete[] screenQuadVertices;
+	m_VertexBuffer.Release();
+	m_IndexBuffer.Release();
+	m_VertexShader.Release();
+	m_PixelShader.Release();
+	m_TextureRV.Release();
 }
