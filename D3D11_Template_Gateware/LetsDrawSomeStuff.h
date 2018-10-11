@@ -42,6 +42,7 @@ class LetsDrawSomeStuff
 	CComPtr<ID3D11PixelShader>		myPixelShaderNoLighting = nullptr;
 	CComPtr<ID3D11PixelShader>		myPixelShaderReflective = nullptr;
 	CComPtr<ID3D11PixelShader>		myPixelShaderPostProcessing = nullptr;
+	CComPtr<ID3D11PixelShader>		myPixelShaderSpecular = nullptr;
 
 	CComPtr<ID3D11GeometryShader>		myGeometryShader = nullptr;
 	CComPtr<ID3D11GeometryShader>		nullGeometryShader = nullptr;
@@ -152,7 +153,7 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 
 			CreateInputLayout();
 
-			feraligtr = new D3DObject("Feraligatr.fbx", 5.0f, myDevice, myContext, myVertexShader, myPixelShader, nullGeometryShader, myConstantBuffer);
+			feraligtr = new D3DObject("Feraligatr.fbx", 5.0f, myDevice, myContext, myVertexShader, myPixelShaderSpecular, nullGeometryShader, myConstantBuffer);
 
 			skyBox = new D3DObject("SkyBox.fbx", 10.0f, myDevice, myContext, SKYMAP_VS, SKYMAP_PS, nullGeometryShader, myConstantBuffer);
 			skyBox->UpdateTexture("OutputCube");
@@ -176,7 +177,7 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 
 			secondaryScreen = new D3DObject("cube.fbx", 1/25.0f, myDevice, myContext, myVertexShader, myPixelShaderPostProcessing, nullGeometryShader, myConstantBuffer);
 
-			screenQuad = new ScreenQuad(myDevice, myContext, myVertexShaderScreenSpace, myPixelShaderPostProcessing, nullGeometryShader);
+			screenQuad = new ScreenQuad(myDevice, myContext, myVertexShaderScreenSpace, myPixelShaderNoLighting, nullGeometryShader);
 
 			textureRenderer = new TextureRenderer(myDevice, width, height);
 			mainTextureRenderer = new TextureRenderer(myDevice, width, height);
@@ -311,15 +312,15 @@ void LetsDrawSomeStuff::Render()
 			feraligtr->RenderIndexed();
 
 			ground->SetPosition(XMVECTOR{ 0,-0.5,0,0 }, cb, myConstantBuffer);
-			ground->RenderIndexed();
+			//ground->RenderIndexed();
 
 			box->SetPosition(XMVECTOR{ -5,0,0,1 }, cb, myConstantBuffer);
 			box->UpdateVS(myVertexShader);
 			box->UpdatePS(myPixelShaderMultitexturing);
-			box->RenderIndexedMulitexture(myTextureRVPMT);
+			//box->RenderIndexedMulitexture(myTextureRVPMT);
 
 			reflectiveCube->SetLocalRotation(XMVECTOR{ 0,5.0f,0.0f,0 }, cb, myConstantBuffer, (float)xTimer.TotalTime()/2.0f,(float)xTimer.TotalTime()/2.0f);
-			reflectiveCube->RenderIndexed();
+			//reflectiveCube->RenderIndexed();
 
 			
 #if DIRECTIONAL_LIGHT_ON
@@ -334,15 +335,15 @@ void LetsDrawSomeStuff::Render()
 			box->RenderIndexed();
 #endif 
 			quad1->SetPosition(XMVECTOR{ 3, 0, 0, 0 }, cb, myConstantBuffer);
-			quad1->RenderIndexed(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
+			//quad1->RenderIndexed(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
 
 			bulb->SetPosition(XMVECTOR{ lCb.lights[2].Position.x, lCb.lights[2].Position.y, lCb.lights[2].Position.z, 1 }, cb, myConstantBuffer);
-			bulb->RenderIndexed();
+			//bulb->RenderIndexed();
 
 			myContext->UpdateSubresource(myInstanceConstantBuffer, 0, nullptr, &iCb, 0, 0);
 			box->UpdateVS(myVertexShaderInstance);
 			box->UpdatePS(myPixelShaderMultitexturing);
-			box->RenderInstanced(10, myInstanceConstantBuffer);
+			//box->RenderInstanced(10, myInstanceConstantBuffer);
 
 
 			textureRenderer->MoveCamera(cb, myConstantBuffer, myContext);
@@ -358,7 +359,7 @@ void LetsDrawSomeStuff::Render()
 
 			quad2->UpdateTexture(textureRenderer->pCTexture);
 			quad2->SetPosition(XMVECTOR{ 5, 2, -3, 1 }, cb, myConstantBuffer);
-			//quad2->RenderIndexedWithDynamicSRV(textureRenderer->pCTexture);
+			quad2->RenderIndexedWithDynamicSRV(textureRenderer->pCTexture);
 
 			mainTextureRenderer->EndRender(myContext, myRenderTargetView, myDepthStencilView);
 
@@ -618,6 +619,7 @@ void LetsDrawSomeStuff::CreateShaders()
 	hr = myDevice->CreatePixelShader(PS_NoLighting, sizeof(PS_NoLighting), nullptr, &myPixelShaderNoLighting);
 	hr = myDevice->CreatePixelShader(PS_Reflective, sizeof(PS_Reflective), nullptr, &myPixelShaderReflective);
 	hr = myDevice->CreatePixelShader(PS_PostProcessing, sizeof(PS_PostProcessing), nullptr, &myPixelShaderPostProcessing);
+	hr = myDevice->CreatePixelShader(PS_Specular, sizeof(PS_Specular), nullptr, &myPixelShaderSpecular);
 
 	hr = myDevice->CreateGeometryShader(GS_PointToQuad, sizeof(GS_PointToQuad), nullptr, &myGeometryShader);
 }

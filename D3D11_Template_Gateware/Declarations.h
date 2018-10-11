@@ -31,12 +31,13 @@ using namespace std;
 #include "PS_Reflective.csh"
 #include "PS_PostProcessing.csh"
 #include "VS_ScreenSpace.csh"
+#include "PS_Specular.csh"
 
 
 #define CHARIZARD_MESH 0
 #define BOX_MESH 1
 #define SPACESHIP 1
-#define DIRECTIONAL_LIGHT_ON 1
+#define DIRECTIONAL_LIGHT_ON 0
 #define DEBUGGER 0
 
 static const XMVECTOR UP = { 0,1,0,0 };

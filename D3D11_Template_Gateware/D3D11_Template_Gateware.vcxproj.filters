@@ -64,7 +64,9 @@
     <ClCompile Include="TextureRenderer.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="ScreenQuad.cpp" />
+    <ClCompile Include="ScreenQuad.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Declarations.h">
@@ -97,7 +99,9 @@
     <ClInclude Include="TextureRenderer.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="ScreenQuad.h" />
+    <ClInclude Include="ScreenQuad.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Gateware Source">
@@ -160,6 +164,9 @@
       <Filter>Shaders</Filter>
     </FxCompile>
     <FxCompile Include="VS_ScreenSpace.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="PS_Specular.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
   </ItemGroup>
