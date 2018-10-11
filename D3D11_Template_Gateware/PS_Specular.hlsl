@@ -55,7 +55,7 @@ float4 main(PS_INPUT input) : SV_Target
 		{
 			float3 lightToPixelVec = lights[i].Position - input.wPos;
 			
-			ligthDir = -lightToPixelVec;
+			ligthDir = lightToPixelVec;
 			
 			float howMuchLight = saturate(dot(normalize(lightToPixelVec), input.Norm));
 			pointLightColor = howMuchLight * baseTexture* lights[i].Color;
@@ -66,7 +66,7 @@ float4 main(PS_INPUT input) : SV_Target
 		{
 			float3 lightToPixelVec = normalize(lights[i].Position - input.wPos);
 
-			ligthDir = -lightToPixelVec;
+			ligthDir = lightToPixelVec;
 			
 			float surfaceRatio = saturate(dot(-lightToPixelVec, float3(lights[i].Direction.x, lights[i].Direction.y, lights[i].Direction.z)));
 			float spotFactor = (surfaceRatio > lights[i].Range.y) ? 1 : 0;
