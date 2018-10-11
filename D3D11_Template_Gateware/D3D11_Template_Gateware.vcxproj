@@ -151,6 +151,7 @@
     <ClInclude Include="LetsDrawSomeStuff.h" />
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="Misc.h" />
+    <ClInclude Include="ScreenQuad.h" />
     <ClInclude Include="test pyramid.h" />
     <ClInclude Include="TextureRenderer.h" />
     <ClInclude Include="XTime.h" />
@@ -175,6 +176,7 @@
     <ClCompile Include="Gateware Redistribution R5d\Source\G_System\GWindow.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Mesh.cpp" />
+    <ClCompile Include="ScreenQuad.cpp" />
     <ClCompile Include="TextureRenderer.cpp" />
     <ClCompile Include="XTime.cpp" />
   </ItemGroup>

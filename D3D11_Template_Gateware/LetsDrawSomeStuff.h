@@ -10,6 +10,7 @@
 #include "XTime.h"
 #include "TextureRenderer.h"
 #include "D3DObject.h"
+#include "ScreenQuad.h"
 // Simple Container class to make life easier/cleaner
 class LetsDrawSomeStuff
 {
@@ -61,7 +62,7 @@ class LetsDrawSomeStuff
 	XMVECTOR At;
 	XMVECTOR Up;
 
-
+	ScreenQuad* screenQuad;
 	TextureRenderer *textureRenderer;
 	TextureRenderer *mainTextureRenderer;
 	D3DObject *feraligtr;
@@ -79,6 +80,8 @@ class LetsDrawSomeStuff
 	InstanceConstantBuffer iCb;
 	LightConstantBuffer lCb;
 	ConstantBuffer cb;
+
+	//SimpleVertex screenQuad[4];
 
 	XTime xTimer;
 
@@ -171,7 +174,9 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			reflectiveCube = new D3DObject("utah-teapot.fbx", 0.1f, myDevice, myContext, myVertexShaderReflective, myPixelShaderReflective, nullGeometryShader, myConstantBuffer);
 			reflectiveCube->UpdateTexture("OutputCube");
 
-			secondaryScreen = new D3DObject("cube.fbx", 1/25.0f, myDevice, myContext, myVertexShaderScreenSpace, myPixelShaderPostProcessing, nullGeometryShader, myConstantBuffer);
+			secondaryScreen = new D3DObject("cube.fbx", 1/25.0f, myDevice, myContext, myVertexShader, myPixelShaderPostProcessing, nullGeometryShader, myConstantBuffer);
+
+			screenQuad = new ScreenQuad(myDevice, myContext, myVertexShaderScreenSpace, myPixelShaderPostProcessing, nullGeometryShader);
 
 			textureRenderer = new TextureRenderer(myDevice, width, height);
 			mainTextureRenderer = new TextureRenderer(myDevice, width, height);
@@ -360,7 +365,10 @@ void LetsDrawSomeStuff::Render()
 			secondaryScreen->SetPosition(XMVECTOR{ 0, 0, 3 }, cb, myConstantBuffer);
 			secondaryScreen->UpdateTexture(mainTextureRenderer->pCTexture);
 			//secondaryScreen->RotateAndMove(XMMatrixRotationX(60), XMVECTOR{ 0, 3, -1 }, cb, myConstantBuffer);
-			secondaryScreen->RenderIndexed();
+			//secondaryScreen->RenderIndexed();
+			screenQuad->UpdateTexture(mainTextureRenderer->pCTexture);
+			screenQuad->Render();
+
 
 			mainTextureRenderer->pResView = { nullptr };
 			myContext->PSSetShaderResources(0, 1, &mainTextureRenderer->pResView.p);

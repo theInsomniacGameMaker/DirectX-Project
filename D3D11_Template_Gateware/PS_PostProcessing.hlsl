@@ -43,8 +43,15 @@ float4 main(PS_INPUT input) : SV_Target
 		return baseTexture;
 	}
 
-	float grayScale = ((baseTexture.r+baseTexture.g+ baseTexture.b)/3.0f);
-	finalColor = float4(grayScale, grayScale, grayScale,1);
+	
+	
+		float outputRed = (baseTexture.r * .393) + (baseTexture.g *.769) + (baseTexture.b * .189);
+		float outputGreen = (baseTexture.r * .349) + (baseTexture.g *.686) + (baseTexture.b * .168);
+		float outputBlue = (baseTexture.r * .272) + (baseTexture.g *.534) + (baseTexture.b * .131);
+
+
+		float grayScale = ((baseTexture.r + baseTexture.g + baseTexture.b) / 3.0f);
+		finalColor = float4(outputRed, outputGreen, outputBlue, 1);
 	
 	//return float4(1, 0, 0, 1);
 	 finalColor =saturate(finalColor);

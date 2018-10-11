@@ -31,10 +31,11 @@ struct VS_OUTPUT
 VS_OUTPUT main(VS_INPUT input)
 {
 	VS_OUTPUT output = (VS_OUTPUT)0;
-	output.Pos = mul(input.Pos, World);
+	//output.Pos = mul(input.Pos, World);
+	output.Pos = input.Pos;
 	output.wPos = output.Pos;
-	output.Pos = mul(output.Pos, View);
-	output.Pos = mul(output.Pos, Projection);
+	//output.Pos = mul(output.Pos, View);
+	//output.Pos = mul(output.Pos, Projection);
 	output.Norm = mul(float4(input.Norm, 0), World).xyz;
 	output.Tex = input.Tex;
 	return output;

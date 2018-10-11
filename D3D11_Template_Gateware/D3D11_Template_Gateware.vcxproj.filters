@@ -64,6 +64,7 @@
     <ClCompile Include="TextureRenderer.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
+    <ClCompile Include="ScreenQuad.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Declarations.h">
@@ -96,6 +97,7 @@
     <ClInclude Include="TextureRenderer.h">
       <Filter>Headers</Filter>
     </ClInclude>
+    <ClInclude Include="ScreenQuad.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Gateware Source">
