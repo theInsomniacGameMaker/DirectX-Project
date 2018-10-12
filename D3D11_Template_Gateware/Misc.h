@@ -1,7 +1,7 @@
 #pragma once
 #include "Declarations.h"
 #include "test pyramid.h"
-
+#include "D3DObject.h"
 SimpleVertex sphereVertices[360*17];
 MeshStruct hFilePyramid;
 
@@ -14,6 +14,8 @@ float DegToRad(float deg)
 {
 	return deg * (XM_PI / 180.0f);
 }
+
+bool wayToSort(D3DObject* &i, D3DObject* &j) { return i->m_DistanceFromCamera > j->m_DistanceFromCamera; }
 
 void CreateSpiral()
 {

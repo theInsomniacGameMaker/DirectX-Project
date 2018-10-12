@@ -11,6 +11,7 @@
 #include <iostream>
 #include <vector>
 #include <time.h>
+#include <algorithm>
 using namespace DirectX;
 using namespace std;
 
@@ -32,6 +33,7 @@ using namespace std;
 #include "PS_PostProcessing.csh"
 #include "VS_ScreenSpace.csh"
 #include "PS_Specular.csh"
+#include "PS_Transparent.csh"
 
 
 #define CHARIZARD_MESH 0

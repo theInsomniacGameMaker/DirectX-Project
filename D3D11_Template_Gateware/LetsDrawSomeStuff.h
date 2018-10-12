@@ -22,40 +22,45 @@ class LetsDrawSomeStuff
 	CComPtr<ID3D11DeviceContext> myContext = nullptr;
 
 	// TODO: Add your own D3D11 variables here (be sure to "Release()" them when done!)
-	D3D_DRIVER_TYPE				myDriverType = D3D_DRIVER_TYPE_NULL;
-	D3D_FEATURE_LEVEL			myFeatureLevel = D3D_FEATURE_LEVEL_11_0;
+	D3D_DRIVER_TYPE							myDriverType = D3D_DRIVER_TYPE_NULL;
+	D3D_FEATURE_LEVEL						myFeatureLevel = D3D_FEATURE_LEVEL_11_0;
 	CComPtr < ID3D11RenderTargetView>		myRenderTargetView = nullptr;
 
-	CComPtr<ID3D11VertexShader>		myVertexShader = nullptr;
-	CComPtr<ID3D11VertexShader>		myVertexShaderUV = nullptr;
-	CComPtr<ID3D11VertexShader>		SKYMAP_VS = nullptr;
-	CComPtr<ID3D11VertexShader>		myVertexShaderInstance = nullptr;
-	CComPtr<ID3D11VertexShader>		myVertexShaderWave = nullptr;
-	CComPtr<ID3D11VertexShader>		myVertexShaderPassThrough = nullptr;
-	CComPtr<ID3D11VertexShader>		myVertexShaderReflective = nullptr;
-	CComPtr<ID3D11VertexShader>		myVertexShaderScreenSpace = nullptr;
+	CComPtr<ID3D11VertexShader>				myVertexShader = nullptr;
+	CComPtr<ID3D11VertexShader>				myVertexShaderUV = nullptr;
+	CComPtr<ID3D11VertexShader>				SKYMAP_VS = nullptr;
+	CComPtr<ID3D11VertexShader>				myVertexShaderInstance = nullptr;
+	CComPtr<ID3D11VertexShader>				myVertexShaderWave = nullptr;
+	CComPtr<ID3D11VertexShader>				myVertexShaderPassThrough = nullptr;
+	CComPtr<ID3D11VertexShader>				myVertexShaderReflective = nullptr;
+	CComPtr<ID3D11VertexShader>				myVertexShaderScreenSpace = nullptr;
 
-	CComPtr<ID3D11PixelShader>		myPixelShader = nullptr;
-	CComPtr<ID3D11PixelShader>		mySolidPixelShader = nullptr;
-	CComPtr<ID3D11PixelShader>		SKYMAP_PS = nullptr;
-	CComPtr<ID3D11PixelShader>		myPixelShaderMultitexturing = nullptr;
-	CComPtr<ID3D11PixelShader>		myPixelShaderNoLighting = nullptr;
-	CComPtr<ID3D11PixelShader>		myPixelShaderReflective = nullptr;
-	CComPtr<ID3D11PixelShader>		myPixelShaderPostProcessing = nullptr;
-	CComPtr<ID3D11PixelShader>		myPixelShaderSpecular = nullptr;
+	CComPtr<ID3D11PixelShader>				myPixelShader = nullptr;
+	CComPtr<ID3D11PixelShader>				mySolidPixelShader = nullptr;
+	CComPtr<ID3D11PixelShader>				SKYMAP_PS = nullptr;
+	CComPtr<ID3D11PixelShader>				myPixelShaderMultitexturing = nullptr;
+	CComPtr<ID3D11PixelShader>				myPixelShaderNoLighting = nullptr;
+	CComPtr<ID3D11PixelShader>				myPixelShaderReflective = nullptr;
+	CComPtr<ID3D11PixelShader>				myPixelShaderPostProcessing = nullptr;
+	CComPtr<ID3D11PixelShader>				myPixelShaderSpecular = nullptr;
+	CComPtr<ID3D11PixelShader>				myPixelShaderTransparent = nullptr;
 
-	CComPtr<ID3D11GeometryShader>		myGeometryShader = nullptr;
-	CComPtr<ID3D11GeometryShader>		nullGeometryShader = nullptr;
+	CComPtr<ID3D11GeometryShader>			myGeometryShader = nullptr;
+	CComPtr<ID3D11GeometryShader>			nullGeometryShader = nullptr;
 
 	CComPtr < ID3D11InputLayout>			myVertexLayout = nullptr;
-	CComPtr < ID3D11ShaderResourceView>	myTextureRVPMT[2];
+	CComPtr < ID3D11ShaderResourceView>		myTextureRVPMT[2];
 
-	CComPtr<ID3D11Buffer>				myConstantBuffer = nullptr;
-	CComPtr<ID3D11Buffer>				myInstanceConstantBuffer = nullptr;
-	CComPtr<ID3D11Buffer>				myLightConstantBuffer = nullptr;
-	XMMATRIX					worldMatrix;
-	XMMATRIX					viewMatrix;
-	XMMATRIX					projectionMatrix;
+	CComPtr<ID3D11Buffer>					myConstantBuffer = nullptr;
+	CComPtr<ID3D11Buffer>					myInstanceConstantBuffer = nullptr;
+	CComPtr<ID3D11Buffer>					myLightConstantBuffer = nullptr;
+	
+	CComPtr<ID3D11BlendState>				transparencyBlendState;
+
+
+	XMMATRIX								worldMatrix;
+	XMMATRIX								viewMatrix;
+	XMMATRIX								projectionMatrix;
 
 	CComPtr < ID3D11SamplerState>			mySamplerLinear = nullptr;
 
@@ -75,6 +80,9 @@ class LetsDrawSomeStuff
 	D3DObject* quad;
 	D3DObject* quad1;
 	D3DObject* quad2;
+	D3DObject* transparentCube1;
+	D3DObject* transparentCube2;
+	D3DObject* transparentCube3;
 	D3DObject* reflectiveCube;
 	D3DObject* secondaryScreen;
 
@@ -82,7 +90,7 @@ class LetsDrawSomeStuff
 	LightConstantBuffer lCb;
 	ConstantBuffer cb;
 
-	//SimpleVertex screenQuad[4];
+	vector<D3DObject*>transparentObjects;
 
 	XTime xTimer;
 
@@ -125,6 +133,10 @@ public:
 	void SetupWVP();
 	//Update the camera
 	void UpdateCamera();
+	//Create Blend State
+	void CreateBlendState();
+	//Sort the object according to the position from the camera
+	void RenderAccordingToPosition();
 
 };
 
@@ -153,7 +165,7 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 
 			CreateInputLayout();
 
-			feraligtr = new D3DObject("Feraligatr.fbx", 5.0f, myDevice, myContext, myVertexShader, myPixelShaderSpecular, nullGeometryShader, myConstantBuffer);
+			feraligtr = new D3DObject("Charizard.fbx", 5.0f, myDevice, myContext, myVertexShader, myPixelShaderSpecular, nullGeometryShader, myConstantBuffer);
 
 			skyBox = new D3DObject("SkyBox.fbx", 10.0f, myDevice, myContext, SKYMAP_VS, SKYMAP_PS, nullGeometryShader, myConstantBuffer);
 			skyBox->UpdateTexture("OutputCube");
@@ -175,12 +187,25 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			reflectiveCube = new D3DObject("utah-teapot.fbx", 0.1f, myDevice, myContext, myVertexShaderReflective, myPixelShaderReflective, nullGeometryShader, myConstantBuffer);
 			reflectiveCube->UpdateTexture("OutputCube");
 
+			transparentCube1 = new D3DObject("cube.fbx", 1 / 50.0f, myDevice, myContext, myVertexShader, myPixelShaderTransparent, nullGeometryShader, myConstantBuffer);
+			transparentCube2 = new D3DObject("cube.fbx", 1 / 50.0f, myDevice, myContext, myVertexShader, myPixelShaderTransparent, nullGeometryShader, myConstantBuffer);
+			transparentCube3 = new D3DObject("cube.fbx", 1 / 50.0f, myDevice, myContext, myVertexShader, myPixelShaderTransparent, nullGeometryShader, myConstantBuffer);
+			
+			transparentCube1->UpdateTexture("Energy");
+			transparentCube2->UpdateTexture("Energy1");
+			transparentCube3->UpdateTexture("Energy");
 
-			screenQuad = new ScreenQuad(myDevice, myContext, myVertexShaderScreenSpace, myPixelShaderPostProcessing, nullGeometryShader);
+			transparentObjects.push_back(transparentCube1);
+			transparentObjects.push_back(transparentCube2);
+			transparentObjects.push_back(transparentCube3);
+			
+			screenQuad = new ScreenQuad(myDevice, myContext, myVertexShaderScreenSpace, myPixelShaderNoLighting, nullGeometryShader);
 
 			textureRenderer = new TextureRenderer(myDevice, width, height);
 			mainTextureRenderer = new TextureRenderer(myDevice, width, height);
 			myContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+			CreateBlendState();
 
 			CreateConstantBuffers();
 
@@ -198,29 +223,29 @@ LetsDrawSomeStuff::~LetsDrawSomeStuff()
 {
 	//Release DX Objects aquired from the surface
 
-	/*myVertexShader->Release();
-	myVertexShaderUV->Release();
-	myPixelShader->Release();
-	mySolidPixelShader->Release();
-	myVertexLayout->Release();
-	myVertexShaderReflective->Release();
-	SKYMAP_VS->Release();
-	myVertexShaderInstance->Release();
-	myVertexShaderWave->Release();
-	myVertexShaderPassThrough->Release();
+	myVertexShader.Release();
+	myVertexShaderUV.Release();
+	myPixelShader.Release();
+	mySolidPixelShader.Release();
+	myVertexLayout.Release();
+	myVertexShaderReflective.Release();
+	SKYMAP_VS.Release();
+	myVertexShaderInstance.Release();
+	myVertexShaderWave.Release();
+	myVertexShaderPassThrough.Release();
 
-	SKYMAP_PS->Release();
-	myPixelShaderMultitexturing->Release();
-	myPixelShaderNoLighting->Release();
-	myPixelShaderReflective->Release();
-	myGeometryShader->Release();
+	SKYMAP_PS.Release();
+	myPixelShaderMultitexturing.Release();
+	myPixelShaderNoLighting.Release();
+	myPixelShaderReflective.Release();
+	myGeometryShader.Release();
 
-	myTextureRVPMT[0]->Release();
-	myTextureRVPMT[1]->Release();
+	myTextureRVPMT[0].Release();
+	myTextureRVPMT[1].Release();
 
-	myLightConstantBuffer->Release();
-	myInstanceConstantBuffer->Release();
-	myConstantBuffer->Release();*/
+	myLightConstantBuffer.Release();
+	myInstanceConstantBuffer.Release();
+	myConstantBuffer.Release();
 
 	//if (mySamplerLinear)mySamplerLinear->Release();
 
@@ -246,6 +271,7 @@ LetsDrawSomeStuff::~LetsDrawSomeStuff()
 	delete quad1;
 	delete quad2;
 	delete reflectiveCube;
+	delete transparentCube1;
 	delete textureRenderer;
 	delete mainTextureRenderer;
 	delete screenQuad;
@@ -302,6 +328,18 @@ void LetsDrawSomeStuff::Render()
 			mainTextureRenderer->Clear(myContext, myDepthStencilView, XMFLOAT4(0, 0, 0, 0));
 			mainTextureRenderer->BeginRender(myContext, myRenderTargetView);
 
+
+			//"fine-tune" the blending equation
+			float blendFactor[] = { 0.75f, 0.75f, 0.75f, 1.0f };
+
+			//Set the default blend state (no blending) for opaque objects
+			myContext->OMSetBlendState(0, 0, 0xffffffff);
+
+			//Render opaque objects//
+
+
+
+
 			skyBox->SetPosition(Eye, cb, myConstantBuffer);
 			skyBox->RenderIndexed();
 			//myContext->ClearDepthStencilView(myDepthStencilView, D3D11_CLEAR_DEPTH, 1, 0); // clear it to Z exponential Far.
@@ -356,9 +394,31 @@ void LetsDrawSomeStuff::Render()
 
 			UpdateCamera();
 
+			//*****Transparency Depth Ordering*****//
+			//Find which transparent object is further from the camera
+			//So we can render the objects in depth order to the render target
+
+			//Find distance from first cube to camera
+			XMVECTOR objectRelativePosition = XMVectorZero();
+
+
 			quad2->UpdateTexture(textureRenderer->pCTexture);
 			quad2->SetPosition(XMVECTOR{ 5, 2, -3, 1 }, cb, myConstantBuffer);
 			quad2->RenderIndexedWithDynamicSRV(textureRenderer->pCTexture);
+
+
+			myContext->OMSetBlendState(transparencyBlendState, blendFactor, 0xffffffff);
+
+			transparentCube1->SetLocalRotation(XMVECTOR{ 2.5,-1.5,0 }, cb, myConstantBuffer, sin(xTimer.TotalTime()));
+			transparentCube2->SetLocalRotation(XMVECTOR{ 0,-1.5,0 }, cb, myConstantBuffer, sin(xTimer.TotalTime()));
+			transparentCube3->SetLocalRotation(XMVECTOR{ -2.5,-1.5,3 }, cb, myConstantBuffer, sin(xTimer.TotalTime()));
+			
+			
+
+			RenderAccordingToPosition();
+			
+			myContext->OMSetBlendState(0, 0, 0xffffffff);
+
 
 			mainTextureRenderer->EndRender(myContext, myRenderTargetView, myDepthStencilView);
 
@@ -372,6 +432,10 @@ void LetsDrawSomeStuff::Render()
 
 			mainTextureRenderer->pResView = { nullptr };
 			myContext->PSSetShaderResources(0, 1, &mainTextureRenderer->pResView.p);
+
+			//Set the blend state for transparent objects
+			
+
 			// Present Backbuffer using Swapchain object
 			// Framerate is currently unlocked, we suggest "MSI Afterburner" to track your current FPS and memory usage.
 			mySwapChain->Present(0, 0); // set first argument to 1 to enable vertical refresh sync with display
@@ -619,6 +683,7 @@ void LetsDrawSomeStuff::CreateShaders()
 	hr = myDevice->CreatePixelShader(PS_Reflective, sizeof(PS_Reflective), nullptr, &myPixelShaderReflective);
 	hr = myDevice->CreatePixelShader(PS_PostProcessing, sizeof(PS_PostProcessing), nullptr, &myPixelShaderPostProcessing);
 	hr = myDevice->CreatePixelShader(PS_Specular, sizeof(PS_Specular), nullptr, &myPixelShaderSpecular);
+	hr = myDevice->CreatePixelShader(PS_Transparent, sizeof(PS_Transparent), nullptr, &myPixelShaderTransparent);
 
 	hr = myDevice->CreateGeometryShader(GS_PointToQuad, sizeof(GS_PointToQuad), nullptr, &myGeometryShader);
 }
@@ -673,3 +738,45 @@ void LetsDrawSomeStuff::UpdateCamera()
 	cb.mView = XMMatrixTranspose(viewMatrix);
 	myContext->UpdateSubresource(myConstantBuffer, 0, nullptr, &cb, 0, 0);
 }
+
+void LetsDrawSomeStuff::CreateBlendState()
+{
+	//Define the Blending Equation
+	D3D11_BLEND_DESC blendDesc;
+	ZeroMemory(&blendDesc, sizeof(blendDesc));
+
+	D3D11_RENDER_TARGET_BLEND_DESC rtbd;
+	ZeroMemory(&rtbd, sizeof(rtbd));
+
+	rtbd.BlendEnable = true;
+	rtbd.SrcBlend = D3D11_BLEND_SRC_COLOR;
+	rtbd.DestBlend = D3D11_BLEND_BLEND_FACTOR;
+	rtbd.BlendOp = D3D11_BLEND_OP_ADD;
+	rtbd.SrcBlendAlpha = D3D11_BLEND_ONE;
+	rtbd.DestBlendAlpha = D3D11_BLEND_ZERO;
+	rtbd.BlendOpAlpha = D3D11_BLEND_OP_ADD;
+	rtbd.RenderTargetWriteMask = D3D10_COLOR_WRITE_ENABLE_ALL;
+
+	blendDesc.AlphaToCoverageEnable = false;
+	blendDesc.RenderTarget[0] = rtbd;
+
+	myDevice->CreateBlendState(&blendDesc, &transparencyBlendState);
+}
+
+inline void LetsDrawSomeStuff::RenderAccordingToPosition()
+{
+	for (int i = 0; i < transparentObjects.size(); i++)
+	{
+		transparentObjects[i]->GetDistanceFromCamera(Eye);
+	}
+	sort(transparentObjects.begin(), transparentObjects.end(), wayToSort);
+	for (int i = 0; i < transparentObjects.size(); i++)
+	{
+		transparentObjects[i]->SetLocalRotation(transparentObjects[i]->GetPosition(), cb, myConstantBuffer, sin(xTimer.TotalTime()));
+		transparentObjects[i]->RenderIndexedTransparent();
+	}
+}
+
+
+
+
