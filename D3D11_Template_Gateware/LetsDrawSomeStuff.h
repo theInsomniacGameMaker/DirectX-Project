@@ -489,12 +489,12 @@ void LetsDrawSomeStuff::CameraMovement()
 	if (GetAsyncKeyState(VK_UP))
 	{
 		fov += (10.0f * (float)xTimer.Delta());
-		projectionMatrix = XMMatrixPerspectiveFovLH(XMConvertToRadians(fov), width / (FLOAT)height, 0.01f, 100.0f);
+		//projectionMatrix = XMMatrixPerspectiveFovLH(XMConvertToRadians(fov), width / (FLOAT)height, 0.01f, 100.0f);
 	}
 	else if (GetAsyncKeyState(VK_DOWN))
 	{
 		fov -= (10 * (float)xTimer.Delta());
-		projectionMatrix = XMMatrixPerspectiveFovLH(XMConvertToRadians(fov), width / (FLOAT)height, 0.01f, 100.0f);
+		//projectionMatrix = XMMatrixPerspectiveFovLH(XMConvertToRadians(fov), width / (FLOAT)height, 0.01f, 100.0f);
 	}
 #pragma endregion
 
@@ -511,43 +511,72 @@ void LetsDrawSomeStuff::CameraMovement()
 
 	if (GetAsyncKeyState('I'))
 	{
-		camPitch += 1 * (float)xTimer.Delta();
+		camPitch -= 1 * (float)xTimer.Delta();
 	}
 	else if (GetAsyncKeyState('K'))
 	{
-		camPitch -= 1 * (float)xTimer.Delta();
+		camPitch += 1 * (float)xTimer.Delta();
 	}
 
 	if (GetAsyncKeyState('J'))
 	{
-		camYaw += 1 * (float)xTimer.Delta();
+		camYaw -= 1 * (float)xTimer.Delta();
 	}
 	else if (GetAsyncKeyState('L'))
 	{
-		camYaw -= 1 * (float)xTimer.Delta();
+		camYaw += 1 * (float)xTimer.Delta();
 	}
 #pragma endregion
 
 
-	XMMATRIX camRotationMatrix = XMMatrixTranspose(XMMatrixRotationRollPitchYaw(camPitch, camYaw, camRoll));
-	At = XMVector3TransformCoord(FORWARD, camRotationMatrix);
-	At = XMVector3Normalize(At);
+	viewMatrix = XMMatrixInverse(0, viewMatrix);
+	viewMatrix = XMMatrixTranslationFromVector(XMVECTOR{ 0,0,moveZ })*viewMatrix;
+	viewMatrix = XMMatrixTranslationFromVector(XMVECTOR{ moveX,0,0 })*viewMatrix;
+
+	viewMatrix = viewMatrix * XMMatrixTranslationFromVector(XMVECTOR{ 0,moveY,0 });
+	viewMatrix = XMMatrixRotationX(camPitch)*viewMatrix;
+
+	XMVECTOR tempPosition = viewMatrix.r[3];
+	viewMatrix.r[3] = XMVECTOR{ 0,0,0 };
+	viewMatrix = viewMatrix * XMMatrixRotationY(camYaw);
+	viewMatrix.r[3] = tempPosition;
+
+	Eye = viewMatrix.r[3];
+	At = viewMatrix.r[2];
+	Up = viewMatrix.r[1];
+
+	//viewMatrix = XMMatrixInverse(0, viewMatrix);
+
+	/////Old Code/////
+
+	//XMMATRIX camRotationMatrix = XMMatrixTranspose(XMMatrixRotationRollPitchYaw(camPitch, camYaw, 0));
+	//At = XMVector3TransformCoord(FORWARD, camRotationMatrix);
+	//At = XMVector3Normalize(At);
+
+	//XMMATRIX tempRotationMatrix = XMMatrixRotationY(camYaw);
 
 
-	XMVECTOR camRight = XMVector3TransformCoord(RIGHT, camRotationMatrix);
-	XMVECTOR camForward = XMVector3TransformCoord(FORWARD, camRotationMatrix);
-	XMVECTOR camUp = XMVector3Cross(camForward, camRight);
+	//XMVECTOR camRight = XMVector3TransformCoord(RIGHT, tempRotationMatrix);
+	//Up = XMVector3TransformCoord(Up, tempRotationMatrix);
+	//XMVECTOR camForward = XMVector3TransformCoord(FORWARD, tempRotationMatrix);
 
-	Eye += moveX * camRight;
-	Eye += moveZ * camForward;
-	Eye += moveY * camUp;
-	Up = camUp;
+	//Eye += moveX * camRight;
+	//Eye += moveZ * camForward;
+	//Eye += moveY * Up;
+
+	///////Old Code//////////
+
 	moveX = 0.0f;
 	moveZ = 0.0f;
 	moveY = 0;
+	camPitch = 0;
+	camYaw = 0;
+	camRoll = 0;
 
-	At = Eye + At;
-
+	float aspectRatio;
+	/*mySurface->GetAspectRatio(aspectRatio);
+	projectionMatrix = XMMatrixPerspectiveFovLH(XMConvertToRadians(fov), width / (FLOAT)height, 0.01f, 100.0f);
+*/
 	viewMatrix = XMMatrixLookAtLH(Eye, At, Up);
 }
 
