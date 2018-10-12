@@ -46,13 +46,16 @@ float4 main(PS_INPUT input) : SV_Target
 		baseTexture = float4(0.5f, 0.5f, 0.5f, 1);
 	}
 
-	
+	if (emissiveTexture.r >= 0.8f)
+	{
+		emissiveTexture.r = 1;
+	}
 
 	for (int i = 0; i < 5; i++)
 	{
 		if (lights[i].Position.w == 1)
 		{
-			finalColor += saturate(mul(emissiveTexture.r,dot((float3)lights[i].Direction, input.Norm) * lights[i].Color * baseTexture));
+			finalColor += saturate(mul(emissiveTexture.r*emissiveTexture.r,dot((float3)lights[i].Direction, input.Norm) * lights[i].Color * baseTexture));
 		}
 		else if (lights[i].Position.w == 2)
 		{
@@ -60,7 +63,7 @@ float4 main(PS_INPUT input) : SV_Target
 			float howMuchLight = saturate(dot(normalize(lightToPixelVec), input.Norm));
 			pointLightColor = howMuchLight * baseTexture* lights[i].Color;
 			pointLightColor *= (1.0 - saturate(length(lights[i].Position - input.wPos) / lights[i].Range.x));
-			finalColor += saturate(mul(emissiveTexture.r,pointLightColor));
+			finalColor += saturate(mul(emissiveTexture.r*emissiveTexture.r,pointLightColor));
 		}
 		else if (lights[i].Position.w == 3)
 		{
@@ -71,10 +74,10 @@ float4 main(PS_INPUT input) : SV_Target
 			float3 spotLightColor = spotFactor*lightRatio*lights[i].Color*baseTexture;
 			spotLightColor *= (1.0 - saturate(length(lights[i].Position - input.wPos) / lights[i].Range.z));
 			spotLightColor *= (1.0 - saturate((lights[i].Range.x - surfaceRatio) / (lights[i].Range.x - lights[i].Range.y)));
-			finalColor += mul(emissiveTexture.r,float4(spotLightColor,1));
+			finalColor += mul(emissiveTexture.r*emissiveTexture.r,float4(spotLightColor,1));
 		}
 	}	
-	finalColor = saturate(finalColor+mul(emissiveTexture.r,baseTexture));
+	finalColor = saturate(finalColor+mul(emissiveTexture.r*emissiveTexture.r,baseTexture));
 	finalColor.a = 1;
 	return finalColor;
 }

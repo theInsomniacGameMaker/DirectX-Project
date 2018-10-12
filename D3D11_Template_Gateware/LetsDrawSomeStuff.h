@@ -207,7 +207,7 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			reflectiveTeapot = new D3DObject("utah-teapot.fbx", 0.1f, myDevice, myContext, myVertexShaderReflective, myPixelShaderReflective, nullGeometryShader, myConstantBuffer);
 			reflectiveTeapot->UpdateTexture("OutputCube");
 
-			emissiveTeapot = new D3DObject("utah-teapot.fbx", 0.1f, myDevice, myContext, myVertexShader, myPixelShaderEmissive, nullGeometryShader, myConstantBuffer);
+			emissiveTeapot = new D3DObject("cube.fbx", 1/50.0f, myDevice, myContext, myVertexShader, myPixelShaderEmissive, nullGeometryShader, myConstantBuffer);
 			emissiveTeapot->UpdateTexture("Lava");
 
 
