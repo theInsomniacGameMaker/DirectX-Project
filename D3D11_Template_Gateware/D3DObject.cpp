@@ -72,7 +72,7 @@ void D3DObject::RenderIndexed()
 	m_Context->DrawIndexed(m_Mesh.GetNumberOfIndices(), 0, 0);
 }
 
-void D3DObject::RenderIndexed(D3D_PRIMITIVE_TOPOLOGY topology)
+void D3DObject::RenderIndexedWithGS(D3D_PRIMITIVE_TOPOLOGY topology)
 {
 	m_Context->IASetPrimitiveTopology(topology);
 	m_Context->VSSetShader(m_VertexShader, nullptr, 0);
@@ -123,6 +123,18 @@ void D3DObject::RenderIndexedMulitexture(CComPtr < ID3D11ShaderResourceView > te
 	m_Context->DrawIndexed(m_Mesh.GetNumberOfIndices(), 0, 0);
 }
 
+void D3DObject::RenderIndexedEmissive(CComPtr<ID3D11ShaderResourceView> emissiveRV)
+{
+	m_Context->VSSetShader(m_VertexShader, nullptr, 0);
+	m_Context->PSSetShader(m_PixelShader, nullptr, 0);
+	m_Context->GSSetShader(m_GeometryShader, nullptr, 0);
+	m_Context->PSSetShaderResources(0, 1, &m_TextureRV.p);
+	m_Context->PSSetShaderResources(1, 1, &emissiveRV.p);
+	m_Context->IASetVertexBuffers(0, 1, &m_VertexBuffer.p, stride, offset);
+	m_Context->IASetIndexBuffer(m_IndexBuffer, DXGI_FORMAT_R32_UINT, 0);
+	m_Context->DrawIndexed(m_Mesh.GetNumberOfIndices(), 0, 0);
+}
+
 void D3DObject::RenderIndexedTransparent()
 {
 	m_Context->VSSetShader(m_VertexShader, nullptr, 0);
@@ -131,13 +143,10 @@ void D3DObject::RenderIndexedTransparent()
 	m_Context->PSSetShaderResources(0, 1, &m_TextureRV.p);
 	m_Context->IASetVertexBuffers(0, 1, &m_VertexBuffer.p, stride, offset);
 	m_Context->IASetIndexBuffer(m_IndexBuffer, DXGI_FORMAT_R32_UINT, 0);
-
+	//render back faces first
 	m_Context->RSSetState(CCWcullMode);
-	///////////////**************new**************////////////////////
-	//Draw the first cube
 	m_Context->DrawIndexed(m_Mesh.GetNumberOfIndices(), 0, 0);
-
-	///////////////**************new**************////////////////////
+	//now render the forwad faces
 	m_Context->RSSetState(CWcullMode);
 	m_Context->DrawIndexed(m_Mesh.GetNumberOfIndices(), 0, 0);
 }

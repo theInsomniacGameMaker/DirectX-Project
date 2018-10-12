@@ -172,6 +172,9 @@
     <FxCompile Include="PS_Transparent.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
+    <FxCompile Include="PS_Emissive.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ExampleCode.cpp" />

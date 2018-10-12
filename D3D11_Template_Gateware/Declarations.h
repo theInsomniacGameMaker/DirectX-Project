@@ -6,7 +6,6 @@
 #include <d3dcompiler.h>
 #include <directxmath.h>
 #include <directxcolors.h>
-#include <dinput.h>
 #include <fbxsdk.h>
 #include <iostream>
 #include <vector>
@@ -34,6 +33,7 @@ using namespace std;
 #include "VS_ScreenSpace.csh"
 #include "PS_Specular.csh"
 #include "PS_Transparent.csh"
+#include "PS_Emissive.csh"
 
 
 #define CHARIZARD_MESH 0

@@ -28,10 +28,11 @@ public:
 		CComPtr < ID3D11VertexShader >& vertexShader, CComPtr < ID3D11PixelShader>& pixelShader,
 		CComPtr < ID3D11GeometryShader> &geoShader, CComPtr < ID3D11Buffer> &perObjectBuffer);
 	void RenderIndexed();
-	void RenderIndexed(D3D_PRIMITIVE_TOPOLOGY topology);
+	void RenderIndexedWithGS(D3D_PRIMITIVE_TOPOLOGY topology);
 	void RenderIndexedWithDynamicSRV(CComPtr < ID3D11ShaderResourceView> &textureRV);
 	void RenderInstanced(int numberOfInstances, CComPtr < ID3D11Buffer> &perInstanceBuffer);
 	void RenderIndexedMulitexture(CComPtr < ID3D11ShaderResourceView > textureRVs[]);
+	void RenderIndexedEmissive(CComPtr < ID3D11ShaderResourceView > emissiveRV);
 	void RenderIndexedTransparent();
 	void UpdateVS(CComPtr < ID3D11VertexShader > vertexShader);
 	void UpdatePS(CComPtr < ID3D11PixelShader> pixelShader);

@@ -45,6 +45,7 @@ class LetsDrawSomeStuff
 	CComPtr<ID3D11PixelShader>				myPixelShaderPostProcessing = nullptr;
 	CComPtr<ID3D11PixelShader>				myPixelShaderSpecular = nullptr;
 	CComPtr<ID3D11PixelShader>				myPixelShaderTransparent = nullptr;
+	CComPtr<ID3D11PixelShader>				myPixelShaderEmissive = nullptr;
 
 	//All Geometry Shaders
 	CComPtr<ID3D11GeometryShader>			myGeometryShader = nullptr;
@@ -54,6 +55,8 @@ class LetsDrawSomeStuff
 	CComPtr < ID3D11InputLayout>			myVertexLayout = nullptr;
 	//SRV (texture) for multitexturing
 	CComPtr < ID3D11ShaderResourceView>		myTextureRVPMT[2];
+
+	CComPtr < ID3D11ShaderResourceView>		myTextureEmissive;
 
 	//Per Object Buffer
 	CComPtr<ID3D11Buffer>					myConstantBuffer = nullptr;
@@ -93,13 +96,16 @@ class LetsDrawSomeStuff
 	D3DObject*		spaceShip;
 	D3DObject*		cubeGS;
 	D3DObject*		spaceShipRTT;
-	D3DObject*		reflectiveCube;
+	D3DObject*		reflectiveTeapot;
+	D3DObject*		emissiveTeapot;
 	D3DObject*		secondaryScreen;
 
 	//Constant Buffers
 	InstanceConstantBuffer	iCb;
 	LightConstantBuffer		lCb;
 	ConstantBuffer			cb;
+
+
 
 	//The vector that contains all the transparent objects
 	vector<D3DObject*>		transparentObjects;
@@ -175,6 +181,8 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			CreateDDSTextureFromFile(myDevice, L"Assets\\PirateBox.dds", nullptr, &myTextureRVPMT[0]);
 			CreateDDSTextureFromFile(myDevice, L"Assets\\Brick.dds", nullptr, &myTextureRVPMT[1]);
 
+			HRESULT hr = CreateDDSTextureFromFile(myDevice, L"Assets\\Lave_EMISSIVEMAP.dds", nullptr, &myTextureEmissive);
+
 			CreateInputLayout();
 
 			transparentObjects.resize(3);
@@ -196,21 +204,20 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 
 			spaceShipRTT = new D3DObject("cube.fbx", 1/50.0f, myDevice, myContext, myVertexShader, myPixelShaderNoLighting, nullGeometryShader, myConstantBuffer);
 
-			reflectiveCube = new D3DObject("utah-teapot.fbx", 0.1f, myDevice, myContext, myVertexShaderReflective, myPixelShaderReflective, nullGeometryShader, myConstantBuffer);
-			reflectiveCube->UpdateTexture("OutputCube");
+			reflectiveTeapot = new D3DObject("utah-teapot.fbx", 0.1f, myDevice, myContext, myVertexShaderReflective, myPixelShaderReflective, nullGeometryShader, myConstantBuffer);
+			reflectiveTeapot->UpdateTexture("OutputCube");
 
-			//transparentObjects.push_back(new D3DObject("cube.fbx", 1 / 50.0f, myDevice, myContext, myVertexShader, myPixelShaderTransparent, nullGeometryShader, myConstantBuffer));
-			//transparentObjects.push_back(new D3DObject("cube.fbx", 1 / 50.0f, myDevice, myContext, myVertexShader, myPixelShaderTransparent, nullGeometryShader, myConstantBuffer));
-			//transparentObjects.push_back(new D3DObject("cube.fbx", 1 / 50.0f, myDevice, myContext, myVertexShader, myPixelShaderTransparent, nullGeometryShader, myConstantBuffer));
-			
+			emissiveTeapot = new D3DObject("utah-teapot.fbx", 0.1f, myDevice, myContext, myVertexShader, myPixelShaderEmissive, nullGeometryShader, myConstantBuffer);
+			emissiveTeapot->UpdateTexture("Lava");
+
+
 			transparentObjects[0] = new D3DObject("cube.fbx", 1 / 50.0f, myDevice, myContext, myVertexShader, myPixelShaderTransparent, nullGeometryShader, myConstantBuffer);
 			transparentObjects[1] = new D3DObject("cube.fbx", 1 / 50.0f, myDevice, myContext, myVertexShader, myPixelShaderTransparent, nullGeometryShader, myConstantBuffer);
 			transparentObjects[2] = new D3DObject("cube.fbx", 1 / 50.0f, myDevice, myContext, myVertexShader, myPixelShaderTransparent, nullGeometryShader, myConstantBuffer);
-			
+
 			transparentObjects[0]->UpdateTexture("Energy");
 			transparentObjects[1]->UpdateTexture("Energy1");
 			transparentObjects[2]->UpdateTexture("Energy");
-
 			
 			screenQuad = new ScreenQuad(myDevice, myContext, myVertexShaderScreenSpace, myPixelShaderNoLighting, nullGeometryShader);
 
@@ -282,14 +289,16 @@ LetsDrawSomeStuff::~LetsDrawSomeStuff()
 	delete spaceShip;
 	delete cubeGS;
 	delete spaceShipRTT;
-	delete reflectiveCube;
+	delete reflectiveTeapot;
 	delete textureRenderer;
 	delete mainTextureRenderer;
 	delete screenQuad;
+
 	for (int i = 0; i < transparentObjects.size(); i++)
 	{
 		delete transparentObjects[i];
 	}
+
 	//delete transparentCube1;
 	//delete transparentCube2;
 	//delete transparentCube3;
@@ -370,8 +379,8 @@ void LetsDrawSomeStuff::Render()
 			box->UpdatePS(myPixelShaderMultitexturing);
 			box->RenderIndexedMulitexture(myTextureRVPMT);
 
-			reflectiveCube->SetLocalRotation(XMVECTOR{ 0,5.0f,0.0f,0 }, cb, myConstantBuffer, (float)xTimer.TotalTime()/2.0f,(float)xTimer.TotalTime()/2.0f);
-			reflectiveCube->RenderIndexed();
+			reflectiveTeapot->SetLocalRotation(XMVECTOR{ 0,5.0f,0.0f,0 }, cb, myConstantBuffer, (float)xTimer.TotalTime()/2.0f,(float)xTimer.TotalTime()/2.0f);
+			reflectiveTeapot->RenderIndexed();
 
 			
 #if DIRECTIONAL_LIGHT_ON
@@ -386,7 +395,7 @@ void LetsDrawSomeStuff::Render()
 			box->RenderIndexed();
 #endif 
 			cubeGS->SetPosition(XMVECTOR{ 3, 0, 0, 0 }, cb, myConstantBuffer);
-			cubeGS->RenderIndexed(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
+			cubeGS->RenderIndexedWithGS(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
 
 			bulb->SetPosition(XMVECTOR{ lCb.lights[2].Position.x, lCb.lights[2].Position.y, lCb.lights[2].Position.z, 1 }, cb, myConstantBuffer);
 			bulb->RenderIndexed();
@@ -396,6 +405,8 @@ void LetsDrawSomeStuff::Render()
 			box->UpdatePS(myPixelShaderMultitexturing);
 			box->RenderInstanced(10, myInstanceConstantBuffer);
 
+			emissiveTeapot->SetLocalRotation(XMVECTOR{ -2,-1,0,1 }, cb, myConstantBuffer, xTimer.TotalTime());
+			emissiveTeapot->RenderIndexedEmissive(myTextureEmissive);
 
 			textureRenderer->MoveCamera(cb, myConstantBuffer, myContext);
 			textureRenderer->Clear(myContext, nullptr, XMFLOAT4(1, 1, 1, 1));
@@ -680,6 +691,7 @@ void LetsDrawSomeStuff::CreateShaders()
 	hr = myDevice->CreatePixelShader(PS_PostProcessing, sizeof(PS_PostProcessing), nullptr, &myPixelShaderPostProcessing);
 	hr = myDevice->CreatePixelShader(PS_Specular, sizeof(PS_Specular), nullptr, &myPixelShaderSpecular);
 	hr = myDevice->CreatePixelShader(PS_Transparent, sizeof(PS_Transparent), nullptr, &myPixelShaderTransparent);
+	hr = myDevice->CreatePixelShader(PS_Emissive, sizeof(PS_Emissive), nullptr, &myPixelShaderEmissive);
 
 	hr = myDevice->CreateGeometryShader(GS_PointToQuad, sizeof(GS_PointToQuad), nullptr, &myGeometryShader);
 }
@@ -759,13 +771,14 @@ void LetsDrawSomeStuff::CreateBlendState()
 	myDevice->CreateBlendState(&blendDesc, &transparencyBlendState);
 }
 
-inline void LetsDrawSomeStuff::RenderTransparentObjects()
+void LetsDrawSomeStuff::RenderTransparentObjects()
 {
 	for (int i = 0; i < transparentObjects.size(); i++)
 	{
 		transparentObjects[i]->GetDistanceFromCamera(Eye);
 	}
-	sort(transparentObjects.begin(), transparentObjects.end(), wayToSort);
+	//TODO: Sort using custome algorathim
+	//sort(transparentObjects.begin(), transparentObjects.end(), wayToSort);
 	for (int i = 0; i < transparentObjects.size(); i++)
 	{
 		transparentObjects[i]->SetLocalRotation(transparentObjects[i]->GetPosition(), cb, myConstantBuffer, sin(xTimer.TotalTime()));
