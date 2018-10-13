@@ -321,10 +321,17 @@ LetsDrawSomeStuff::~LetsDrawSomeStuff()
 	delete spaceShip;
 	delete cubeGS;
 	delete spaceShipRTT;
+	delete plant;
+	delete closedSack;
+	delete choppedWood;
 	delete reflectiveTeapot;
+	delete emissiveTeapot;
+
 	delete textureRenderer;
 	delete mainTextureRenderer;
 	delete screenQuad;
+	delete screenQuadRightTop;
+	delete rightTopRTT;
 
 	for (int i = 0; i < transparentObjects.size(); i++)
 	{
@@ -480,10 +487,10 @@ void LetsDrawSomeStuff::Render()
 			//Start rendering the right top of the screen
 			//TODO: change all light buffers
 
-			rightTopRTT->Clear(myContext, myDepthStencilView, XMFLOAT4(0, 0, 0, 0));
+			rightTopRTT->Clear(myContext, myDepthStencilView, XMFLOAT4(0, 0, 0, 1));
 			rightTopRTT->BeginRender(myContext, myRenderTargetView);
 
-			choppedWood->SetLocalRotation(XMVECTOR{ -1,0,0 }, cb, myConstantBuffer,90);
+			choppedWood->SetLocalRotation(XMVECTOR{ -1,0,0 }, cb, myConstantBuffer,XMConvertToRadians(180.0f));
 			choppedWood->RenderIndexed();
 
 			closedSack->SetPosition(XMVECTOR{ 0,0,0.2f }, cb, myConstantBuffer);
