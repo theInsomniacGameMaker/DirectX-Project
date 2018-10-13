@@ -60,6 +60,62 @@ D3DObject::D3DObject(string fileName, float scale, CComPtr < ID3D11Device >& myD
 	hr = m_Device->CreateRasterizerState(&cmdesc, &CWcullMode);
 }
 
+D3DObject::D3DObject(string fileName, float scale, CComPtr<ID3D11Device>& myDevice, CComPtr<ID3D11DeviceContext>& myContext, CComPtr<ID3D11VertexShader>& vertexShader, CComPtr<ID3D11PixelShader>& pixelShader, CComPtr<ID3D11GeometryShader>& geoShader, CComPtr<ID3D11Buffer>& perObjectBuffer, string explicitTexture)
+{
+	m_Device = myDevice;
+	m_Context = myContext;
+	m_VertexShader = vertexShader;
+	m_PixelShader = pixelShader;
+	m_GeometryShader = geoShader;
+	m_PerObjectBuffer = perObjectBuffer;
+	m_Mesh = Mesh(fileName, scale, m_Device.p, m_TextureRV.p);
+
+	D3D11_BUFFER_DESC bd = {};
+	D3D11_SUBRESOURCE_DATA InitData = {};
+	stride[0] = sizeof(SimpleVertex);
+	offset[0] = 0;
+
+	//Desc Vertex Buffer
+	bd.Usage = D3D11_USAGE_DEFAULT;
+	bd.ByteWidth = sizeof(SimpleVertex) * m_Mesh.GetNumberOfVertices();
+	bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	bd.CPUAccessFlags = 0;
+
+	//Subresource
+	InitData.pSysMem = m_Mesh.GetVertices();
+
+	//Create Vertex Buffer
+	m_Device->CreateBuffer(&bd, &InitData, &m_VertexBuffer);
+
+	//Desc Index Buffer
+	bd.Usage = D3D11_USAGE_DEFAULT;
+	bd.ByteWidth = sizeof(int) * m_Mesh.GetNumberOfIndices();
+	bd.BindFlags = D3D11_BIND_INDEX_BUFFER;
+	bd.CPUAccessFlags = 0;
+
+	//Subresource
+	InitData.pSysMem = m_Mesh.GetIndices();
+
+	//Create Index Buffer
+	m_Device->CreateBuffer(&bd, &InitData, &m_IndexBuffer);
+
+	UpdateTexture(explicitTexture);
+
+	D3D11_RASTERIZER_DESC cmdesc;
+	ZeroMemory(&cmdesc, sizeof(D3D11_RASTERIZER_DESC));
+
+	cmdesc.FillMode = D3D11_FILL_SOLID;
+	cmdesc.CullMode = D3D11_CULL_BACK;
+
+	cmdesc.FrontCounterClockwise = true;
+	HRESULT hr = m_Device->CreateRasterizerState(&cmdesc, &CCWcullMode);
+
+	cmdesc.FrontCounterClockwise = false;
+	hr = m_Device->CreateRasterizerState(&cmdesc, &CWcullMode);
+
+
+}
+
 
 void D3DObject::RenderIndexed()
 {

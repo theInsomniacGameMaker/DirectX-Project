@@ -27,6 +27,9 @@ public:
 	D3DObject(string fileName, float scale, CComPtr < ID3D11Device >& myDevice, CComPtr < ID3D11DeviceContext >& myContext,
 		CComPtr < ID3D11VertexShader >& vertexShader, CComPtr < ID3D11PixelShader>& pixelShader,
 		CComPtr < ID3D11GeometryShader> &geoShader, CComPtr < ID3D11Buffer> &perObjectBuffer);
+	D3DObject(string fileName, float scale, CComPtr < ID3D11Device >& myDevice, CComPtr < ID3D11DeviceContext >& myContext,
+		CComPtr < ID3D11VertexShader >& vertexShader, CComPtr < ID3D11PixelShader>& pixelShader,
+		CComPtr < ID3D11GeometryShader> &geoShader, CComPtr < ID3D11Buffer> &perObjectBuffer, string explicitTexture);
 	void RenderIndexed();
 	void RenderIndexedWithGS(D3D_PRIMITIVE_TOPOLOGY topology);
 	void RenderIndexedWithDynamicSRV(CComPtr < ID3D11ShaderResourceView> &textureRV);
