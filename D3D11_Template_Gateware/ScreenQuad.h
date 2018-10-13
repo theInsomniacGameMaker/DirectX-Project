@@ -18,7 +18,7 @@ public:
 	ScreenQuad();
 	ScreenQuad(CComPtr < ID3D11Device >& myDevice, CComPtr < ID3D11DeviceContext >& myContext,
 		CComPtr < ID3D11VertexShader >& vertexShader, CComPtr < ID3D11PixelShader>& pixelShader,
-		CComPtr < ID3D11GeometryShader> &geoShader);
+		CComPtr < ID3D11GeometryShader> &geoShader, XMFLOAT3 positions[]);
 	void Render();
 	void UpdateTexture(CComPtr < ID3D11ShaderResourceView> &textureRV);
 	~ScreenQuad();

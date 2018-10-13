@@ -6,7 +6,7 @@ ScreenQuad::ScreenQuad()
 {
 }
 
-ScreenQuad::ScreenQuad(CComPtr<ID3D11Device>& myDevice, CComPtr<ID3D11DeviceContext>& myContext, CComPtr<ID3D11VertexShader>& vertexShader, CComPtr<ID3D11PixelShader>& pixelShader, CComPtr<ID3D11GeometryShader>& geoShader)
+ScreenQuad::ScreenQuad(CComPtr<ID3D11Device>& myDevice, CComPtr<ID3D11DeviceContext>& myContext, CComPtr<ID3D11VertexShader>& vertexShader, CComPtr<ID3D11PixelShader>& pixelShader, CComPtr<ID3D11GeometryShader>& geoShader, XMFLOAT3 positions[])
 {
 	m_Device = myDevice;
 	m_Context = myContext;
@@ -16,12 +16,12 @@ ScreenQuad::ScreenQuad(CComPtr<ID3D11Device>& myDevice, CComPtr<ID3D11DeviceCont
 
 	screenQuadVertices = new SimpleVertex[6];
 
-	screenQuadVertices[0].Pos = XMFLOAT3(-1, 1, 0);
-	screenQuadVertices[1].Pos = XMFLOAT3(1,1, 0);
-	screenQuadVertices[2].Pos = XMFLOAT3(-1, -1, 0);
-	screenQuadVertices[3].Pos = XMFLOAT3(1, 1, 0);
-	screenQuadVertices[5].Pos = XMFLOAT3(-1, -1, 0);
-	screenQuadVertices[4].Pos = XMFLOAT3(1, -1, 0);
+	screenQuadVertices[0].Pos = positions[0];
+	screenQuadVertices[1].Pos = positions[1];
+	screenQuadVertices[2].Pos = positions[2];
+	screenQuadVertices[3].Pos = positions[1];
+	screenQuadVertices[5].Pos = positions[2];
+	screenQuadVertices[4].Pos = positions[3];
 
 	screenQuadVertices[0].Tex = XMFLOAT2(0, 0);
 	screenQuadVertices[1].Tex = XMFLOAT2(1, 0);
