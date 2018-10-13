@@ -120,6 +120,7 @@ void TextureRenderer::EndRender(CComPtr<ID3D11DeviceContext> pDeviceContext, CCo
 	pDeviceContext->OMSetRenderTargets(1, &pTarget.p, mainDepthStencilView);
 	//pResView = {nullptr};
 	//pDeviceContext->PSSetShaderResources(0, 1, &pResView.p);
+
 }
 
 void TextureRenderer::ClearDPV(CComPtr < ID3D11DeviceContext> pDeviceContext)

@@ -83,10 +83,12 @@ class LetsDrawSomeStuff
 
 	//Quad that is on a screen to appl Post Processing
 	ScreenQuad*		screenQuad;
+	ScreenQuad*		screenQuadRightTop;
 
 	//RTT variables
 	TextureRenderer*	textureRenderer;
 	TextureRenderer*	mainTextureRenderer;
+	TextureRenderer*	rightTopRTT;
 
 	//All 3D Objects 
 	D3DObject*		feraligtr;
@@ -101,6 +103,9 @@ class LetsDrawSomeStuff
 	D3DObject*		emissiveTeapot;
 	D3DObject*		secondaryScreen;
 	D3DObject*		plant;
+
+	D3DObject*		choppedWood;
+	D3DObject*		closedSack;
 
 	//Constant Buffers
 	InstanceConstantBuffer	iCb;
@@ -209,8 +214,16 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			reflectiveTeapot = new D3DObject("utah-teapot.fbx", 0.1f, myDevice, myContext, myVertexShaderReflective, myPixelShaderReflective, nullGeometryShader, myConstantBuffer);
 			reflectiveTeapot->UpdateTexture("OutputCube");
 
-			emissiveTeapot = new D3DObject("cube.fbx", 1/50.0f, myDevice, myContext, myVertexShader, myPixelShaderEmissive, nullGeometryShader, myConstantBuffer);
+			emissiveTeapot = new D3DObject("cube.fbx", 1/50.0f, myDevice, myContext, myVertexShader, 
+				myPixelShaderEmissive, nullGeometryShader, myConstantBuffer);
 			emissiveTeapot->UpdateTexture("Lava");
+
+			choppedWood = new D3DObject("Chopped_Wood_Pile.fbx", 1 / 50.0f, myDevice, myContext, myVertexShader,
+				myPixelShader, nullGeometryShader, myConstantBuffer, "Chopped_Wood_Pile_Albedo");
+
+			closedSack = new D3DObject("Closed_Sack.fbx", 1 / 50.0f, myDevice, myContext, myVertexShader,
+				myPixelShader, nullGeometryShader, myConstantBuffer, "Closed_Sack_Albedo");
+
 
 			plant = new D3DObject("Parviflora.fbx", 1.0f/15.0f, myDevice, myContext, myVertexShader, myPixelShaderTransparentRejector, nullGeometryShader, myConstantBuffer);
 			plant->UpdateTexture("Parviflora_diffuse");
@@ -223,10 +236,25 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			transparentObjects[1]->UpdateTexture("Energy1");
 			transparentObjects[2]->UpdateTexture("Energy");
 			
-			screenQuad = new ScreenQuad(myDevice, myContext, myVertexShaderScreenSpace, myPixelShaderNoLighting, nullGeometryShader);
+
+			XMFLOAT3 positions[4];
+			positions[0] = XMFLOAT3(-1, 1,0);
+			positions[1] = XMFLOAT3(0, 1, 0);
+			positions[2] = XMFLOAT3(-1, 0, 0);
+			positions[3] = XMFLOAT3(0, 0, 0);
+
+			screenQuad = new ScreenQuad(myDevice, myContext, myVertexShaderScreenSpace, myPixelShaderNoLighting, nullGeometryShader, positions);
 
 			textureRenderer = new TextureRenderer(myDevice, width, height);
 			mainTextureRenderer = new TextureRenderer(myDevice, width, height);
+			rightTopRTT = new TextureRenderer(myDevice, width, height);
+			
+			positions[0] = XMFLOAT3(0, 1, 0);
+			positions[1] = XMFLOAT3(1, 1, 0);
+			positions[2] = XMFLOAT3(0, 0, 0);
+			positions[3] = XMFLOAT3(1, 0, 0);
+			screenQuadRightTop = new ScreenQuad(myDevice, myContext, myVertexShaderScreenSpace, myPixelShaderNoLighting, nullGeometryShader, positions);
+
 			myContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 			CreateBlendState();
@@ -449,6 +477,24 @@ void LetsDrawSomeStuff::Render()
 			mainTextureRenderer->pResView = { nullptr };
 			myContext->PSSetShaderResources(0, 1, &mainTextureRenderer->pResView.p);
 
+			//Start rendering the right top of the screen
+			//TODO: change all light buffers
+
+			rightTopRTT->Clear(myContext, myDepthStencilView, XMFLOAT4(0, 0, 0, 0));
+			rightTopRTT->BeginRender(myContext, myRenderTargetView);
+
+			choppedWood->SetLocalRotation(XMVECTOR{ -1,0,0 }, cb, myConstantBuffer,90);
+			choppedWood->RenderIndexed();
+
+			closedSack->SetPosition(XMVECTOR{ 0,0,0.2f }, cb, myConstantBuffer);
+			closedSack->RenderIndexed();
+
+			rightTopRTT->EndRender(myContext, myRenderTargetView, myDepthStencilView);
+
+			screenQuadRightTop->UpdateTexture(rightTopRTT->pCTexture);
+			screenQuadRightTop->Render();
+			rightTopRTT->pResView = { nullptr };
+			myContext->PSSetShaderResources(0, 1, &mainTextureRenderer->pResView.p);
 			
 			// Present Backbuffer using Swapchain object
 			// Framerate is currently unlocked, we suggest "MSI Afterburner" to track your current FPS and memory usage.
