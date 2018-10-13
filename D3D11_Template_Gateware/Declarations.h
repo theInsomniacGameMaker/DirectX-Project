@@ -34,12 +34,12 @@ using namespace std;
 #include "PS_Specular.csh"
 #include "PS_Transparent.csh"
 #include "PS_Emissive.csh"
-
+#include "PS_TransparentRejector.csh"
 
 #define CHARIZARD_MESH 0
 #define BOX_MESH 1
 #define SPACESHIP 1
-#define DIRECTIONAL_LIGHT_ON 0
+#define DIRECTIONAL_LIGHT_ON 1
 #define DEBUGGER 0
 
 static const XMVECTOR UP = { 0,1,0,0 };
