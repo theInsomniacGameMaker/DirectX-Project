@@ -118,16 +118,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="Trivial_PS.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="Trivial_VS.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
     <FxCompile Include="VS_UVModifier.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="SolidPS.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
     <FxCompile Include="PS_SkyBox.hlsl">
@@ -176,6 +167,18 @@
       <Filter>Shaders</Filter>
     </FxCompile>
     <FxCompile Include="PS_TransparentRejector.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="GS_Instancer.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="PS_SolidColor.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="PS_Main.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="VS_Main.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
   </ItemGroup>

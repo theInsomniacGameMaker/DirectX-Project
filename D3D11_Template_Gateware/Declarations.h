@@ -15,31 +15,32 @@ using namespace DirectX;
 using namespace std;
 
 
-#include "Trivial_VS.csh"
-#include "Trivial_PS.csh"
+#include "VS_Main.csh"
+#include "VS_ScreenSpace.csh"
 #include "VS_UVModifier.csh"
-#include "SolidPS.csh"
-#include "PS_SkyBox.csh"
+#include "VS_Reflective.csh"
 #include "VS_SkyBox.csh"
+#include "VS_PassThrough.csh"
 #include "VS_Instance.csh"
 #include "VS_PositionModifier.csh"
-#include "PS_Multitexturing.csh"
+#include "PS_Main.csh"
+#include "PS_SolidColor.csh"
 #include "PS_NoLighting.csh"
-#include "GS_PointToQuad.csh"
-#include "VS_PassThrough.csh"
-#include "VS_Reflective.csh"
+#include "PS_SkyBox.csh"
 #include "PS_Reflective.csh"
 #include "PS_PostProcessing.csh"
-#include "VS_ScreenSpace.csh"
+#include "PS_Multitexturing.csh"
 #include "PS_Specular.csh"
 #include "PS_Transparent.csh"
 #include "PS_Emissive.csh"
 #include "PS_TransparentRejector.csh"
+#include "GS_PointToQuad.csh"
+#include "GS_Instancer.csh"
 
 #define CHARIZARD_MESH 0
 #define BOX_MESH 1
 #define SPACESHIP 1
-#define DIRECTIONAL_LIGHT_ON 0
+#define DIRECTIONAL_LIGHT_ON 1
 #define DEBUGGER 0
 
 static const XMVECTOR UP = { 0,1,0,0 };
