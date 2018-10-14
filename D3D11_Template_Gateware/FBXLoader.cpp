@@ -68,23 +68,23 @@ void Compactify(MeshStruct &meshToMutate)
 
 XMFLOAT3 ConvertFromFBXVector4(const FbxVector4 cd)
 {
-	return XMFLOAT3(cd.mData[0], cd.mData[1], cd.mData[2]);
+	return XMFLOAT3((float)cd.mData[0], (float)cd.mData[1], (float)cd.mData[2]);
 }
 
 XMFLOAT3 ConvertFromFBXVector4(const FbxVector4 cd, float scale)
 {
-	return XMFLOAT3(cd.mData[0]*scale, cd.mData[1]*scale, cd.mData[2]*scale);
+	return XMFLOAT3((float)cd.mData[0]*scale, (float)cd.mData[1]*scale, (float)cd.mData[2]*scale);
 }
 
 
 XMFLOAT4 ConvertFromFBXVector4To4(const FbxVector4 cd)
 {
-	return XMFLOAT4(cd.mData[0], cd.mData[1], cd.mData[2], cd.mData[3]);
+	return XMFLOAT4((float)cd.mData[0], (float)cd.mData[1], (float)cd.mData[2], (float)cd.mData[3]);
 }
 
 XMFLOAT2 ConvertFromFBXVector2(const FbxVector2 cd)
 {
-	return XMFLOAT2(cd.mData[0], cd.mData[1]);
+	return XMFLOAT2((float)cd.mData[0], (float)cd.mData[1]);
 }
 
 void ProcessFbxMesh(FbxNode* Node, MeshStruct &meshToMutate, ID3D11Device *&myDevice, ID3D11ShaderResourceView*& myTextureRV)
@@ -275,7 +275,7 @@ void ProcessFbxMesh(FbxNode* Node, MeshStruct &meshToMutate, ID3D11Device *&myDe
 							//Print out the value of UV(lUVValue) or log it to a file
 
 							vertices2[lPolyIndexCounter].Tex.x = (float)lUVValue.mData[0];
-							vertices2[lPolyIndexCounter].Tex.y = 1.0 - (float)lUVValue.mData[1];
+							vertices2[lPolyIndexCounter].Tex.y = 1.0f - (float)lUVValue.mData[1];
 
 
 
@@ -430,8 +430,8 @@ void ProcessPolygons(FbxMesh* mesh, MeshStruct &meshToMutate)
 	}
 
 	//meshToMutate.indices = indices.data();
-	meshToMutate.numVertices = vertices.size();
-	meshToMutate.numIndices = indices.size();
+	meshToMutate.numVertices = (int)vertices.size();
+	meshToMutate.numIndices = (int)indices.size();
 }
 
 void ProcessMesh(FbxNode* Node, MeshStruct &meshToMutate)

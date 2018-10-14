@@ -48,7 +48,7 @@ float4 main(PS_INPUT input) : SV_Target
 		float3 ligthDir;
 		if (lights[i].Position.w == 1)
 		{
-			ligthDir = lights[i].Direction;
+			ligthDir = (float3)lights[i].Direction;
 			finalColor += saturate(dot((float3)lights[i].Direction, input.Norm) * lights[i].Color * baseTexture);
 		}
 		else if (lights[i].Position.w == 2)

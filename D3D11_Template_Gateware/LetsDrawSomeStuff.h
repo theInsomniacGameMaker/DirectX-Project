@@ -123,7 +123,7 @@ class LetsDrawSomeStuff
 	float camYaw, camPitch, camRoll;
 	float moveX, moveY, moveZ;
 	float fov = 60;
-	float nearPlane = 0.01, farPlane = 100;
+	float nearPlane = 0.01f, farPlane = 100.0f; 
 	unsigned int width, height;
 
 #if DEBUGGER
@@ -451,7 +451,7 @@ void LetsDrawSomeStuff::Render()
 			box->UpdatePS(myPixelShaderMultitexturing);
 			box->RenderInstanced(10, myInstanceConstantBuffer);
 
-			emissiveTeapot->SetLocalRotation(XMVECTOR{ -2,-1,0,1 }, cb, myConstantBuffer, xTimer.TotalTime());
+			emissiveTeapot->SetLocalRotation(XMVECTOR{ -2,-1,0,1 }, cb, myConstantBuffer, (float)xTimer.TotalTime());
 			//emissiveTeapot->RenderIndexedEmissive(myTextureEmissive);
 
 			plant->SetPosition(XMVECTOR{ 3,0,-3,0 }, cb, myConstantBuffer);
@@ -474,9 +474,9 @@ void LetsDrawSomeStuff::Render()
 
 			myContext->OMSetBlendState(transparencyBlendState, blendFactor, 0xffffffff);
 
-			transparentObjects[0]->SetLocalRotation(XMVECTOR{ 2.5,-1.5,0 }, cb, myConstantBuffer, sin(xTimer.TotalTime()));
-			transparentObjects[1]->SetLocalRotation(XMVECTOR{ 0,-1.5,0 }, cb, myConstantBuffer, sin(xTimer.TotalTime()));
-			transparentObjects[2]->SetLocalRotation(XMVECTOR{ -2.5,-1.5,3 }, cb, myConstantBuffer, sin(xTimer.TotalTime()));
+			transparentObjects[0]->SetLocalRotation(XMVECTOR{ 2.5,-1.5,0 }, cb, myConstantBuffer, (float)sin(xTimer.TotalTime()));
+			transparentObjects[1]->SetLocalRotation(XMVECTOR{ 0,-1.5,0 }, cb, myConstantBuffer, (float)sin(xTimer.TotalTime()));
+			transparentObjects[2]->SetLocalRotation(XMVECTOR{ -2.5,-1.5,3 }, cb, myConstantBuffer, (float)sin(xTimer.TotalTime()));
 			
 
 			//RenderTransparentObjects();
@@ -599,24 +599,24 @@ void LetsDrawSomeStuff::CameraMovement()
 	{
 		if (nearPlane > 0.1f)
 		{
-			nearPlane -= xTimer.Delta();
+			nearPlane -= (float)xTimer.Delta();
 		}
 	}
 	else if (GetAsyncKeyState('M'))
 	{
-		nearPlane += xTimer.Delta();
+		nearPlane += (float)xTimer.Delta();
 	}
 
 	if (GetAsyncKeyState('C'))
 	{
 		if (farPlane > 0.1f)
 		{
-			farPlane -= xTimer.Delta()*5;
+			farPlane -= (float)xTimer.Delta()*5;
 		}
 	}
 	else if (GetAsyncKeyState('V'))
 	{
-		farPlane += xTimer.Delta();
+		farPlane += (float)xTimer.Delta();
 	}
 
 	viewMatrix = XMMatrixInverse(0, viewMatrix);
@@ -901,7 +901,7 @@ void LetsDrawSomeStuff::RenderTransparentObjects()
 	//sort(transparentObjects.begin(), transparentObjects.end(), wayToSort);
 	for (int i = 0; i < transparentObjects.size(); i++)
 	{
-		transparentObjects[i]->SetLocalRotation(transparentObjects[i]->GetPosition(), cb, myConstantBuffer, sin(xTimer.TotalTime()));
+		transparentObjects[i]->SetLocalRotation(transparentObjects[i]->GetPosition(), cb, myConstantBuffer,(float)sin(xTimer.TotalTime()));
 		transparentObjects[i]->RenderIndexedTransparent();
 	}
 }
