@@ -123,6 +123,7 @@ class LetsDrawSomeStuff
 	float camYaw, camPitch, camRoll;
 	float moveX, moveY, moveZ;
 	float fov = 60;
+	float nearPlane = 0.01, farPlane = 100;
 	unsigned int width, height;
 
 #if DEBUGGER
@@ -594,6 +595,29 @@ void LetsDrawSomeStuff::CameraMovement()
 	}
 #pragma endregion
 
+	if (GetAsyncKeyState('N'))
+	{
+		if (nearPlane > 0.1f)
+		{
+			nearPlane -= xTimer.Delta();
+		}
+	}
+	else if (GetAsyncKeyState('M'))
+	{
+		nearPlane += xTimer.Delta();
+	}
+
+	if (GetAsyncKeyState('C'))
+	{
+		if (farPlane > 0.1f)
+		{
+			farPlane -= xTimer.Delta()*5;
+		}
+	}
+	else if (GetAsyncKeyState('V'))
+	{
+		farPlane += xTimer.Delta();
+	}
 
 	viewMatrix = XMMatrixInverse(0, viewMatrix);
 	viewMatrix = XMMatrixTranslationFromVector(XMVECTOR{ 0,0,moveZ })*viewMatrix;
@@ -640,9 +664,9 @@ void LetsDrawSomeStuff::CameraMovement()
 	camRoll = 0;
 
 	float aspectRatio;
-	/*mySurface->GetAspectRatio(aspectRatio);
-	projectionMatrix = XMMatrixPerspectiveFovLH(XMConvertToRadians(fov), width / (FLOAT)height, 0.01f, 100.0f);
-*/
+	mySurface->GetAspectRatio(aspectRatio);
+	projectionMatrix = XMMatrixPerspectiveFovLH(XMConvertToRadians(fov), width / (FLOAT)height, nearPlane, farPlane);
+
 	//viewMatrix = XMMatrixLookAtLH(Eye, At, Up);
 }
 
@@ -834,7 +858,7 @@ void LetsDrawSomeStuff::SetupWVP()
 	viewMatrix = XMMatrixLookAtLH(Eye, At, Up);
 
 	// Initialize the projection matrix
-	projectionMatrix = XMMatrixPerspectiveFovLH(XMConvertToRadians(fov), width / (FLOAT)height, 0.01f, 100.0f);
+	projectionMatrix = XMMatrixPerspectiveFovLH(XMConvertToRadians(fov), width / (FLOAT)height, nearPlane, farPlane);
 }
 
 void LetsDrawSomeStuff::UpdateCamera()
