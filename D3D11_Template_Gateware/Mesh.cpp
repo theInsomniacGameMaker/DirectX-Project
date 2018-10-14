@@ -7,7 +7,7 @@ Mesh::Mesh()
 }
 Mesh::Mesh(string fileName, float scale, ID3D11Device* &myDevice, ID3D11ShaderResourceView* &myTextureRV)
 {
-	fileName = "\\Assets\\" + fileName;
+	fileName = "\\Assets\\" + fileName+".fbx";
 	// Change the following filename to a suitable filename value.
 	const char* lFilename =fileName.c_str();
 

@@ -196,43 +196,43 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 
 			transparentObjects.resize(3);
 
-			feraligtr = new D3DObject("Charizard.fbx", 5.0f, myDevice, myContext, myVertexShader, myPixelShaderSpecular, nullGeometryShader, myConstantBuffer);
+			feraligtr = new D3DObject("Charizard", 5.0f, myDevice, myContext, myVertexShader, myPixelShaderSpecular, nullGeometryShader, myConstantBuffer);
 
-			skyBox = new D3DObject("SkyBox.fbx", 10.0f, myDevice, myContext, myVertexShaderSkyBox, myPixelShaderSkyBox, nullGeometryShader, myConstantBuffer);
+			skyBox = new D3DObject("SkyBox", 10.0f, myDevice, myContext, myVertexShaderSkyBox, myPixelShaderSkyBox, nullGeometryShader, myConstantBuffer);
 			skyBox->UpdateTexture("OutputCube");
 
-			ground = new D3DObject("Ground.fbx", 10.0f, myDevice, myContext, myVertexShaderWave, myPixelShader, nullGeometryShader, myConstantBuffer);
+			ground = new D3DObject("Ground", 10.0f, myDevice, myContext, myVertexShaderWave, myPixelShader, nullGeometryShader, myConstantBuffer);
 
-			box = new D3DObject("cube.fbx", 1 / 50.0f, myDevice, myContext, myVertexShader, myPixelShaderMultitexturing, nullGeometryShader, myConstantBuffer);
+			box = new D3DObject("cube", 1 / 50.0f, myDevice, myContext, myVertexShader, myPixelShaderMultitexturing, nullGeometryShader, myConstantBuffer);
 
-			bulb = new D3DObject("Bulb.fbx", 1.0f / 5, myDevice, myContext, myVertexShader, myPixelShader, nullGeometryShader, myConstantBuffer);
+			bulb = new D3DObject("Bulb", 1.0f / 5, myDevice, myContext, myVertexShader, myPixelShader, nullGeometryShader, myConstantBuffer);
 
-			spaceShip = new D3DObject("Galaga Fighter.fbx", 1.0f / 4, myDevice, myContext, myVertexShader, myPixelShader, nullGeometryShader, myConstantBuffer);
+			spaceShip = new D3DObject("Galaga Fighter", 1.0f / 4, myDevice, myContext, myVertexShader, myPixelShader, nullGeometryShader, myConstantBuffer);
 
-			cubeGS = new D3DObject("Q.fbx", 5.0f, myDevice, myContext, myVertexShaderPassThrough, myPixelShaderNoLighting, myGeometryShaderPoint, myConstantBuffer);
+			cubeGS = new D3DObject("Q", 5.0f, myDevice, myContext, myVertexShaderPassThrough, myPixelShaderNoLighting, myGeometryShaderPoint, myConstantBuffer);
 
-			spaceShipRTT = new D3DObject("cube.fbx", 1/50.0f, myDevice, myContext, myVertexShader, myPixelShaderNoLighting, nullGeometryShader, myConstantBuffer);
+			spaceShipRTT = new D3DObject("cube", 1/50.0f, myDevice, myContext, myVertexShader, myPixelShaderNoLighting, nullGeometryShader, myConstantBuffer);
 
-			reflectiveTeapot = new D3DObject("utah-teapot.fbx", 0.1f, myDevice, myContext, myVertexShaderReflective, myPixelShaderReflective, nullGeometryShader, myConstantBuffer);
+			reflectiveTeapot = new D3DObject("utah-teapot", 0.1f, myDevice, myContext, myVertexShaderReflective, myPixelShaderReflective, nullGeometryShader, myConstantBuffer);
 			reflectiveTeapot->UpdateTexture("OutputCube");
 
-			emissiveTeapot = new D3DObject("cube.fbx", 1/50.0f, myDevice, myContext, myVertexShader, 
+			emissiveTeapot = new D3DObject("cube", 1/50.0f, myDevice, myContext, myVertexShader, 
 				myPixelShaderEmissive, nullGeometryShader, myConstantBuffer);
 			emissiveTeapot->UpdateTexture("Lava");
 
-			choppedWood = new D3DObject("Chopped_Wood_Pile.fbx", 1 / 50.0f, myDevice, myContext, myVertexShader,
+			choppedWood = new D3DObject("Chopped_Wood_Pile", 1 / 50.0f, myDevice, myContext, myVertexShader,
 				myPixelShader, nullGeometryShader, myConstantBuffer, "Chopped_Wood_Pile_Albedo");
 
-			closedSack = new D3DObject("Closed_Sack.fbx", 1 / 50.0f, myDevice, myContext, myVertexShader,
+			closedSack = new D3DObject("Closed_Sack", 1 / 50.0f, myDevice, myContext, myVertexShader,
 				myPixelShader, nullGeometryShader, myConstantBuffer, "Closed_Sack_Albedo");
 
 
-			plant = new D3DObject("Parviflora.fbx", 1.0f/15.0f, myDevice, myContext, myVertexShader, myPixelShaderTransparentRejector, nullGeometryShader, myConstantBuffer);
+			plant = new D3DObject("Parviflora", 1.0f/15.0f, myDevice, myContext, myVertexShader, myPixelShaderTransparentRejector, nullGeometryShader, myConstantBuffer);
 			plant->UpdateTexture("Parviflora_diffuse");
 
-			transparentObjects[0] = new D3DObject("cube.fbx", 1 / 50.0f, myDevice, myContext, myVertexShader, myPixelShaderTransparent, nullGeometryShader, myConstantBuffer);
-			transparentObjects[1] = new D3DObject("cube.fbx", 1 / 50.0f, myDevice, myContext, myVertexShader, myPixelShaderTransparent, nullGeometryShader, myConstantBuffer);
-			transparentObjects[2] = new D3DObject("cube.fbx", 1 / 50.0f, myDevice, myContext, myVertexShader, myPixelShaderTransparent, nullGeometryShader, myConstantBuffer);
+			transparentObjects[0] = new D3DObject("cube", 1 / 50.0f, myDevice, myContext, myVertexShader, myPixelShaderTransparent, nullGeometryShader, myConstantBuffer);
+			transparentObjects[1] = new D3DObject("cube", 1 / 50.0f, myDevice, myContext, myVertexShader, myPixelShaderTransparent, nullGeometryShader, myConstantBuffer);
+			transparentObjects[2] = new D3DObject("cube", 1 / 50.0f, myDevice, myContext, myVertexShader, myPixelShaderTransparent, nullGeometryShader, myConstantBuffer);
 
 			transparentObjects[0]->UpdateTexture("Energy");
 			transparentObjects[1]->UpdateTexture("Energy1");
