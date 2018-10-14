@@ -48,7 +48,7 @@ static const XMVECTOR UP = { 0,1,0,0 };
 static const XMVECTOR RIGHT = { 1,0,0,0 };
 static const XMVECTOR FORWARD = { 0,0,1,0 };
 
-enum TEXTURE_TYPE { NORMALMAP, AMBIENTOCCULUSION };
+enum TEXTURE_TYPE { NORMALMAP, AMBIENTOCCULUSION, EMISSIVE };
 
 struct SimpleVertex
 {

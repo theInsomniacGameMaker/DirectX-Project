@@ -64,7 +64,17 @@ void LoadFromHeader()
 	}
 }
 
-
+XMMATRIX MakeWorldMatrix(float positionX, float positionY, float positionZ, float factorX, float factorY, float factorZ, bool inDegrees = true)
+{
+	if (!inDegrees)
+	{
+		return  XMMatrixTranspose(XMMatrixRotationX(factorX)*XMMatrixRotationY(factorY)*XMMatrixRotationZ(factorZ)*(XMMatrixTranslationFromVector(XMVECTOR{ positionX , positionY, positionZ})));
+	}
+	else
+	{
+		return XMMatrixTranspose(XMMatrixRotationX(XMConvertToRadians(factorX))*XMMatrixRotationY(XMConvertToRadians(factorY))*XMMatrixRotationZ(XMConvertToRadians(factorZ))*(XMMatrixTranslationFromVector(XMVECTOR{ positionX , positionY, positionZ })));
+	}
+}
 
 
 
