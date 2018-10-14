@@ -18,7 +18,7 @@ cbuffer ConstantBuffer : register(b0)
 
 cbuffer LightBuffer : register (b1)
 {
-	Light lights[5];
+	Light lights[6];
 }
 
 Texture2D txDiffuse : register(t0);
@@ -51,9 +51,14 @@ float4 main(PS_INPUT input) : SV_Target
 		emissiveTexture.r = 1;
 	}
 
-	for (int i = 0; i < 5; i++)
+	for (int i = 0; i < 6; i++)
 	{
-		if (lights[i].Position.w == 1)
+		if (lights[i].Position.w == 0)
+		{
+			finalColor += saturate(mul(lights[i].Direction.x, lights[i].Color)*baseTexture);
+		}
+
+		else if (lights[i].Position.w == 1)
 		{
 			finalColor += saturate(mul(emissiveTexture.r*emissiveTexture.r,dot((float3)lights[i].Direction, input.Norm) * lights[i].Color * baseTexture));
 		}

@@ -47,6 +47,7 @@ class LetsDrawSomeStuff
 	CComPtr<ID3D11PixelShader>				myPixelShaderTransparent = nullptr;
 	CComPtr<ID3D11PixelShader>				myPixelShaderEmissive = nullptr;
 	CComPtr<ID3D11PixelShader>				myPixelShaderTransparentRejector = nullptr;
+	CComPtr<ID3D11PixelShader>				myPixelShaderAO = nullptr;
 
 	//All Geometry Shaders
 	CComPtr<ID3D11GeometryShader>			myGeometryShaderPoint = nullptr;
@@ -220,8 +221,12 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 				myPixelShaderEmissive, nullGeometryShader, myConstantBuffer);
 			emissiveTeapot->UpdateTexture("Lava");
 
-			choppedWood = new D3DObject("Chopped_Wood_Pile", 1 / 50.0f, myDevice, myContext, myVertexShader,
-				myPixelShader, nullGeometryShader, myConstantBuffer, "Chopped_Wood_Pile_Albedo");
+			choppedWood = new D3DObject("Humvee", 1 / 50.0f, myDevice, myContext, myVertexShader,
+				myPixelShader, nullGeometryShader, myConstantBuffer, "Humvee_Albedo", 
+				"Humvee_Occlusion", AMBIENTOCCULUSION);
+
+			/*choppedWood = new D3DObject("Humvee", 1.0f/50.0f , myDevice, myContext, myVertexShader, myPixelShaderNoLighting, nullGeometryShader, myConstantBuffer);
+			choppedWood->UpdateTexture("Humvee_Albedo");*/
 
 			closedSack = new D3DObject("Closed_Sack", 1 / 50.0f, myDevice, myContext, myVertexShader,
 				myPixelShader, nullGeometryShader, myConstantBuffer, "Closed_Sack_Albedo");
@@ -244,6 +249,11 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			positions[1] = XMFLOAT3(0, 1, 0);
 			positions[2] = XMFLOAT3(-1, 0, 0);
 			positions[3] = XMFLOAT3(0, 0, 0);
+
+			positions[0] = XMFLOAT3(-1, 1, 0);
+			positions[1] = XMFLOAT3(1, 1, 0);
+			positions[2] = XMFLOAT3(-1, -1, 0);
+			positions[3] = XMFLOAT3(1, -1, 0);
 
 			screenQuad = new ScreenQuad(myDevice, myContext, myVertexShaderScreenSpace, myPixelShaderNoLighting, nullGeometryShader, positions);
 
@@ -418,15 +428,15 @@ void LetsDrawSomeStuff::Render()
 			box->SetPosition(XMVECTOR{ -5,0,0,1 }, cb, myConstantBuffer);
 			box->UpdateVS(myVertexShader);
 			box->UpdatePS(myPixelShaderMultitexturing);
-			box->RenderIndexedMulitexture(myTextureRVPMT);
+			//box->RenderIndexedMulitexture(myTextureRVPMT);
 
 			reflectiveTeapot->SetLocalRotation(XMVECTOR{ 0,5.0f,0.0f,0 }, cb, myConstantBuffer, (float)xTimer.TotalTime()/2.0f,(float)xTimer.TotalTime()/2.0f);
-			reflectiveTeapot->RenderIndexed();
+			//reflectiveTeapot->RenderIndexed();
 
 			box->SetPosition(XMVECTOR{ -5,2,0,0 }, cb, myConstantBuffer);
 			box->UpdateVS(myVertexShaderPassThrough);
 			box->UpdateGS(myGeometryShaderTriangle);
-			box->RenderIndexedWithGS(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+			//box->RenderIndexedWithGS(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 			box->UpdateGS(nullGeometryShader);
 
 #if DIRECTIONAL_LIGHT_ON
@@ -441,21 +451,30 @@ void LetsDrawSomeStuff::Render()
 			box->RenderIndexed();
 #endif 
 			cubeGS->SetPosition(XMVECTOR{ 3, 0, 0, 0 }, cb, myConstantBuffer);
-			cubeGS->RenderIndexedWithGS(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
+			//cubeGS->RenderIndexedWithGS(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
 
 			bulb->SetPosition(XMVECTOR{ lCb.lights[2].Position.x, lCb.lights[2].Position.y, lCb.lights[2].Position.z, 1 }, cb, myConstantBuffer);
-			bulb->RenderIndexed();
+			//bulb->RenderIndexed();
 
 			myContext->UpdateSubresource(myInstanceConstantBuffer, 0, nullptr, &iCb, 0, 0);
 			box->UpdateVS(myVertexShaderInstance);
 			box->UpdatePS(myPixelShaderMultitexturing);
-			box->RenderInstanced(10, myInstanceConstantBuffer);
+			//box->RenderInstanced(10, myInstanceConstantBuffer);
 
 			emissiveTeapot->SetLocalRotation(XMVECTOR{ -2,-1,0,1 }, cb, myConstantBuffer, (float)xTimer.TotalTime());
 			//emissiveTeapot->RenderIndexedEmissive(myTextureEmissive);
 
 			plant->SetPosition(XMVECTOR{ 3,0,-3,0 }, cb, myConstantBuffer);
-			plant->RenderIndexed();
+			//plant->RenderIndexed();
+
+			choppedWood->SetLocalRotation(XMVECTOR{ -3,0,0 }, cb, myConstantBuffer,XMConvertToRadians(180.0f));
+			choppedWood->RenderIndexed();
+			choppedWood->SetLocalRotation(XMVECTOR{ 3,0,0 }, cb, myConstantBuffer, XMConvertToRadians(180.0f));
+			choppedWood->RenderIndexedWithAO();
+
+
+			closedSack->SetPosition(XMVECTOR{ 0,0,0.2f }, cb, myConstantBuffer);
+			closedSack->RenderIndexed();
 
 			textureRenderer->MoveCamera(cb, myConstantBuffer, myContext);
 			textureRenderer->Clear(myContext, nullptr, XMFLOAT4(1, 1, 1, 1));
@@ -471,6 +490,7 @@ void LetsDrawSomeStuff::Render()
 			spaceShipRTT->UpdateTexture(textureRenderer->pCTexture);
 			spaceShipRTT->SetPosition(XMVECTOR{ 5, 2, -3, 1 }, cb, myConstantBuffer);
 			//spaceShipRTT->RenderIndexedWithDynamicSRV(textureRenderer->pCTexture);
+
 
 			myContext->OMSetBlendState(transparencyBlendState, blendFactor, 0xffffffff);
 
@@ -497,16 +517,12 @@ void LetsDrawSomeStuff::Render()
 			rightTopRTT->Clear(myContext, myDepthStencilView, XMFLOAT4(0, 0, 0, 1));
 			rightTopRTT->BeginRender(myContext, myRenderTargetView);
 
-			choppedWood->SetLocalRotation(XMVECTOR{ -1,0,0 }, cb, myConstantBuffer,XMConvertToRadians(180.0f));
-			choppedWood->RenderIndexed();
 
-			closedSack->SetPosition(XMVECTOR{ 0,0,0.2f }, cb, myConstantBuffer);
-			closedSack->RenderIndexed();
 
 			rightTopRTT->EndRender(myContext, myRenderTargetView, myDepthStencilView);
 
 			screenQuadRightTop->UpdateTexture(rightTopRTT->pCTexture);
-			screenQuadRightTop->Render();
+			//screenQuadRightTop->Render();
 			rightTopRTT->pResView = { nullptr };
 			myContext->PSSetShaderResources(0, 1, &mainTextureRenderer->pResView.p);
 			
@@ -740,6 +756,11 @@ void LetsDrawSomeStuff::UpdateLightBuffer()
 	lCb.lights[4].Range.z = 10.0f;
 	lCb.lights[4].Color = XMFLOAT4(1, 1, 1, 1);
 
+	lCb.lights[5].Position.w = 0;
+	lCb.lights[5].Color = XMFLOAT4(1,1,1,1);
+	lCb.lights[5].Direction.x = 0.275f;
+
+
 	// Rotate the a matrix
 	XMMATRIX mRotate = XMMatrixRotationY(-2.0f * (float)xTimer.TotalTime());
 	//store the ligh dir in a XMFloat 
@@ -811,6 +832,7 @@ void LetsDrawSomeStuff::CreateShaders()
 	hr = myDevice->CreatePixelShader(PS_Transparent, sizeof(PS_Transparent), nullptr, &myPixelShaderTransparent);
 	hr = myDevice->CreatePixelShader(PS_Emissive, sizeof(PS_Emissive), nullptr, &myPixelShaderEmissive);
 	hr = myDevice->CreatePixelShader(PS_TransparentRejector, sizeof(PS_TransparentRejector), nullptr, &myPixelShaderTransparentRejector);
+	hr = myDevice->CreatePixelShader(PS_AmbientOcculusion, sizeof(PS_AmbientOcculusion), nullptr, &myPixelShaderAO);
 
 	hr = myDevice->CreateGeometryShader(GS_PointToQuad, sizeof(GS_PointToQuad), nullptr, &myGeometryShaderPoint);
 	hr = myDevice->CreateGeometryShader(GS_Instancer, sizeof(GS_Instancer), nullptr, &myGeometryShaderTriangle);
