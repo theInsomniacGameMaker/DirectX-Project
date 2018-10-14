@@ -28,7 +28,7 @@ class LetsDrawSomeStuff
 	//All vertex shaders
 	CComPtr<ID3D11VertexShader>				myVertexShader = nullptr;
 	CComPtr<ID3D11VertexShader>				myVertexShaderUV = nullptr;
-	CComPtr<ID3D11VertexShader>				SKYMAP_VS = nullptr;
+	CComPtr<ID3D11VertexShader>				myVertexShaderSkyBox = nullptr;
 	CComPtr<ID3D11VertexShader>				myVertexShaderInstance = nullptr;
 	CComPtr<ID3D11VertexShader>				myVertexShaderWave = nullptr;
 	CComPtr<ID3D11VertexShader>				myVertexShaderPassThrough = nullptr;
@@ -37,8 +37,8 @@ class LetsDrawSomeStuff
 
 	//All Pixel Shaders
 	CComPtr<ID3D11PixelShader>				myPixelShader = nullptr;
-	CComPtr<ID3D11PixelShader>				mySolidPixelShader = nullptr;
-	CComPtr<ID3D11PixelShader>				SKYMAP_PS = nullptr;
+	CComPtr<ID3D11PixelShader>				myPixelShaderSolid = nullptr;
+	CComPtr<ID3D11PixelShader>				myPixelShaderSkyBox = nullptr;
 	CComPtr<ID3D11PixelShader>				myPixelShaderMultitexturing = nullptr;
 	CComPtr<ID3D11PixelShader>				myPixelShaderNoLighting = nullptr;
 	CComPtr<ID3D11PixelShader>				myPixelShaderReflective = nullptr;
@@ -49,7 +49,8 @@ class LetsDrawSomeStuff
 	CComPtr<ID3D11PixelShader>				myPixelShaderTransparentRejector = nullptr;
 
 	//All Geometry Shaders
-	CComPtr<ID3D11GeometryShader>			myGeometryShader = nullptr;
+	CComPtr<ID3D11GeometryShader>			myGeometryShaderPoint = nullptr;
+	CComPtr<ID3D11GeometryShader>			myGeometryShaderTriangle = nullptr;
 	CComPtr<ID3D11GeometryShader>			nullGeometryShader = nullptr; //Used for objects that do not use a GS
 
 	//Vertex Layout
@@ -196,7 +197,7 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 
 			feraligtr = new D3DObject("Charizard.fbx", 5.0f, myDevice, myContext, myVertexShader, myPixelShaderSpecular, nullGeometryShader, myConstantBuffer);
 
-			skyBox = new D3DObject("SkyBox.fbx", 10.0f, myDevice, myContext, SKYMAP_VS, SKYMAP_PS, nullGeometryShader, myConstantBuffer);
+			skyBox = new D3DObject("SkyBox.fbx", 10.0f, myDevice, myContext, myVertexShaderSkyBox, myPixelShaderSkyBox, nullGeometryShader, myConstantBuffer);
 			skyBox->UpdateTexture("OutputCube");
 
 			ground = new D3DObject("Ground.fbx", 10.0f, myDevice, myContext, myVertexShaderWave, myPixelShader, nullGeometryShader, myConstantBuffer);
@@ -207,7 +208,7 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 
 			spaceShip = new D3DObject("Galaga Fighter.fbx", 1.0f / 4, myDevice, myContext, myVertexShader, myPixelShader, nullGeometryShader, myConstantBuffer);
 
-			cubeGS = new D3DObject("Q.fbx", 5.0f, myDevice, myContext, myVertexShaderPassThrough, myPixelShaderNoLighting, myGeometryShader, myConstantBuffer);
+			cubeGS = new D3DObject("Q.fbx", 5.0f, myDevice, myContext, myVertexShaderPassThrough, myPixelShaderNoLighting, myGeometryShaderPoint, myConstantBuffer);
 
 			spaceShipRTT = new D3DObject("cube.fbx", 1/50.0f, myDevice, myContext, myVertexShader, myPixelShaderNoLighting, nullGeometryShader, myConstantBuffer);
 
@@ -278,19 +279,19 @@ LetsDrawSomeStuff::~LetsDrawSomeStuff()
 	myVertexShader.Release();
 	myVertexShaderUV.Release();
 	myPixelShader.Release();
-	mySolidPixelShader.Release();
+	myPixelShaderSolid.Release();
 	myVertexLayout.Release();
 	myVertexShaderReflective.Release();
-	SKYMAP_VS.Release();
+	myVertexShaderSkyBox.Release();
 	myVertexShaderInstance.Release();
 	myVertexShaderWave.Release();
 	myVertexShaderPassThrough.Release();
 
-	SKYMAP_PS.Release();
+	myPixelShaderSkyBox.Release();
 	myPixelShaderMultitexturing.Release();
 	myPixelShaderNoLighting.Release();
 	myPixelShaderReflective.Release();
-	myGeometryShader.Release();
+	myGeometryShaderPoint.Release();
 
 	myTextureRVPMT[0].Release();
 	myTextureRVPMT[1].Release();
@@ -388,7 +389,7 @@ void LetsDrawSomeStuff::Render()
 			myContext->PSSetConstantBuffers(1, 1, &myLightConstantBuffer.p);
 			myContext->PSSetSamplers(0, 1, &mySamplerLinear.p);
 			myContext->GSSetShader(nullGeometryShader, nullptr, 0);
-			myContext->GSSetShader(myGeometryShader, nullptr, 0);
+			myContext->GSSetShader(myGeometryShaderPoint, nullptr, 0);
 			myContext->GSSetConstantBuffers(0, 1, &myConstantBuffer.p);
 			
 			mainTextureRenderer->Clear(myContext, myDepthStencilView, XMFLOAT4(0, 0, 0, 0));
@@ -421,9 +422,14 @@ void LetsDrawSomeStuff::Render()
 			reflectiveTeapot->SetLocalRotation(XMVECTOR{ 0,5.0f,0.0f,0 }, cb, myConstantBuffer, (float)xTimer.TotalTime()/2.0f,(float)xTimer.TotalTime()/2.0f);
 			reflectiveTeapot->RenderIndexed();
 
-			
+			box->SetPosition(XMVECTOR{ -5,2,0,0 }, cb, myConstantBuffer);
+			box->UpdateVS(myVertexShaderPassThrough);
+			box->UpdateGS(myGeometryShaderTriangle);
+			box->RenderIndexedWithGS(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+			box->UpdateGS(nullGeometryShader);
+
 #if DIRECTIONAL_LIGHT_ON
-			box->UpdatePS(mySolidPixelShader);
+			box->UpdatePS(myPixelShaderSolid);
 			box->UpdateVS(myVertexShader);
 			XMMATRIX mLight = XMMatrixTranslationFromVector(5.0f * XMLoadFloat4(&lCb.lights[1].Direction));
 			XMMATRIX mLightScale = XMMatrixScaling(0.2f, 0.2f, 0.2f);
@@ -445,7 +451,7 @@ void LetsDrawSomeStuff::Render()
 			box->RenderInstanced(10, myInstanceConstantBuffer);
 
 			emissiveTeapot->SetLocalRotation(XMVECTOR{ -2,-1,0,1 }, cb, myConstantBuffer, xTimer.TotalTime());
-			emissiveTeapot->RenderIndexedEmissive(myTextureEmissive);
+			//emissiveTeapot->RenderIndexedEmissive(myTextureEmissive);
 
 			plant->SetPosition(XMVECTOR{ 3,0,-3,0 }, cb, myConstantBuffer);
 			plant->RenderIndexed();
@@ -463,7 +469,7 @@ void LetsDrawSomeStuff::Render()
 
 			spaceShipRTT->UpdateTexture(textureRenderer->pCTexture);
 			spaceShipRTT->SetPosition(XMVECTOR{ 5, 2, -3, 1 }, cb, myConstantBuffer);
-			spaceShipRTT->RenderIndexedWithDynamicSRV(textureRenderer->pCTexture);
+			//spaceShipRTT->RenderIndexedWithDynamicSRV(textureRenderer->pCTexture);
 
 			myContext->OMSetBlendState(transparencyBlendState, blendFactor, 0xffffffff);
 
@@ -761,18 +767,18 @@ void LetsDrawSomeStuff::SetupRenderTargetView()
 void LetsDrawSomeStuff::CreateShaders()
 {
 	HRESULT hr;
-	hr = myDevice->CreateVertexShader(Trivial_VS, sizeof(Trivial_VS), nullptr, &myVertexShader);
+	hr = myDevice->CreateVertexShader(VS_Main, sizeof(VS_Main), nullptr, &myVertexShader);
 	hr = myDevice->CreateVertexShader(VS_UVModifier, sizeof(VS_UVModifier), nullptr, &myVertexShaderUV);
-	hr = myDevice->CreateVertexShader(VS_SkyBox, sizeof(VS_SkyBox), nullptr, &SKYMAP_VS);
+	hr = myDevice->CreateVertexShader(VS_SkyBox, sizeof(VS_SkyBox), nullptr, &myVertexShaderSkyBox);
 	hr = myDevice->CreateVertexShader(VS_Instance, sizeof(VS_Instance), nullptr, &myVertexShaderInstance);
 	hr = myDevice->CreateVertexShader(VS_PositionModifier, sizeof(VS_PositionModifier), nullptr, &myVertexShaderWave);
 	hr = myDevice->CreateVertexShader(VS_PassThrough, sizeof(VS_PassThrough), nullptr, &myVertexShaderPassThrough);
 	hr = myDevice->CreateVertexShader(VS_Reflective, sizeof(VS_Reflective), nullptr, &myVertexShaderReflective);
 	hr = myDevice->CreateVertexShader(VS_ScreenSpace, sizeof(VS_ScreenSpace), nullptr, &myVertexShaderScreenSpace);
 
-	hr = myDevice->CreatePixelShader(Trivial_PS, sizeof(Trivial_PS), nullptr, &myPixelShader);
-	hr = myDevice->CreatePixelShader(SolidPS, sizeof(SolidPS), nullptr, &mySolidPixelShader);
-	hr = myDevice->CreatePixelShader(PS_SkyBox, sizeof(PS_SkyBox), nullptr, &SKYMAP_PS);
+	hr = myDevice->CreatePixelShader(PS_Main, sizeof(PS_Main), nullptr, &myPixelShader);
+	hr = myDevice->CreatePixelShader(PS_SolidColor, sizeof(PS_SolidColor), nullptr, &myPixelShaderSolid);
+	hr = myDevice->CreatePixelShader(PS_SkyBox, sizeof(PS_SkyBox), nullptr, &myPixelShaderSkyBox);
 	hr = myDevice->CreatePixelShader(PS_Multitexturing, sizeof(PS_Multitexturing), nullptr, &myPixelShaderMultitexturing);
 	hr = myDevice->CreatePixelShader(PS_NoLighting, sizeof(PS_NoLighting), nullptr, &myPixelShaderNoLighting);
 	hr = myDevice->CreatePixelShader(PS_Reflective, sizeof(PS_Reflective), nullptr, &myPixelShaderReflective);
@@ -782,7 +788,8 @@ void LetsDrawSomeStuff::CreateShaders()
 	hr = myDevice->CreatePixelShader(PS_Emissive, sizeof(PS_Emissive), nullptr, &myPixelShaderEmissive);
 	hr = myDevice->CreatePixelShader(PS_TransparentRejector, sizeof(PS_TransparentRejector), nullptr, &myPixelShaderTransparentRejector);
 
-	hr = myDevice->CreateGeometryShader(GS_PointToQuad, sizeof(GS_PointToQuad), nullptr, &myGeometryShader);
+	hr = myDevice->CreateGeometryShader(GS_PointToQuad, sizeof(GS_PointToQuad), nullptr, &myGeometryShaderPoint);
+	hr = myDevice->CreateGeometryShader(GS_Instancer, sizeof(GS_Instancer), nullptr, &myGeometryShaderTriangle);
 }
 
 void LetsDrawSomeStuff::CreateInputLayout()
@@ -798,7 +805,7 @@ void LetsDrawSomeStuff::CreateInputLayout()
 	UINT numElements = ARRAYSIZE(layout);
 
 	// Create the input layout
-	myDevice->CreateInputLayout(layout, numElements, Trivial_VS, sizeof(Trivial_VS), &myVertexLayout);
+	myDevice->CreateInputLayout(layout, numElements, VS_Main, sizeof(VS_Main), &myVertexLayout);
 	myContext->IASetInputLayout(myVertexLayout);
 }
 
