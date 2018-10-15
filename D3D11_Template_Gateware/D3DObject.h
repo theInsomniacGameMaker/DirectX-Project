@@ -41,6 +41,7 @@ public:
 	void RenderInstanced(int numberOfInstances, CComPtr < ID3D11Buffer> &perInstanceBuffer);
 	void RenderIndexedMulitexture(CComPtr < ID3D11ShaderResourceView > textureRVs[]);
 	void RenderIndexedEmissive();
+	void RenderIndexedEmissiveInstanced(int numberOfInstances, CComPtr<ID3D11Buffer>& perInstanceBuffer);
 	void RenderIndexedEmissive(CComPtr < ID3D11ShaderResourceView > emissiveRV);
 	void RenderIndexedTransparent();
 	void RenderIndexedWithAO();
@@ -51,6 +52,7 @@ public:
 	//do not use this unless you know what you are doing
 	void UpdateTexture(CComPtr < ID3D11ShaderResourceView> &textureRV);
 	void Scale(float scale, ConstantBuffer &constantBuffer, CComPtr < ID3D11Buffer> &perObjectBuffer);
+	void Scale(float scaleX, float scaleY, float scaleZ, ConstantBuffer & constantBuffer, CComPtr<ID3D11Buffer>& perObjectBuffer);
 	void SetPosition(XMVECTOR position, ConstantBuffer &constantBuffer, CComPtr < ID3D11Buffer> &perObjectBuffer);
 	void SetPosition(XMMATRIX position, ConstantBuffer &constantBuffer, CComPtr < ID3D11Buffer> &perObjectBuffer);
 	void SetLocalRotation(XMVECTOR position, ConstantBuffer & constantBuffer, CComPtr < ID3D11Buffer >& perObjectBuffer, float factorX, float factorY, float factorZ, bool inDegrees = true);

@@ -331,6 +331,20 @@ void D3DObject::RenderIndexedEmissive()
 	m_Context->DrawIndexed(m_Mesh.GetNumberOfIndices(), 0, 0);
 }
 
+void D3DObject::RenderIndexedEmissiveInstanced(int numberOfInstances, CComPtr<ID3D11Buffer>& perInstanceBuffer)
+{
+	m_Context->VSSetShader(m_VertexShader, nullptr, 0);
+	m_Context->PSSetShader(m_PixelShader, nullptr, 0);
+	m_Context->GSSetShader(m_GeometryShader, nullptr, 0);
+	m_Context->PSSetShaderResources(0, 1, &m_TextureRV.p);
+	m_Context->PSSetShaderResources(1, 1, &m_SpecialTexture.p);
+	m_Context->IASetVertexBuffers(0, 1, &m_VertexBuffer.p, stride, offset);
+	m_Context->IASetIndexBuffer(m_IndexBuffer, DXGI_FORMAT_R32_UINT, 0);
+	m_Context->VSSetConstantBuffers(1, 1, &perInstanceBuffer.p);
+	m_Context->DrawIndexedInstanced(m_Mesh.GetNumberOfIndices(), numberOfInstances, 0, 0, 0);
+}
+
+
 void D3DObject::RenderIndexedEmissive(CComPtr<ID3D11ShaderResourceView> emissiveRV)
 {
 	m_Context->VSSetShader(m_VertexShader, nullptr, 0);
@@ -357,6 +371,7 @@ void D3DObject::RenderIndexedTransparent()
 	//now render the forwad faces
 	m_Context->RSSetState(CWcullMode);
 	m_Context->DrawIndexed(m_Mesh.GetNumberOfIndices(), 0, 0);
+
 }
 
 void D3DObject::RenderIndexedWithAO()
@@ -407,6 +422,13 @@ void D3DObject::UpdateTexture(CComPtr < ID3D11ShaderResourceView> &textureRV)
 void D3DObject::Scale(float scale, ConstantBuffer &constantBuffer, CComPtr < ID3D11Buffer> &perObjectBuffer)
 {
 	constantBuffer.mWorld = XMMatrixScaling(scale, scale, scale)*XMMatrixTranspose(constantBuffer.mWorld);
+	m_Context->UpdateSubresource(perObjectBuffer, 0, nullptr, &constantBuffer, 0, 0);
+	m_Position = XMMatrixTranspose(constantBuffer.mWorld).r[3];
+}
+
+void D3DObject::Scale(float scaleX, float scaleY, float scaleZ, ConstantBuffer &constantBuffer, CComPtr < ID3D11Buffer> &perObjectBuffer)
+{
+	constantBuffer.mWorld = XMMatrixScaling(scaleX, scaleY, scaleZ)*XMMatrixTranspose(constantBuffer.mWorld);
 	m_Context->UpdateSubresource(perObjectBuffer, 0, nullptr, &constantBuffer, 0, 0);
 	m_Position = XMMatrixTranspose(constantBuffer.mWorld).r[3];
 }
