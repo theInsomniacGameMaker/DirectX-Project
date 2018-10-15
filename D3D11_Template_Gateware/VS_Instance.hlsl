@@ -39,7 +39,7 @@ VS_OUTPUT main(VS_INPUT input, uint instanceID : SV_InstanceID)
 	output.wPos = output.Pos;
 	output.Pos = mul(output.Pos, View);
 	output.Pos = mul(output.Pos, Projection);
-	output.Norm = mul(float4(input.Norm, 0), World).xyz;
+	output.Norm = mul(float4(input.Norm, 0), worldArray[instanceID]).xyz;
 	output.Tex = input.Tex;
 	return output;
 }
