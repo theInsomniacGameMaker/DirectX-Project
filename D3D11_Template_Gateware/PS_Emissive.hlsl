@@ -60,7 +60,7 @@ float4 main(PS_INPUT input) : SV_Target
 
 		else if (lights[i].Position.w == 1)
 		{
-			finalColor += saturate(mul(emissiveTexture.r*emissiveTexture.r,dot((float3)lights[i].Direction, input.Norm) * lights[i].Color * baseTexture));
+			finalColor += saturate(mul(/*emissiveTexture.r*/1,dot((float3)lights[i].Direction, input.Norm) * lights[i].Color * baseTexture));
 		}
 		else if (lights[i].Position.w == 2)
 		{
@@ -68,21 +68,27 @@ float4 main(PS_INPUT input) : SV_Target
 			float howMuchLight = saturate(dot(normalize(lightToPixelVec), input.Norm));
 			pointLightColor = howMuchLight * baseTexture* lights[i].Color;
 			pointLightColor *= (1.0 - saturate(length(lights[i].Position - input.wPos) / lights[i].Range.x));
-			finalColor += saturate(mul(emissiveTexture.r*emissiveTexture.r,pointLightColor));
+			finalColor += saturate(mul(/*emissiveTexture.r*/1,pointLightColor));
 		}
 		else if (lights[i].Position.w == 3)
 		{
 			float3 lightToPixelVec = normalize(lights[i].Position - input.wPos);
-			float surfaceRatio = saturate(dot(-lightToPixelVec, float3(lights[i].Direction.x, lights[i].Direction.y, lights[i].Direction.z)));
+			float surfaceRatio = saturate(dot(-lightToPixelVec, normalize(float3(lights[i].Direction.x, lights[i].Direction.y, lights[i].Direction.z))));
 			float spotFactor = (surfaceRatio > lights[i].Range.y) ? 1 : 0;
 			float lightRatio = saturate(dot(lightToPixelVec, input.Norm));
 			float3 spotLightColor = spotFactor*lightRatio*lights[i].Color*baseTexture;
 			spotLightColor *= (1.0 - saturate(length(lights[i].Position - input.wPos) / lights[i].Range.z));
 			spotLightColor *= (1.0 - saturate((lights[i].Range.x - surfaceRatio) / (lights[i].Range.x - lights[i].Range.y)));
-			finalColor += mul(emissiveTexture.r*emissiveTexture.r,float4(spotLightColor,1));
+			finalColor += mul(/*emissiveTexture.r*/1,float4(spotLightColor,1));
 		}
 	}	
-	finalColor = saturate(finalColor+mul(emissiveTexture.r*emissiveTexture.r,baseTexture));
+	if (all(emissiveTexture != float4(0, 0, 0, 0)))
+	{
+		finalColor = saturate(emissiveTexture);
+		finalColor.a = 1;
+		return finalColor;
+	}
+	finalColor = saturate(finalColor+mul(emissiveTexture.r,baseTexture));
 	finalColor.a = 1;
 	return finalColor;
 }
