@@ -271,7 +271,7 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="ExampleCode.cpp" />
-    <Text Include="LegacyCode.txt" />
+    <Text Include="LegacyCode.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

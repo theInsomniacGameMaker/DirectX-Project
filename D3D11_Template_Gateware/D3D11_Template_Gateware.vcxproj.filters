@@ -187,6 +187,6 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="ExampleCode.cpp" />
-    <Text Include="LegacyCode.txt" />
+    <Text Include="LegacyCode.cpp" />
   </ItemGroup>
 </Project>
