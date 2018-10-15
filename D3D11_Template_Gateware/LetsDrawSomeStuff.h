@@ -341,7 +341,7 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			positions[2] = XMFLOAT3(-1, -1, 0);
 			positions[3] = XMFLOAT3(1, -1, 0);
 
-			screenQuadRightTop = new ScreenQuad(myDevice, myContext, myVertexShaderScreenSpace, myPixelShaderNoLighting, nullGeometryShader, positions);
+			screenQuadRightTop = new ScreenQuad(myDevice, myContext, myVertexShaderScreenSpace, myPixelShaderPostProcessing, nullGeometryShader, positions);
 
 			myContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
@@ -408,19 +408,12 @@ LetsDrawSomeStuff::~LetsDrawSomeStuff()
 #endif
 
 
-
 	delete textureRenderer;
 	delete mainTextureRenderer;
 	delete rightTopRTT;
 
 	delete screenQuad;
 	delete screenQuadRightTop;
-
-	
-
-
-
-
 
 	delete feraligtr;
 	delete skyBox;
