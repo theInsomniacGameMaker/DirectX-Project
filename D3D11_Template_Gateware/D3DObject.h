@@ -13,8 +13,6 @@ class D3DObject
 	CComPtr<ID3D11GeometryShader>			m_GeometryShader = nullptr;
 	CComPtr < ID3D11ShaderResourceView>		m_TextureRV = nullptr;
 	CComPtr < ID3D11ShaderResourceView>		m_SpecialTexture = nullptr;
-	CComPtr < ID3D11ShaderResourceView>		m_SpecTexture = nullptr;
-	CComPtr < ID3D11ShaderResourceView>		m_EmissiveTexture = nullptr;
 	CComPtr < ID3D11Buffer>					m_PerObjectBuffer = nullptr;
 	CComPtr<ID3D11RasterizerState>			CCWcullMode;
 	CComPtr<ID3D11RasterizerState>			CWcullMode;
@@ -37,7 +35,6 @@ public:
 		CComPtr < ID3D11VertexShader >& vertexShader, CComPtr < ID3D11PixelShader>& pixelShader,
 		CComPtr < ID3D11GeometryShader> &geoShader, CComPtr < ID3D11Buffer> &perObjectBuffer, string AOfileName, TEXTURE_TYPE textureType);
 	D3DObject(string fileName, float scale, CComPtr<ID3D11Device>& myDevice, CComPtr<ID3D11DeviceContext>& myContext, CComPtr<ID3D11VertexShader>& vertexShader, CComPtr<ID3D11PixelShader>& pixelShader, CComPtr<ID3D11GeometryShader>& geoShader, CComPtr<ID3D11Buffer>& perObjectBuffer, string explicitTexture, string specialTexFileName, TEXTURE_TYPE textureType);
-	D3DObject(string fileName, float scale, CComPtr<ID3D11Device>& myDevice, CComPtr<ID3D11DeviceContext>& myContext, CComPtr<ID3D11VertexShader>& vertexShader, CComPtr<ID3D11PixelShader>& pixelShader, CComPtr<ID3D11GeometryShader>& geoShader, CComPtr<ID3D11Buffer>& perObjectBuffer, string explicitTexture, string specTextureName, string emissiveTexName);
 	void RenderIndexed();
 	void ImmediatePositionRenderingIndexed(XMMATRIX worldMatrix, ConstantBuffer constantBuffer, CComPtr<ID3D11Buffer>& perObjectBuffer);
 	void PositionRenderingIndexed(ConstantBuffer constantBuffer, CComPtr<ID3D11Buffer>& perObjectBuffer);
@@ -46,7 +43,6 @@ public:
 	void RenderInstanced(int numberOfInstances, CComPtr < ID3D11Buffer> &perInstanceBuffer);
 	void RenderIndexedMulitexture(CComPtr < ID3D11ShaderResourceView > textureRVs[]);
 	void RenderIndexedEmissive();
-	void RenderIndexedEmissiveSpec();
 	void RenderIndexedEmissiveInstanced(int numberOfInstances, CComPtr<ID3D11Buffer>& perInstanceBuffer);
 	void RenderIndexedEmissive(CComPtr < ID3D11ShaderResourceView > emissiveRV);
 	void RenderIndexedTransparent();

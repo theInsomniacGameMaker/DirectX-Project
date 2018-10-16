@@ -130,12 +130,14 @@ class LetsDrawSomeStuff
 	D3DObject*		space_planetMercury;
 	D3DObject*		space_planetVenus;
 	D3DObject*		space_planetEarth;
+	D3DObject*		space_moon;
 	D3DObject*		space_planetMars;
 	D3DObject*		space_planetJupiter;
 	D3DObject*		space_planetSaturnRing;
 	D3DObject*		space_planetSaturn;
 	D3DObject*		space_planetUranus;
 	D3DObject*		space_planetNeptune;
+	D3DObject*		space_satellite;
 
 	//Constant Buffers
 	InstanceConstantBuffer	iCb;
@@ -320,7 +322,7 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 				nullGeometryShader, myConstantBuffer, "venusmap");
 
 			space_planetEarth = new D3DObject("Planet", 1/50.f, myDevice, myContext, myVertexShader, myPixelShader,
-				nullGeometryShader, myConstantBuffer, "earthmap1k");
+				nullGeometryShader, myConstantBuffer, "earthmap1k", "earthlights1k",EMISSIVE);
 
 			space_planetMars = new D3DObject("Planet", 1 / 45.0f, myDevice, myContext, myVertexShader, myPixelShader,
 				nullGeometryShader, myConstantBuffer, "marsmap");
@@ -340,8 +342,17 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			space_planetNeptune = new D3DObject("Planet", 1 / 40.0f, myDevice, myContext, myVertexShader, myPixelShader,
 				nullGeometryShader, myConstantBuffer, "neptunemap");
 
+			space_moon = new D3DObject("Planet", 1 / 150.0f, myDevice, myContext, myVertexShader, myPixelShader,
+				nullGeometryShader, myConstantBuffer, "moon_Diffuse");
+
+			space_satellite = new D3DObject("Satellite", 1 / 220.0f, myDevice, myContext, myVertexShader, myPixelShader,
+				nullGeometryShader, myConstantBuffer, "RT_2D_Station_Diffuse");
+
 			space_Sun = new D3DObject("Planet", 1 / 10.f, myDevice, myContext, myVertexShader, myPixelShaderEmissive,
 				nullGeometryShader, myConstantBuffer, "8k_sun", "8k_sun",EMISSIVE);
+
+
+
 
 			plant = new D3DObject("Parviflora", 1.0f / 15.0f, myDevice, myContext, myVertexShader, myPixelShaderTransparentRejector, nullGeometryShader, myConstantBuffer);
 			plant->UpdateTexture("Parviflora_diffuse");
@@ -512,6 +523,8 @@ LetsDrawSomeStuff::~LetsDrawSomeStuff()
 	delete space_planetSaturn;
 	delete space_planetUranus;
 	delete space_planetNeptune;
+	delete space_moon;
+	delete space_satellite; 
 
 	for (int i = 0; i < transparentObjects.size(); i++)
 	{
@@ -758,9 +771,7 @@ void LetsDrawSomeStuff::Render()
 			lCb.lights[5].Direction.x = 0.575f;
 			myContext->UpdateSubresource(myLightConstantBuffer, 0, nullptr, &lCb, 0, 0);
 
-			spaceShip->SetPosition(XMVECTOR{ A,B,10+C }, cb, myConstantBuffer);
-			spaceShip->UpdatePS(myPixelShader);
-			spaceShip->RenderIndexed();
+
 
 			skyBox->UpdateTexture("StarField");
 			skyBox->SetPosition(Eye, cb, myConstantBuffer);
@@ -781,7 +792,7 @@ void LetsDrawSomeStuff::Render()
 
 			space_planetEarth->SetPosition(XMMatrixTranspose(MakeWorldMatrix(0, 0, 18, 0, (float)xTimer.TotalTime() * 50, 0))
 				*XMMatrixRotationY((float)-xTimer.TotalTime() * 0.3f), cb, myConstantBuffer);
-			space_planetEarth->RenderIndexedEmissiveSpec();
+			space_planetEarth->RenderIndexedEmissive();
 
 			space_planetMars->SetPosition(XMMatrixTranspose(MakeWorldMatrix(0, 0, 25.0f, 0, (float)xTimer.TotalTime() * 80, 0))
 				*XMMatrixRotationY((float)-xTimer.TotalTime() * 0.24f), cb, myConstantBuffer);
@@ -806,6 +817,31 @@ void LetsDrawSomeStuff::Render()
 				*XMMatrixRotationY((float)-xTimer.TotalTime() * 0.05f), cb, myConstantBuffer);
 			space_planetNeptune->RenderIndexed();
 
+			XMMATRIX moonWorldMatrix= XMMatrixIdentity();
+			moonWorldMatrix = XMMatrixRotationY(xTimer.TotalTime()) *moonWorldMatrix;
+			moonWorldMatrix = moonWorldMatrix* XMMatrixTranslation(space_planetEarth->GetPosition().m128_f32[0],
+				space_planetEarth->GetPosition().m128_f32[1], 
+				space_planetEarth->GetPosition().m128_f32[2]);
+	
+			moonWorldMatrix = XMMatrixTranslation(0, 0, 2.5)*moonWorldMatrix;
+			moonWorldMatrix = XMMatrixRotationY((float)xTimer.TotalTime()/10.0f) *moonWorldMatrix;
+
+			space_moon->SetPosition(moonWorldMatrix, cb, myConstantBuffer);
+			space_moon->RenderIndexed();
+
+
+			XMMATRIX satelliteWorldMatrix = XMMatrixIdentity();
+			satelliteWorldMatrix = XMMatrixRotationY(xTimer.TotalTime()) *satelliteWorldMatrix;
+			satelliteWorldMatrix = satelliteWorldMatrix * XMMatrixTranslation(space_planetEarth->GetPosition().m128_f32[0],
+				space_planetEarth->GetPosition().m128_f32[1],
+				space_planetEarth->GetPosition().m128_f32[2]);
+
+			satelliteWorldMatrix = XMMatrixTranslation(1.0f, 0, 1.0f)*satelliteWorldMatrix;
+			satelliteWorldMatrix = XMMatrixRotationY((float)xTimer.TotalTime() / 5.0f) *satelliteWorldMatrix;
+			satelliteWorldMatrix = XMMatrixRotationX((float)xTimer.TotalTime() / 10.0f) *satelliteWorldMatrix;
+
+			space_satellite->SetPosition(satelliteWorldMatrix, cb, myConstantBuffer);
+			space_satellite->RenderIndexed();
 
 			rightBottomRTT->EndRender(myContext, myRenderTargetView, myDepthStencilView);
 
