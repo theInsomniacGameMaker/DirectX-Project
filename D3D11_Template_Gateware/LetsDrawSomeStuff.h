@@ -198,6 +198,9 @@ public:
 	void RenderTransparentObjects();
 	//Desert Scene
 	void RenderDesertScene();
+	//Space Scene
+	void RenderSpaceScene();
+
 
 };
 
@@ -767,8 +770,12 @@ void LetsDrawSomeStuff::Render()
 			lCb.lights[2].Color = XMFLOAT4(0, 0, 0, 0);
 			lCb.lights[3].Color = XMFLOAT4(0, 0, 0, 0);
 			lCb.lights[4].Color = XMFLOAT4(0, 0, 0, 0);
-			//lCb.lights[5].Color = XMFLOAT4(0, 0, 0, 0);
-			lCb.lights[5].Direction.x = 0.575f;
+			
+			lCb.lights[0].Position = XMFLOAT4(0, 0, 0, 2);
+			lCb.lights[0].Color = XMFLOAT4(0.95f, 0.85f, 0.69f, 1);
+			lCb.lights[0].Range.x = 100.0f;
+
+			lCb.lights[5].Direction.x = 0.01f;
 			myContext->UpdateSubresource(myLightConstantBuffer, 0, nullptr, &lCb, 0, 0);
 
 
@@ -1430,4 +1437,8 @@ inline void LetsDrawSomeStuff::RenderDesertScene()
 
 	desert_humvee->SetLocalRotation(XMVECTOR{ -1.79f,0,36.59f }, cb, myConstantBuffer, 9.73f);
 	desert_humvee->RenderIndexedWithAO();
+}
+
+inline void LetsDrawSomeStuff::RenderSpaceScene()
+{
 }
