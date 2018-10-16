@@ -46,11 +46,6 @@ float4 main(PS_INPUT input) : SV_Target
 		baseTexture = float4(0.5f, 0.5f, 0.5f, 1);
 	}
 
-	if (emissiveTexture.r >= 0.8f)
-	{
-		emissiveTexture.r = 1;
-	}
-
 	for (int i = 0; i < 6; i++)
 	{
 		if (lights[i].Position.w == 0)

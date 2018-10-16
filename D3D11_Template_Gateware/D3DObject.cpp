@@ -256,6 +256,84 @@ D3DObject::D3DObject(string fileName, float scale, CComPtr<ID3D11Device>& myDevi
 
 }
 
+D3DObject::D3DObject(string fileName, float scale, CComPtr<ID3D11Device>& myDevice,
+	CComPtr<ID3D11DeviceContext>& myContext, CComPtr<ID3D11VertexShader>& vertexShader,
+	CComPtr<ID3D11PixelShader>& pixelShader, CComPtr<ID3D11GeometryShader>& geoShader,
+	CComPtr<ID3D11Buffer>& perObjectBuffer, string explicitTexture, string specTextureName, string emissiveTexName)
+{
+	m_Device = myDevice;
+	m_Context = myContext;
+	m_VertexShader = vertexShader;
+	m_PixelShader = pixelShader;
+	m_GeometryShader = geoShader;
+	m_PerObjectBuffer = perObjectBuffer;
+	m_Mesh = Mesh(fileName, scale, m_Device.p, m_TextureRV.p);
+
+	D3D11_BUFFER_DESC bd = {};
+	D3D11_SUBRESOURCE_DATA InitData = {};
+	stride[0] = sizeof(SimpleVertex);
+	offset[0] = 0;
+
+	//Desc Vertex Buffer
+	bd.Usage = D3D11_USAGE_DEFAULT;
+	bd.ByteWidth = sizeof(SimpleVertex) * m_Mesh.GetNumberOfVertices();
+	bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	bd.CPUAccessFlags = 0;
+
+	//Subresource
+	InitData.pSysMem = m_Mesh.GetVertices();
+
+	//Create Vertex Buffer
+	m_Device->CreateBuffer(&bd, &InitData, &m_VertexBuffer);
+
+	//Desc Index Buffer
+	bd.Usage = D3D11_USAGE_DEFAULT;
+	bd.ByteWidth = sizeof(int) * m_Mesh.GetNumberOfIndices();
+	bd.BindFlags = D3D11_BIND_INDEX_BUFFER;
+	bd.CPUAccessFlags = 0;
+
+	//Subresource
+	InitData.pSysMem = m_Mesh.GetIndices();
+
+	//Create Index Buffer
+	m_Device->CreateBuffer(&bd, &InitData, &m_IndexBuffer);
+
+	UpdateTexture(explicitTexture);
+
+
+	if (m_EmissiveTexture)
+	{
+		m_EmissiveTexture.Release();
+		m_EmissiveTexture = nullptr;
+	}
+	string emissveTextureName = "Assets\\" + emissiveTexName + ".dds";
+	std::wstring widestr = std::wstring(emissveTextureName.begin(), emissveTextureName.end());
+	const wchar_t* widecstr = widestr.c_str();
+	HRESULT hr = CreateDDSTextureFromFile(m_Device, widecstr, nullptr, &m_EmissiveTexture.p);
+
+	if (m_SpecTexture)
+	{
+		m_SpecTexture.Release();
+		m_SpecTexture = nullptr;
+	}
+	string specularTextureName = "Assets\\" + specTextureName + ".dds";
+	std::wstring widestr1 = std::wstring(specularTextureName.begin(), specularTextureName.end());
+	const wchar_t* widecstr1 = widestr1.c_str();
+	hr = CreateDDSTextureFromFile(m_Device, widecstr1, nullptr, &m_EmissiveTexture.p);
+
+	D3D11_RASTERIZER_DESC cmdesc;
+	ZeroMemory(&cmdesc, sizeof(D3D11_RASTERIZER_DESC));
+
+	cmdesc.FillMode = D3D11_FILL_SOLID;
+	cmdesc.CullMode = D3D11_CULL_BACK;
+
+	cmdesc.FrontCounterClockwise = true;
+	hr = m_Device->CreateRasterizerState(&cmdesc, &CCWcullMode);
+
+	cmdesc.FrontCounterClockwise = false;
+	hr = m_Device->CreateRasterizerState(&cmdesc, &CWcullMode);
+
+}
 
 void D3DObject::RenderIndexed()
 {
@@ -356,6 +434,19 @@ void D3DObject::RenderIndexedEmissive()
 	m_Context->GSSetShader(m_GeometryShader, nullptr, 0);
 	m_Context->PSSetShaderResources(0, 1, &m_TextureRV.p);
 	m_Context->PSSetShaderResources(1, 1, &m_SpecialTexture.p);
+	m_Context->IASetVertexBuffers(0, 1, &m_VertexBuffer.p, stride, offset);
+	m_Context->IASetIndexBuffer(m_IndexBuffer, DXGI_FORMAT_R32_UINT, 0);
+	m_Context->DrawIndexed(m_Mesh.GetNumberOfIndices(), 0, 0);
+}
+
+void D3DObject::RenderIndexedEmissiveSpec()
+{
+	m_Context->VSSetShader(m_VertexShader, nullptr, 0);
+	m_Context->PSSetShader(m_PixelShader, nullptr, 0);
+	m_Context->GSSetShader(m_GeometryShader, nullptr, 0);
+	m_Context->PSSetShaderResources(0, 1, &m_TextureRV.p);
+	m_Context->PSSetShaderResources(1, 1, &m_EmissiveTexture.p);
+	m_Context->PSSetShaderResources(2, 1, &m_SpecTexture.p);
 	m_Context->IASetVertexBuffers(0, 1, &m_VertexBuffer.p, stride, offset);
 	m_Context->IASetIndexBuffer(m_IndexBuffer, DXGI_FORMAT_R32_UINT, 0);
 	m_Context->DrawIndexed(m_Mesh.GetNumberOfIndices(), 0, 0);

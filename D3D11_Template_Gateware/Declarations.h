@@ -35,6 +35,7 @@ using namespace std;
 #include "PS_Emissive.csh"
 #include "PS_TransparentRejector.csh"
 #include "PS_AmbientOcculusion.csh"
+#include "PS_SpecularEmissive.csh"
 #include "GS_PointToQuad.csh"
 #include "GS_Instancer.csh"
 

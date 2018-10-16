@@ -48,6 +48,7 @@ class LetsDrawSomeStuff
 	CComPtr<ID3D11PixelShader>				myPixelShaderEmissive = nullptr;
 	CComPtr<ID3D11PixelShader>				myPixelShaderTransparentRejector = nullptr;
 	CComPtr<ID3D11PixelShader>				myPixelShaderAO = nullptr;
+	CComPtr<ID3D11PixelShader>				myPixelShaderSpecEmissive = nullptr;
 
 	//All Geometry Shaders
 	CComPtr<ID3D11GeometryShader>			myGeometryShaderPoint = nullptr;
@@ -86,11 +87,13 @@ class LetsDrawSomeStuff
 	//Quad that is on a screen to appl Post Processing
 	ScreenQuad*		screenQuad;
 	ScreenQuad*		screenQuadRightTop;
+	ScreenQuad*		screenQuadRightBottom;
 
 	//RTT variables
 	TextureRenderer*	textureRenderer;
 	TextureRenderer*	mainTextureRenderer;
 	TextureRenderer*	rightTopRTT;
+	TextureRenderer*	rightBottomRTT;
 
 	//All 3D Objects 
 	D3DObject*		feraligtr;
@@ -117,14 +120,24 @@ class LetsDrawSomeStuff
 	D3DObject*		desert_containerGreen;
 	D3DObject*		desert_well;
 	D3DObject*		desert_barrel;
-	//D3DObject*		desert_largeRock;
 	D3DObject*		desert_light;
 	D3DObject*		desert_tireWall;
 	D3DObject*		desert_pressureTank;
 	D3DObject*		desert_barrier;
 	D3DObject*		desert_crate;
 	D3DObject*		desert_ground;
+	D3DObject*		desert_humvee;
 
+	D3DObject*		space_Sun;
+	D3DObject*		space_planetMercury;
+	D3DObject*		space_planetVenus;
+	D3DObject*		space_planetEarth;
+	D3DObject*		space_planetMars;
+	D3DObject*		space_planetJupiter;
+	D3DObject*		space_planetSaturnRing;
+	D3DObject*		space_planetSaturn;
+	D3DObject*		space_planetUranus;
+	D3DObject*		space_planetNeptune;
 
 	//Constant Buffers
 	InstanceConstantBuffer	iCb;
@@ -183,6 +196,8 @@ public:
 	void CreateBlendState();
 	//Sort the object according to the position from the camera
 	void RenderTransparentObjects();
+	//Desert Scene
+	void RenderDesertScene();
 
 };
 
@@ -280,9 +295,6 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			desert_barrel = new D3DObject("Barrel", 1, myDevice, myContext, myVertexShader,
 				myPixelShaderSpecular, nullGeometryShader, myConstantBuffer, "BlueBarrel_Albedo");
 
-			/*desert_largeRock = new D3DObject("Rocks", 1 / 35.0f, myDevice, myContext, myVertexShaderInstance,
-				myPixelShader, nullGeometryShader, myConstantBuffer, "Rocks_Albedo");*/
-
 			desert_light = new D3DObject("Light", 1 / 5.0f, myDevice, myContext, myVertexShaderInstance,
 				myPixelShaderEmissive, nullGeometryShader, myConstantBuffer, "Light_Albedo", "Light_Emissive", EMISSIVE);
 
@@ -301,6 +313,39 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			desert_ground = new D3DObject("Ground", 100.0f, myDevice, myContext, myVertexShader,
 				myPixelShader, nullGeometryShader, myConstantBuffer, "Ground_Albedo");
 
+			desert_humvee = new D3DObject("Humvee", 1 / 45.0f, myDevice, myContext, myVertexShader,
+				myPixelShaderAO, nullGeometryShader, myConstantBuffer, "Humvee_Albedo",
+				"Humvee_Occlusion", AMBIENTOCCULUSION);
+
+			space_planetMercury = new D3DObject("Planet", 1 / 70.f, myDevice, myContext, myVertexShader, myPixelShader,
+				nullGeometryShader, myConstantBuffer, "mercurymap");
+
+			space_planetVenus = new D3DObject("Planet", 1 / 55.0f, myDevice, myContext, myVertexShader, myPixelShader,
+				nullGeometryShader, myConstantBuffer, "venusmap");
+
+			space_planetEarth = new D3DObject("Planet", 1/50.f, myDevice, myContext, myVertexShader, myPixelShaderSpecEmissive,
+				nullGeometryShader, myConstantBuffer, "earthmap1k","earthspec1k" ,"earthlights1k");
+
+			space_planetMars = new D3DObject("Planet", 1 / 45.0f, myDevice, myContext, myVertexShader, myPixelShader,
+				nullGeometryShader, myConstantBuffer, "marsmap");
+
+			space_planetJupiter = new D3DObject("Planet", 1 / 20.0f, myDevice, myContext, myVertexShader, myPixelShader,
+				nullGeometryShader, myConstantBuffer, "jupitermap");
+
+			space_planetSaturn = new D3DObject("Planet", 1 / 30.0f, myDevice, myContext, myVertexShader, myPixelShader,
+				nullGeometryShader, myConstantBuffer, "saturnmap");
+
+			space_planetSaturnRing = new D3DObject("Planet_Ring", 1 / 30.0f, myDevice, myContext, myVertexShader, myPixelShader,
+				nullGeometryShader, myConstantBuffer, "saturnmap");
+
+			space_planetUranus = new D3DObject("Planet", 1 / 35.0f, myDevice, myContext, myVertexShader, myPixelShader,
+				nullGeometryShader, myConstantBuffer, "uranusmap");
+
+			space_planetNeptune = new D3DObject("Planet", 1 / 40.0f, myDevice, myContext, myVertexShader, myPixelShader,
+				nullGeometryShader, myConstantBuffer, "neptunemap");
+
+			space_Sun = new D3DObject("Planet", 1 / 10.f, myDevice, myContext, myVertexShader, myPixelShaderEmissive,
+				nullGeometryShader, myConstantBuffer, "8k_sun", "8k_sun",EMISSIVE);
 
 			plant = new D3DObject("Parviflora", 1.0f / 15.0f, myDevice, myContext, myVertexShader, myPixelShaderTransparentRejector, nullGeometryShader, myConstantBuffer);
 			plant->UpdateTexture("Parviflora_diffuse");
@@ -313,6 +358,10 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			transparentObjects[1]->UpdateTexture("Energy1");
 			transparentObjects[2]->UpdateTexture("Energy");
 
+			textureRenderer = new TextureRenderer(myDevice, width, height);
+			mainTextureRenderer = new TextureRenderer(myDevice, width, height);
+			rightTopRTT = new TextureRenderer(myDevice, width, height);
+			rightBottomRTT = new TextureRenderer(myDevice, width, height);
 
 			XMFLOAT3 positions[4];
 			positions[0] = XMFLOAT3(-1, 1, 0);
@@ -327,9 +376,6 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 
 			screenQuad = new ScreenQuad(myDevice, myContext, myVertexShaderScreenSpace, myPixelShaderNoLighting, nullGeometryShader, positions);
 
-			textureRenderer = new TextureRenderer(myDevice, width, height);
-			mainTextureRenderer = new TextureRenderer(myDevice, width, height);
-			rightTopRTT = new TextureRenderer(myDevice, width, height);
 
 			positions[0] = XMFLOAT3(0, 1, 0);
 			positions[1] = XMFLOAT3(1, 1, 0);
@@ -342,6 +388,18 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			//positions[3] = XMFLOAT3(1, -1, 0);
 
 			screenQuadRightTop = new ScreenQuad(myDevice, myContext, myVertexShaderScreenSpace, myPixelShaderNoLighting, nullGeometryShader, positions);
+
+			positions[0] = XMFLOAT3(0, 1-1, 0);
+			positions[1] = XMFLOAT3(1, 1-1, 0);
+			positions[2] = XMFLOAT3(0, 0-1, 0);
+			positions[3] = XMFLOAT3(1, 0-1, 0);
+
+			positions[0] = XMFLOAT3(-1, 1, 0);
+			positions[1] = XMFLOAT3(1, 1, 0);
+			positions[2] = XMFLOAT3(-1, -1, 0);
+			positions[3] = XMFLOAT3(1, -1, 0);
+
+			screenQuadRightBottom = new ScreenQuad(myDevice, myContext, myVertexShaderScreenSpace, myPixelShaderNoLighting, nullGeometryShader, positions);
 
 			myContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
@@ -445,6 +503,7 @@ LetsDrawSomeStuff::~LetsDrawSomeStuff()
 	delete desert_barrier;
 	delete desert_crate;
 	delete desert_ground;
+	delete desert_humvee;
 
 	for (int i = 0; i < transparentObjects.size(); i++)
 	{
@@ -668,165 +727,93 @@ void LetsDrawSomeStuff::Render()
 			mainTextureRenderer->pResView = { nullptr };
 			myContext->PSSetShaderResources(0, 1, &mainTextureRenderer->pResView.p);
 
-			//Start rendering the right top of the screen
-			
+			////Start rendering the right top of the screen
 			rightTopRTT->Clear(myContext, myDepthStencilView, XMFLOAT4(0, 0, 0, 1));
 			rightTopRTT->BeginRender(myContext, myRenderTargetView);
 
-			lCb.lights[0].Position = XMFLOAT4(0, 0, 0, 1);
-			lCb.lights[0].Direction = XMFLOAT4(-0.577f, 0.577f, -0.577f, 1.0f);
-			lCb.lights[0].Color = XMFLOAT4(0.95f/3.0f, 0.85f/3.0f, 0.69f/3.0f, 1);
-
-			lCb.lights[1].Position = XMFLOAT4(-0.8471255f, 1.361888f*4.0f, -1.361888f, 3);
-			lCb.lights[1].Direction = XMFLOAT4(0.88f-0.830f, 0, 0.56f+4.19f, 10.0f);
-			lCb.lights[1].Range.x = 0.9f;
-			lCb.lights[1].Range.y = 0.8f;
-			lCb.lights[1].Range.z = 70.0f;
-			lCb.lights[1].Color = XMFLOAT4(1, 1, 1, 1); 
-
-			lCb.lights[2].Position = XMFLOAT4(-12.82835f + 56.25, 4, 7.0f - 10.55, 3);
-			lCb.lights[2].Direction = XMFLOAT4(-16, 0, -0.208, 10.0f);
-			lCb.lights[2].Range.x = 0.9f;
-			lCb.lights[2].Range.y = 0.8f;
-			lCb.lights[2].Range.z =70;
-			lCb.lights[2].Color = XMFLOAT4(1, 1, 1, 1);
-
-			lCb.lights[3].Position = XMFLOAT4(1.131 + 3.230f - 11.07, 0, -18.629 - 23.8819f + 4.38, 3);
-			lCb.lights[3].Direction = XMFLOAT4(3.731, 0, 3.671, 10.0f);
-			lCb.lights[3].Range.x = 0.9f;
-			lCb.lights[3].Range.y = 0.8f;
-			lCb.lights[3].Range.z = 70;
-			lCb.lights[3].Color = XMFLOAT4(1, 1, 1, 1);
-
-			lCb.lights[4].Color = XMFLOAT4(0, 0, 0, 0);
-
-			lCb.lights[5].Position.w = 0;
-			lCb.lights[5].Color = XMFLOAT4(1, 1, 1, 1);
-			lCb.lights[5].Direction.x = 0.15f;
-
-			myContext->UpdateSubresource(myLightConstantBuffer, 0, nullptr, &lCb, 0, 0);
-
-
-			skyBox->UpdateTexture("DesertSkyBox");
-			skyBox->SetPosition(Eye, cb, myConstantBuffer);
-			skyBox->RenderIndexed();
-			rightTopRTT->ClearDPV(myContext);
-
-			//myContext->ClearDepthStencilView(myDepthStencilView, D3D11_CLEAR_DEPTH, 1, 0); // clear it to Z exponential Far.
-
-			desert_ground->SetPosition(XMVECTOR{ 0,0,0,0 }, cb, myConstantBuffer);
-			desert_ground->RenderIndexed();
-
-			iCb.worldArray[0] = MakeWorldMatrix(-3.46f - 31.8729f+19.3f, 0, 5.7 + 33.86f + 1.88f, 0, -90 + 39.0f, 0);
-			iCb.worldArray[1] = MakeWorldMatrix(-17.0f, 0, -3.1, 0, 72, 0);
-			iCb.worldArray[2] = MakeWorldMatrix(19.17, 0, 5.09, 0, 72, 0);
-			myContext->UpdateSubresource(myInstanceConstantBuffer, 0, nullptr, &iCb, 0, 0);
-			desert_house1->RenderInstanced(3, myInstanceConstantBuffer);
-
-			//Rendering Palm Tree 1
-			iCb.worldArray[0] = MakeWorldMatrix(-17.6f, 0, -26.4, 16, 65, 0);
-			iCb.worldArray[1] = MakeWorldMatrix(3.9f+8.18f, 0, -12.0f-3.38f, 16, 72, 0);
-			iCb.worldArray[2] = MakeWorldMatrix(-8, 0, 4.65, 16, 72, 0);
-			iCb.worldArray[3] = MakeWorldMatrix(7.7, 0, -33, 16, 125.28, 0);
-			iCb.worldArray[4] = MakeWorldMatrix(-13.73f, 0, 32.23f, 16, 125.28, 0);
-			myContext->UpdateSubresource(myInstanceConstantBuffer, 0, nullptr, &iCb, 0, 0);
-
-			desert_palmtree2->RenderInstanced(5, myInstanceConstantBuffer);
-
-
-			//Rendering Palm Tree 2
-			iCb.worldArray[0] = MakeWorldMatrix(-10.6f, 0, -43, 0, 152, 0);
-			iCb.worldArray[1] = MakeWorldMatrix(3.9f, 0, -39, 0, 152, 0);
-			iCb.worldArray[2] = MakeWorldMatrix(20+11.62f, 0, -1.5f-30.29f, 0, 152, 0);
-			iCb.worldArray[3] = MakeWorldMatrix(10+21.3116, 0, -8+42.9204, 0, 152, 0);
-			iCb.worldArray[4] = MakeWorldMatrix(0.6+40.6197, 0, -16, 0, 152, 0);
-			iCb.worldArray[5] = MakeWorldMatrix(-0.6+31.7339f, 0, -4+16.8939f, 0, 152, 0);
-			iCb.worldArray[6] = MakeWorldMatrix(-24.6, 0, -9, 0, 152, 0);
-			iCb.worldArray[7] = MakeWorldMatrix(-4.56, 0, -6, 0, 152, 0);
-			iCb.worldArray[8] = MakeWorldMatrix(-18, 0, -8, 0, 152, 0);
-			iCb.worldArray[9] = MakeWorldMatrix(-7.6-22.5094, 0, -19+46.39, 0, 152, 0);
-			myContext->UpdateSubresource(myInstanceConstantBuffer, 0, nullptr, &iCb, 0, 0);
-			desert_palmtree1->RenderInstanced(10, myInstanceConstantBuffer);
-
-			//Rendering House2
-			iCb.worldArray[0] = MakeWorldMatrix(7.72f*2.0f+11.211, 0, -12 * 2.0f+4.010, 0, 90+27.0f, 0);
-			iCb.worldArray[1] = MakeWorldMatrix(3.9f*3.2f, 0, 21+6.62f, 0, 37, 0);
-			iCb.worldArray[2] = MakeWorldMatrix(0.32f*1.75, 0, -18.94*0.8, 0, 109, 0);
-			myContext->UpdateSubresource(myInstanceConstantBuffer, 0, nullptr, &iCb, 0, 0);
-			desert_house2->RenderInstanced(3, myInstanceConstantBuffer);
-
-			desert_containerRed->SetLocalRotation(XMVECTOR{ -13.31f - 6.28f + 0.1187f,3.18f - 8.4151f,12.44f + 11.60f - 6.334f }, cb, myConstantBuffer, XMConvertToRadians(76.61f));
-			desert_containerRed->RenderIndexed();
-
-			desert_containerBlue->SetLocalRotation(XMVECTOR{ -22.83f,-16.0f + 3.51f,14.04f }, cb, myConstantBuffer, XMConvertToRadians(126.4f));
-			desert_containerBlue->RenderIndexed();
-
-			desert_containerGreen->SetLocalRotation(XMVECTOR{ -9.93f-5.841,-16.0f + 3.51f,13.7f+7.8384 }, cb, myConstantBuffer, XMConvertToRadians(151.615f));
-			desert_containerGreen->RenderIndexed();
-
-			desert_well->SetLocalRotation(XMVECTOR{ -6.112831f+5.8945f,0,-11.38f-17.792f }, cb, myConstantBuffer, 0, 90, 0);
-			desert_well->RenderIndexed();
-
-			desert_barrel->SetPosition(XMVECTOR{ -11.70,1.5f,-17.49 }, cb, myConstantBuffer);
-			desert_barrel->RenderIndexed();
-
-			desert_barrel->SetPosition(XMVECTOR{ 4.118042,1.5f,9.440564 }, cb, myConstantBuffer);
-			desert_barrel->RenderIndexed();
-			desert_barrel->UpdateTexture("RedBarrel_Albedo");
-			
-			desert_barrel->SetPosition(XMVECTOR{ -4.359656f, 1.5f,8.526803f }, cb, myConstantBuffer);
-			desert_barrel->RenderIndexed();
-
-			desert_barrel->SetLocalRotation(XMVECTOR{ 1.32f - 2, 1.5f + 7.5f,-18.034f + 6 }, cb, myConstantBuffer, 90.0f);
-			desert_barrel->RenderIndexed();
-
-			iCb.worldArray[0] = MakeWorldMatrix(-0.8471255f, 0, -1.361888f, 0, -95.97501f, 0);
-			//iCb.worldArray[0] = MakeWorldMatrix(sin(xTimer.TotalTime()), 0, -1.361888f, 0, -95.97501f, 0);
-			//may have to change orientation of the one below
-			iCb.worldArray[1] = MakeWorldMatrix(-12.82835f+56.25, 0, 7.0f-10.55, 0, -150-26.774, 0);
-			iCb.worldArray[2] = MakeWorldMatrix(1.131+3.230f-11.07, 0, -18.629-23.8819f+4.38, 0, -213.068+129.22+36.62, 0);
-			iCb.worldArray[3] = MakeWorldMatrix(12.0f, 0, -25.33, 0, 0, 0);
-			iCb.worldArray[4] = MakeWorldMatrix(-12.69f, 0, -24, 0, 0, 0);
-			myContext->UpdateSubresource(myInstanceConstantBuffer, 0, nullptr, &iCb, 0, 0);
-			desert_light->RenderIndexedEmissiveInstanced(3, myInstanceConstantBuffer);
-
-			iCb.worldArray[0] = MakeWorldMatrix(1.985f+9.946f, 0, -5.46+21.096f, 0, 24.397, 0);
-			iCb.worldArray[1] = MakeWorldMatrix(3.55f+26.7051f, 0, -12.83+2.10, 0, -5.603+117.6, 0);
-			iCb.worldArray[2] = MakeWorldMatrix(-13.78f, 0, -10, 0, -88, 0);
-			myContext->UpdateSubresource(myInstanceConstantBuffer, 0, nullptr, &iCb, 0, 0);
-			desert_tireWall->RenderIndexedEmissiveInstanced(3, myInstanceConstantBuffer);
-
-			iCb.worldArray[0] = MakeWorldMatrix(-12.61, 0, -1.656, 0, -18.7, 0);
-			iCb.worldArray[1] = MakeWorldMatrix(19.4452f, 5.968f, 0.9f, 0, -15.1244f, 0);
-			iCb.worldArray[2] = MakeWorldMatrix(23.51, 5.96, -23.66, 0, 29.47, 0);
-			myContext->UpdateSubresource(myInstanceConstantBuffer, 0, nullptr, &iCb, 0, 0);
-			desert_pressureTank->RenderInstanced(3,myInstanceConstantBuffer);
-
-			iCb.worldArray[0] = MakeWorldMatrix(0, 0, 42.8, 0, 0, 0);
-			iCb.worldArray[1] = MakeWorldMatrix(5.89, 0, 41.5, 0, 25, 0);
-			iCb.worldArray[2] = MakeWorldMatrix(14.74f, 0, -11.0f, 0, -27.536, 0);
-			iCb.worldArray[3] = MakeWorldMatrix(-19.28f, 0, -18.37f, 0, 61.123f, 0);
-			iCb.worldArray[4] = MakeWorldMatrix(24.89, 2.723, 18.91,94.3+10.781 ,76.03f+180, 0);
-			iCb.worldArray[5] = MakeWorldMatrix(-1.72, 0, 26.07f, 0, 0, 0);
-			iCb.worldArray[6] = MakeWorldMatrix(-1.72-7.0f, 0, 26.07f-1.87f, 0, -38.2752, 0);
-			myContext->UpdateSubresource(myInstanceConstantBuffer, 0, nullptr, &iCb, 0, 0);
-			desert_barrier->RenderInstanced(7, myInstanceConstantBuffer);
-
-
-			iCb.worldArray[0] = MakeWorldMatrix(6.4f, 0, 23.5, 0, 32.5, 0);
-			iCb.worldArray[1] = MakeWorldMatrix(6.4f+1.39f, 0, 23.5-0.85, 0, 32.5+3.28, 0);
-			iCb.worldArray[2] = MakeWorldMatrix(6.4f+0.6190, 0+1.57, 23.5-0.24f, 0, 32.5, 0);
-			iCb.worldArray[3] = MakeWorldMatrix(-5.189f, 0, -11.42f, 0, 18.028f, 0);
-			myContext->UpdateSubresource(myInstanceConstantBuffer, 0, nullptr, &iCb, 0, 0);
-			desert_crate->RenderInstanced(4, myInstanceConstantBuffer);
-
+			RenderDesertScene();
 
 			rightTopRTT->EndRender(myContext, myRenderTargetView, myDepthStencilView);
 
 			screenQuadRightTop->UpdateTexture(rightTopRTT->pCTexture);
-			//screenQuadRightTop->Render();
+			screenQuadRightTop->Render();
+
 			rightTopRTT->pResView = { nullptr };
 			myContext->PSSetShaderResources(0, 1, &mainTextureRenderer->pResView.p);
+
+
+			rightBottomRTT->Clear(myContext, myDepthStencilView, XMFLOAT4(1, 0, 1, 0));
+			rightBottomRTT->BeginRender(myContext, myRenderTargetView);
+
+			lCb.lights[0].Color = XMFLOAT4(0, 0, 0, 0);
+			lCb.lights[1].Color = XMFLOAT4(0, 0, 0, 0);
+			lCb.lights[2].Color = XMFLOAT4(0, 0, 0, 0);
+			lCb.lights[3].Color = XMFLOAT4(0, 0, 0, 0);
+			lCb.lights[4].Color = XMFLOAT4(0, 0, 0, 0);
+			//lCb.lights[5].Color = XMFLOAT4(0, 0, 0, 0);
+			lCb.lights[5].Direction.x = 0.575f;
+			myContext->UpdateSubresource(myLightConstantBuffer, 0, nullptr, &lCb, 0, 0);
+
+			spaceShip->SetPosition(XMVECTOR{ A,B,10+C }, cb, myConstantBuffer);
+			spaceShip->UpdatePS(myPixelShader);
+			spaceShip->RenderIndexed();
+
+			skyBox->UpdateTexture("StarField");
+			skyBox->SetPosition(Eye, cb, myConstantBuffer);
+			skyBox->RenderIndexed();
+			rightBottomRTT->ClearDPV(myContext);
+
+			space_Sun->SetPosition(XMMatrixTranspose(MakeWorldMatrix(0, 0, 0, 0, (float)xTimer.TotalTime(), 0)),
+				cb, myConstantBuffer);
+			space_Sun->RenderIndexedEmissive();
+
+			space_planetMercury->SetPosition(XMMatrixTranspose(MakeWorldMatrix(0, 0, 7.0f, 0, (float)xTimer.TotalTime() * 80, 0))
+				*XMMatrixRotationY(-xTimer.TotalTime() * 0.47f), cb, myConstantBuffer);
+			space_planetMercury->RenderIndexed();
+
+			space_planetVenus->SetPosition(XMMatrixTranspose(MakeWorldMatrix(0, 0, 12.0f, 0, (float)xTimer.TotalTime() * 80, 0))
+				*XMMatrixRotationY(-xTimer.TotalTime() * 0.32f), cb, myConstantBuffer);
+			space_planetVenus->RenderIndexed();
+
+			space_planetEarth->SetPosition(XMMatrixTranspose(MakeWorldMatrix(0, 0, 18, 0, (float)xTimer.TotalTime() * 50, 0))
+				*XMMatrixRotationY(-xTimer.TotalTime() * 0.3f), cb, myConstantBuffer);
+			space_planetEarth->RenderIndexedEmissiveSpec();
+
+			space_planetMars->SetPosition(XMMatrixTranspose(MakeWorldMatrix(0, 0, 25.0f, 0, (float)xTimer.TotalTime() * 80, 0))
+				*XMMatrixRotationY(-xTimer.TotalTime() * 0.24f), cb, myConstantBuffer);
+			space_planetMars->RenderIndexed();
+
+			space_planetJupiter->SetPosition(XMMatrixTranspose(MakeWorldMatrix(0, 0, 32.0f, 0, (float)xTimer.TotalTime() * 80, 0))
+				*XMMatrixRotationY(-xTimer.TotalTime() * 0.13f), cb, myConstantBuffer);
+			space_planetJupiter->RenderIndexed();
+
+			space_planetSaturn->SetPosition(XMMatrixTranspose(MakeWorldMatrix(0, 0, 39.0f, 0, (float)xTimer.TotalTime() * 80, 0))
+				*XMMatrixRotationY(-xTimer.TotalTime() * 0.1f), cb, myConstantBuffer);
+			space_planetSaturn->RenderIndexed();
+
+			space_planetSaturnRing->SetPosition(space_planetSaturn->GetPosition(), cb, myConstantBuffer);
+			space_planetSaturnRing->RenderIndexed();
+
+			space_planetUranus->SetPosition(XMMatrixTranspose(MakeWorldMatrix(0, 0, 46.0f, 0, (float)xTimer.TotalTime() * 80, 0))
+				*XMMatrixRotationY(-xTimer.TotalTime() * 0.07f), cb, myConstantBuffer);
+			space_planetUranus->RenderIndexed();
+
+			space_planetNeptune->SetPosition(XMMatrixTranspose(MakeWorldMatrix(0, 0, 55.0f, 0, (float)xTimer.TotalTime() * 80, 0))
+				*XMMatrixRotationY(-xTimer.TotalTime() * 0.05f), cb, myConstantBuffer);
+			space_planetNeptune->RenderIndexed();
+
+
+
+
+
+			rightBottomRTT->EndRender(myContext, myRenderTargetView, myDepthStencilView);
+
+			screenQuadRightBottom->UpdateTexture(rightBottomRTT->pCTexture);
+			screenQuadRightBottom->Render();
+
+			rightBottomRTT->pResView = { nullptr };
+			myContext->PSSetShaderResources(0, 1, &mainTextureRenderer->pResView.p);
+
 
 			// Present Backbuffer using Swapchain object
 			// Framerate is currently unlocked, we suggest "MSI Afterburner" to track your current FPS and memory usage.
@@ -1135,6 +1122,7 @@ void LetsDrawSomeStuff::CreateShaders()
 	hr = myDevice->CreatePixelShader(PS_Emissive, sizeof(PS_Emissive), nullptr, &myPixelShaderEmissive);
 	hr = myDevice->CreatePixelShader(PS_TransparentRejector, sizeof(PS_TransparentRejector), nullptr, &myPixelShaderTransparentRejector);
 	hr = myDevice->CreatePixelShader(PS_AmbientOcculusion, sizeof(PS_AmbientOcculusion), nullptr, &myPixelShaderAO);
+	hr = myDevice->CreatePixelShader(PS_SpecularEmissive, sizeof(PS_SpecularEmissive), nullptr, &myPixelShaderSpecEmissive);
 
 	hr = myDevice->CreateGeometryShader(GS_PointToQuad, sizeof(GS_PointToQuad), nullptr, &myGeometryShaderPoint);
 	hr = myDevice->CreateGeometryShader(GS_Instancer, sizeof(GS_Instancer), nullptr, &myGeometryShaderTriangle);
@@ -1242,7 +1230,7 @@ void LetsDrawSomeStuff::RenderTransparentObjects()
 				distances[j] = distances[j + 1];
 				distances[j + 1] = tempF;
 
-				float tempI = indices[j];
+				int tempI = indices[j];
 				indices[j] = indices[j + 1];
 				indices[j + 1] = tempI;
 			}
@@ -1254,4 +1242,156 @@ void LetsDrawSomeStuff::RenderTransparentObjects()
 		//transparentObjects[indices[i]]->SetLocalRotation(transparentObjects[i]->GetPosition(), cb, myConstantBuffer, (float)sin(xTimer.TotalTime()));
 		transparentObjects[indices[i]]->PositionRenderIndexedTransparent(cb,myConstantBuffer);
 	}
+}
+
+inline void LetsDrawSomeStuff::RenderDesertScene()
+{
+
+	lCb.lights[0].Position = XMFLOAT4(0, 0, 0, 1.0f);
+	lCb.lights[0].Direction = XMFLOAT4(-0.577f, 0.577f, -0.577f, 1.0f);
+	lCb.lights[0].Color = XMFLOAT4(0.95f / 3.0f, 0.85f / 3.0f, 0.69f / 3.0f, 1);
+
+	lCb.lights[1].Position = XMFLOAT4(-0.8471255f, 1.361888f*4.0f, -1.361888f, 3);
+	lCb.lights[1].Direction = XMFLOAT4(0.88f - 0.830f, 0, 0.56f + 4.19f, 10.0f);
+	lCb.lights[1].Range.x = 0.9f;
+	lCb.lights[1].Range.y = 0.8f;
+	lCb.lights[1].Range.z = 70.0f;
+	lCb.lights[1].Color = XMFLOAT4(1, 1, 1, 1);
+
+	lCb.lights[2].Position = XMFLOAT4(-12.82835f + 56.25f, 4.0f, 7.0f - 10.55f, 3.0f);
+	lCb.lights[2].Direction = XMFLOAT4(-16.0f, 0.0f, -0.208f, 10.0f);
+	lCb.lights[2].Range.x = 0.9f;
+	lCb.lights[2].Range.y = 0.8f;
+	lCb.lights[2].Range.z = 70;
+	lCb.lights[2].Color = XMFLOAT4(1, 1, 1, 1);
+
+	lCb.lights[3].Position = XMFLOAT4(1.131f + 3.230f - 11.07f, 0, -18.629f - 23.8819f + 4.38f, 3.0f);
+	lCb.lights[3].Direction = XMFLOAT4(3.731f, 0, 3.671f, 10.0f);
+	lCb.lights[3].Range.x = 0.9f;
+	lCb.lights[3].Range.y = 0.8f;
+	lCb.lights[3].Range.z = 70;
+	lCb.lights[3].Color = XMFLOAT4(1, 1, 1, 1);
+
+	lCb.lights[4].Color = XMFLOAT4(0, 0, 0, 0);
+
+	lCb.lights[5].Position.w = 0;
+	lCb.lights[5].Color = XMFLOAT4(1, 1, 1, 1);
+	lCb.lights[5].Direction.x = 0.15f;
+
+	myContext->UpdateSubresource(myLightConstantBuffer, 0, nullptr, &lCb, 0, 0);
+
+
+	skyBox->UpdateTexture("DesertSkyBox");
+	skyBox->SetPosition(Eye, cb, myConstantBuffer);
+	skyBox->RenderIndexed();
+	rightTopRTT->ClearDPV(myContext);
+
+	//myContext->ClearDepthStencilView(myDepthStencilView, D3D11_CLEAR_DEPTH, 1, 0); // clear it to Z exponential Far.
+
+	desert_ground->SetPosition(XMVECTOR{ 0,0,0,0 }, cb, myConstantBuffer);
+	desert_ground->RenderIndexed();
+
+	iCb.worldArray[0] = MakeWorldMatrix(-3.46f - 31.8729f + 19.3f, 0.0f, 5.7f + 33.86f + 1.88f, 0, -90.0f + 39.0f, 0);
+	iCb.worldArray[1] = MakeWorldMatrix(-17.0f, 0, -3.1f, 0, 72.0f, 0);
+	iCb.worldArray[2] = MakeWorldMatrix(19.17f, 0, 5.09f, 0, 72.0f, 0);
+	myContext->UpdateSubresource(myInstanceConstantBuffer, 0, nullptr, &iCb, 0, 0);
+	desert_house1->RenderInstanced(3, myInstanceConstantBuffer);
+
+	//Rendering Palm Tree 1
+	iCb.worldArray[0] = MakeWorldMatrix(-17.6f, 0, -26.4f, 16.0f, 65.0f, 0);
+	iCb.worldArray[1] = MakeWorldMatrix(3.9f + 8.18f, 0, -12.0f - 3.38f, 16.0f, 72.0f, 0);
+	iCb.worldArray[2] = MakeWorldMatrix(-8.0f, 0, 4.65f, 16.0f, 72.0f, 0);
+	iCb.worldArray[3] = MakeWorldMatrix(7.7f, 0, -33.0f, 16.0f, 125.28f, 0);
+	iCb.worldArray[4] = MakeWorldMatrix(-13.73f, 0.0f, 32.23f, 16.0f, 125.28f, 0);
+	myContext->UpdateSubresource(myInstanceConstantBuffer, 0, nullptr, &iCb, 0, 0);
+
+	desert_palmtree2->RenderInstanced(5, myInstanceConstantBuffer);
+
+
+	//Rendering Palm Tree 2
+	iCb.worldArray[0] = MakeWorldMatrix(-10.6f, 0, -43, 0, 152, 0);
+	iCb.worldArray[1] = MakeWorldMatrix(3.9f, 0, -39, 0, 152, 0);
+	iCb.worldArray[2] = MakeWorldMatrix(20 + 11.62f, 0, -1.5f - 30.29f, 0, 152, 0);
+	iCb.worldArray[3] = MakeWorldMatrix(10.0f + 21.3116f, 0, -8.0f + 42.9204f, 0, 152.0f, 0);
+	iCb.worldArray[4] = MakeWorldMatrix(0.6f + 40.6197f, 0, -16.0f, 0, 152.0f, 0);
+	iCb.worldArray[5] = MakeWorldMatrix(-0.6f + 31.7339f, 0, -4 + 16.8939f, 0, 152.0f, 0);
+	iCb.worldArray[6] = MakeWorldMatrix(-24.6f, 0, -9.0f, 0, 152.0f, 0);
+	iCb.worldArray[7] = MakeWorldMatrix(-4.56f, 0, -6.0f, 0, 152.0f, 0);
+	iCb.worldArray[8] = MakeWorldMatrix(-18.0f, 0, -8.0f, 0, 152.0f, 0);
+	iCb.worldArray[9] = MakeWorldMatrix(-7.6f - 22.5094f, 0, -19.0f + 46.39f, 0, 152.0f, 0);
+	myContext->UpdateSubresource(myInstanceConstantBuffer, 0, nullptr, &iCb, 0, 0);
+	desert_palmtree1->RenderInstanced(10, myInstanceConstantBuffer);
+
+	//Rendering House2
+	iCb.worldArray[0] = MakeWorldMatrix(7.72f*2.0f + 11.211f, 0, -12 * 2.0f + 4.010f, 0, 90 + 27.0f, 0);
+	iCb.worldArray[1] = MakeWorldMatrix(3.9f*3.2f, 0, 21 + 6.62f, 0, 37, 0);
+	iCb.worldArray[2] = MakeWorldMatrix(0.32f*1.75f, 0, -18.94f*0.8f, 0, 109, 0);
+	myContext->UpdateSubresource(myInstanceConstantBuffer, 0, nullptr, &iCb, 0, 0);
+	desert_house2->RenderInstanced(3, myInstanceConstantBuffer);
+
+	desert_containerRed->SetLocalRotation(XMVECTOR{ -13.31f - 6.28f + 0.1187f,3.18f - 8.4151f,12.44f + 11.60f - 6.334f }, cb, myConstantBuffer, XMConvertToRadians(76.61f));
+	desert_containerRed->RenderIndexed();
+
+	desert_containerBlue->SetLocalRotation(XMVECTOR{ -22.83f,-16.0f + 3.51f,14.04f }, cb, myConstantBuffer, XMConvertToRadians(126.4f));
+	desert_containerBlue->RenderIndexed();
+
+	desert_containerGreen->SetLocalRotation(XMVECTOR{ -9.93f - 5.841f,-16.0f + 3.51f,13.7f + 7.8384f }, cb, myConstantBuffer, XMConvertToRadians(151.615f));
+	desert_containerGreen->RenderIndexed();
+
+	desert_well->SetLocalRotation(XMVECTOR{ -6.112831f + 5.8945f,0,-11.38f - 17.792f }, cb, myConstantBuffer, 0, 90, 0);
+	desert_well->RenderIndexed();
+
+	desert_barrel->SetPosition(XMVECTOR{ -11.70f,1.5f,-17.49f }, cb, myConstantBuffer);
+	desert_barrel->RenderIndexed();
+
+	desert_barrel->SetPosition(XMVECTOR{ 4.118042f,1.5f,9.440564f }, cb, myConstantBuffer);
+	desert_barrel->RenderIndexed();
+	desert_barrel->UpdateTexture("RedBarrel_Albedo");
+
+	desert_barrel->SetPosition(XMVECTOR{ -4.359656f, 1.5f,8.526803f }, cb, myConstantBuffer);
+	desert_barrel->RenderIndexed();
+
+	desert_barrel->SetLocalRotation(XMVECTOR{ 1.32f - 2, 1.5f + 7.5f,-18.034f + 6 }, cb, myConstantBuffer, 90.0f);
+	desert_barrel->RenderIndexed();
+
+	iCb.worldArray[0] = MakeWorldMatrix(-0.8471255f, 0, -1.361888f, 0, -95.97501f, 0);
+	iCb.worldArray[1] = MakeWorldMatrix(-12.82835f + 56.25f, 0, 7.0f - 10.55f, 0, -150 - 26.774f, 0);
+	iCb.worldArray[2] = MakeWorldMatrix(1.131f + 3.230f - 11.07f, 0, -18.629f - 23.8819f + 4.38f, 0, -213.068f + 129.22f + 36.62f, 0);
+	iCb.worldArray[3] = MakeWorldMatrix(12.0f, 0, -25.33f, 0, 0, 0);
+	iCb.worldArray[4] = MakeWorldMatrix(-12.69f, 0, -24, 0, 0, 0);
+	myContext->UpdateSubresource(myInstanceConstantBuffer, 0, nullptr, &iCb, 0, 0);
+	desert_light->RenderIndexedEmissiveInstanced(3, myInstanceConstantBuffer);
+
+	iCb.worldArray[0] = MakeWorldMatrix(1.985f + 9.946f, 0, -5.46f + 21.096f, 0, 24.397f, 0);
+	iCb.worldArray[1] = MakeWorldMatrix(3.55f + 26.7051f, 0, -12.83f + 2.10f, 0, -5.603f + 117.6f, 0);
+	iCb.worldArray[2] = MakeWorldMatrix(-13.78f, 0, -10, 0, -88, 0);
+	myContext->UpdateSubresource(myInstanceConstantBuffer, 0, nullptr, &iCb, 0, 0);
+	desert_tireWall->RenderIndexedEmissiveInstanced(3, myInstanceConstantBuffer);
+
+	iCb.worldArray[0] = MakeWorldMatrix(-12.61f, 0, -1.656f, 0, -18.7f, 0);
+	iCb.worldArray[1] = MakeWorldMatrix(19.4452f, 5.968f, 0.9f, 0, -15.1244f, 0);
+	iCb.worldArray[2] = MakeWorldMatrix(23.51f, 5.96f, -23.66f, 0, 29.47f, 0);
+	myContext->UpdateSubresource(myInstanceConstantBuffer, 0, nullptr, &iCb, 0, 0);
+	desert_pressureTank->RenderInstanced(3, myInstanceConstantBuffer);
+
+	iCb.worldArray[0] = MakeWorldMatrix(0, 0, 42.8f, 0, 0, 0);
+	iCb.worldArray[1] = MakeWorldMatrix(5.89f, 0, 41.5f, 0, 25, 0);
+	iCb.worldArray[2] = MakeWorldMatrix(14.74f, 0, -11.0f, 0, -27.536f, 0);
+	iCb.worldArray[3] = MakeWorldMatrix(-19.28f, 0, -18.37f, 0, 61.123f, 0);
+	iCb.worldArray[4] = MakeWorldMatrix(24.89f, 2.723f, 18.91f, 94.3f + 10.781f, 76.03f + 180, 0);
+	iCb.worldArray[5] = MakeWorldMatrix(-1.72f, 0, 26.07f, 0, 0, 0);
+	iCb.worldArray[6] = MakeWorldMatrix(-1.72f - 7.0f, 0, 26.07f - 1.87f, 0, -38.2752f, 0);
+	myContext->UpdateSubresource(myInstanceConstantBuffer, 0, nullptr, &iCb, 0, 0);
+	desert_barrier->RenderInstanced(7, myInstanceConstantBuffer);
+
+
+	iCb.worldArray[0] = MakeWorldMatrix(6.4f, 0, 23.5f, 0, 32.5f, 0);
+	iCb.worldArray[1] = MakeWorldMatrix(6.4f + 1.39f, 0, 23.5f - 0.85f, 0, 32.5f + 3.28f, 0);
+	iCb.worldArray[2] = MakeWorldMatrix(6.4f + 0.6190f, 0 + 1.57f, 23.5f - 0.24f, 0, 32.5f, 0);
+	iCb.worldArray[3] = MakeWorldMatrix(-5.189f, 0, -11.42f, 0, 18.028f, 0);
+	myContext->UpdateSubresource(myInstanceConstantBuffer, 0, nullptr, &iCb, 0, 0);
+	desert_crate->RenderInstanced(4, myInstanceConstantBuffer);
+
+	desert_humvee->SetLocalRotation(XMVECTOR{ -1.79f,0,36.59f }, cb, myConstantBuffer, 9.73f);
+	desert_humvee->RenderIndexedWithAO();
 }
