@@ -764,92 +764,7 @@ void LetsDrawSomeStuff::Render()
 
 			rightBottomRTT->Clear(myContext, myDepthStencilView, XMFLOAT4(1, 0, 1, 0));
 			rightBottomRTT->BeginRender(myContext, myRenderTargetView);
-
-			lCb.lights[0].Color = XMFLOAT4(0, 0, 0, 0);
-			lCb.lights[1].Color = XMFLOAT4(0, 0, 0, 0);
-			lCb.lights[2].Color = XMFLOAT4(0, 0, 0, 0);
-			lCb.lights[3].Color = XMFLOAT4(0, 0, 0, 0);
-			lCb.lights[4].Color = XMFLOAT4(0, 0, 0, 0);
-			
-			lCb.lights[0].Position = XMFLOAT4(0, 0, 0, 2);
-			lCb.lights[0].Color = XMFLOAT4(0.95f, 0.85f, 0.69f, 1);
-			lCb.lights[0].Range.x = 100.0f;
-
-			lCb.lights[5].Direction.x = 0.01f;
-			myContext->UpdateSubresource(myLightConstantBuffer, 0, nullptr, &lCb, 0, 0);
-
-
-
-			skyBox->UpdateTexture("StarField");
-			skyBox->SetPosition(Eye, cb, myConstantBuffer);
-			skyBox->RenderIndexed();
-			rightBottomRTT->ClearDPV(myContext);
-
-			space_Sun->SetPosition(XMMatrixTranspose(MakeWorldMatrix(0, 0, 0, 0, (float)xTimer.TotalTime(), 0)),
-				cb, myConstantBuffer);
-			space_Sun->RenderIndexedEmissive();
-
-			space_planetMercury->SetPosition(XMMatrixTranspose(MakeWorldMatrix(0, 0, 7.0f, 0, (float)xTimer.TotalTime() * 80, 0))
-				*XMMatrixRotationY((float)-xTimer.TotalTime() * 0.47f), cb, myConstantBuffer);
-			space_planetMercury->RenderIndexed();
-
-			space_planetVenus->SetPosition(XMMatrixTranspose(MakeWorldMatrix(0, 0, 12.0f, 0, (float)xTimer.TotalTime() * 80, 0))
-				*XMMatrixRotationY((float)-xTimer.TotalTime() * 0.32f), cb, myConstantBuffer);
-			space_planetVenus->RenderIndexed();
-
-			space_planetEarth->SetPosition(XMMatrixTranspose(MakeWorldMatrix(0, 0, 18, 0, (float)xTimer.TotalTime() * 50, 0))
-				*XMMatrixRotationY((float)-xTimer.TotalTime() * 0.3f), cb, myConstantBuffer);
-			space_planetEarth->RenderIndexedEmissive();
-
-			space_planetMars->SetPosition(XMMatrixTranspose(MakeWorldMatrix(0, 0, 25.0f, 0, (float)xTimer.TotalTime() * 80, 0))
-				*XMMatrixRotationY((float)-xTimer.TotalTime() * 0.24f), cb, myConstantBuffer);
-			space_planetMars->RenderIndexed();
-
-			space_planetJupiter->SetPosition(XMMatrixTranspose(MakeWorldMatrix(0, 0, 32.0f, 0, (float)xTimer.TotalTime() * 80, 0))
-				*XMMatrixRotationY((float)-xTimer.TotalTime() * 0.13f), cb, myConstantBuffer);
-			space_planetJupiter->RenderIndexed();
-
-			space_planetSaturn->SetPosition(XMMatrixTranspose(MakeWorldMatrix(0, 0, 39.0f, 0, (float)xTimer.TotalTime() * 80, 0))
-				*XMMatrixRotationY((float)-xTimer.TotalTime() * 0.1f), cb, myConstantBuffer);
-			space_planetSaturn->RenderIndexed();
-
-			space_planetSaturnRing->SetPosition(space_planetSaturn->GetPosition(), cb, myConstantBuffer);
-			space_planetSaturnRing->RenderIndexed();
-
-			space_planetUranus->SetPosition(XMMatrixTranspose(MakeWorldMatrix(0, 0, 46.0f, 0, (float)xTimer.TotalTime() * 80, 0))
-				*XMMatrixRotationY((float)-xTimer.TotalTime() * 0.07f), cb, myConstantBuffer);
-			space_planetUranus->RenderIndexed();
-
-			space_planetNeptune->SetPosition(XMMatrixTranspose(MakeWorldMatrix(0, 0, 55.0f, 0, (float)xTimer.TotalTime() * 80, 0))
-				*XMMatrixRotationY((float)-xTimer.TotalTime() * 0.05f), cb, myConstantBuffer);
-			space_planetNeptune->RenderIndexed();
-
-			XMMATRIX moonWorldMatrix= XMMatrixIdentity();
-			moonWorldMatrix = XMMatrixRotationY(xTimer.TotalTime()) *moonWorldMatrix;
-			moonWorldMatrix = moonWorldMatrix* XMMatrixTranslation(space_planetEarth->GetPosition().m128_f32[0],
-				space_planetEarth->GetPosition().m128_f32[1], 
-				space_planetEarth->GetPosition().m128_f32[2]);
-	
-			moonWorldMatrix = XMMatrixTranslation(0, 0, 2.5)*moonWorldMatrix;
-			moonWorldMatrix = XMMatrixRotationY((float)xTimer.TotalTime()/10.0f) *moonWorldMatrix;
-
-			space_moon->SetPosition(moonWorldMatrix, cb, myConstantBuffer);
-			space_moon->RenderIndexed();
-
-
-			XMMATRIX satelliteWorldMatrix = XMMatrixIdentity();
-			satelliteWorldMatrix = XMMatrixRotationY(xTimer.TotalTime()) *satelliteWorldMatrix;
-			satelliteWorldMatrix = satelliteWorldMatrix * XMMatrixTranslation(space_planetEarth->GetPosition().m128_f32[0],
-				space_planetEarth->GetPosition().m128_f32[1],
-				space_planetEarth->GetPosition().m128_f32[2]);
-
-			satelliteWorldMatrix = XMMatrixTranslation(1.0f, 0, 1.0f)*satelliteWorldMatrix;
-			satelliteWorldMatrix = XMMatrixRotationY((float)xTimer.TotalTime() / 5.0f) *satelliteWorldMatrix;
-			satelliteWorldMatrix = XMMatrixRotationX((float)xTimer.TotalTime() / 10.0f) *satelliteWorldMatrix;
-
-			space_satellite->SetPosition(satelliteWorldMatrix, cb, myConstantBuffer);
-			space_satellite->RenderIndexed();
-
+			RenderSpaceScene();
 			rightBottomRTT->EndRender(myContext, myRenderTargetView, myDepthStencilView);
 
 			screenQuadRightBottom->UpdateTexture(rightBottomRTT->pCTexture);
@@ -1441,4 +1356,90 @@ inline void LetsDrawSomeStuff::RenderDesertScene()
 
 inline void LetsDrawSomeStuff::RenderSpaceScene()
 {
+
+	lCb.lights[0].Color = XMFLOAT4(0, 0, 0, 0);
+	lCb.lights[1].Color = XMFLOAT4(0, 0, 0, 0);
+	lCb.lights[2].Color = XMFLOAT4(0, 0, 0, 0);
+	lCb.lights[3].Color = XMFLOAT4(0, 0, 0, 0);
+	lCb.lights[4].Color = XMFLOAT4(0, 0, 0, 0);
+
+	lCb.lights[0].Position = XMFLOAT4(0, 0, 0, 2);
+	lCb.lights[0].Color = XMFLOAT4(0.95f, 0.85f, 0.69f, 1);
+	lCb.lights[0].Range.x = 100.0f;
+
+	lCb.lights[5].Direction.x = 0.01f;
+	myContext->UpdateSubresource(myLightConstantBuffer, 0, nullptr, &lCb, 0, 0);
+
+
+
+	skyBox->UpdateTexture("StarField");
+	skyBox->SetPosition(Eye, cb, myConstantBuffer);
+	skyBox->RenderIndexed();
+	rightBottomRTT->ClearDPV(myContext);
+
+	space_Sun->SetPosition(XMMatrixTranspose(MakeWorldMatrix(0, 0, 0, 0, (float)xTimer.TotalTime(), 0)),
+		cb, myConstantBuffer);
+	space_Sun->RenderIndexedEmissive();
+
+	space_planetMercury->SetPosition(XMMatrixTranspose(MakeWorldMatrix(0, 0, 7.0f, 0, (float)xTimer.TotalTime() * 80, 0))
+		*XMMatrixRotationY((float)-xTimer.TotalTime() * 0.47f), cb, myConstantBuffer);
+	space_planetMercury->RenderIndexed();
+
+	space_planetVenus->SetPosition(XMMatrixTranspose(MakeWorldMatrix(0, 0, 12.0f, 0, (float)xTimer.TotalTime() * 80, 0))
+		*XMMatrixRotationY((float)-xTimer.TotalTime() * 0.32f), cb, myConstantBuffer);
+	space_planetVenus->RenderIndexed();
+
+	space_planetEarth->SetPosition(XMMatrixTranspose(MakeWorldMatrix(0, 0, 18, 0, (float)xTimer.TotalTime() * 50, 0))
+		*XMMatrixRotationY((float)-xTimer.TotalTime() * 0.3f), cb, myConstantBuffer);
+	space_planetEarth->RenderIndexedEmissive();
+
+	space_planetMars->SetPosition(XMMatrixTranspose(MakeWorldMatrix(0, 0, 25.0f, 0, (float)xTimer.TotalTime() * 80, 0))
+		*XMMatrixRotationY((float)-xTimer.TotalTime() * 0.24f), cb, myConstantBuffer);
+	space_planetMars->RenderIndexed();
+
+	space_planetJupiter->SetPosition(XMMatrixTranspose(MakeWorldMatrix(0, 0, 32.0f, 0, (float)xTimer.TotalTime() * 80, 0))
+		*XMMatrixRotationY((float)-xTimer.TotalTime() * 0.13f), cb, myConstantBuffer);
+	space_planetJupiter->RenderIndexed();
+
+	space_planetSaturn->SetPosition(XMMatrixTranspose(MakeWorldMatrix(0, 0, 39.0f, 0, (float)xTimer.TotalTime() * 80, 0))
+		*XMMatrixRotationY((float)-xTimer.TotalTime() * 0.1f), cb, myConstantBuffer);
+	space_planetSaturn->RenderIndexed();
+
+	space_planetSaturnRing->SetPosition(space_planetSaturn->GetPosition(), cb, myConstantBuffer);
+	space_planetSaturnRing->RenderIndexed();
+
+	space_planetUranus->SetPosition(XMMatrixTranspose(MakeWorldMatrix(0, 0, 46.0f, 0, (float)xTimer.TotalTime() * 80, 0))
+		*XMMatrixRotationY((float)-xTimer.TotalTime() * 0.07f), cb, myConstantBuffer);
+	space_planetUranus->RenderIndexed();
+
+	space_planetNeptune->SetPosition(XMMatrixTranspose(MakeWorldMatrix(0, 0, 55.0f, 0, (float)xTimer.TotalTime() * 80, 0))
+		*XMMatrixRotationY((float)-xTimer.TotalTime() * 0.05f), cb, myConstantBuffer);
+	space_planetNeptune->RenderIndexed();
+
+	XMMATRIX moonWorldMatrix = XMMatrixIdentity();
+	moonWorldMatrix = XMMatrixRotationY(xTimer.TotalTime()) *moonWorldMatrix;
+	moonWorldMatrix = moonWorldMatrix * XMMatrixTranslation(space_planetEarth->GetPosition().m128_f32[0],
+		space_planetEarth->GetPosition().m128_f32[1],
+		space_planetEarth->GetPosition().m128_f32[2]);
+
+	moonWorldMatrix = XMMatrixTranslation(0, 0, 2.5)*moonWorldMatrix;
+	moonWorldMatrix = XMMatrixRotationY((float)xTimer.TotalTime() / 10.0f) *moonWorldMatrix;
+
+	space_moon->SetPosition(moonWorldMatrix, cb, myConstantBuffer);
+	space_moon->RenderIndexed();
+
+
+	XMMATRIX satelliteWorldMatrix = XMMatrixIdentity();
+	satelliteWorldMatrix = XMMatrixRotationY(xTimer.TotalTime()) *satelliteWorldMatrix;
+	satelliteWorldMatrix = satelliteWorldMatrix * XMMatrixTranslation(space_planetEarth->GetPosition().m128_f32[0],
+		space_planetEarth->GetPosition().m128_f32[1],
+		space_planetEarth->GetPosition().m128_f32[2]);
+
+	satelliteWorldMatrix = XMMatrixTranslation(1.0f, 0, 1.0f)*satelliteWorldMatrix;
+	satelliteWorldMatrix = XMMatrixRotationY((float)xTimer.TotalTime() / 5.0f) *satelliteWorldMatrix;
+	satelliteWorldMatrix = XMMatrixRotationX((float)xTimer.TotalTime() / 10.0f) *satelliteWorldMatrix;
+
+	space_satellite->SetPosition(satelliteWorldMatrix, cb, myConstantBuffer);
+	space_satellite->RenderIndexed();
+
 }
