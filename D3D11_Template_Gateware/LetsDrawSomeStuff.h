@@ -48,7 +48,6 @@ class LetsDrawSomeStuff
 	CComPtr<ID3D11PixelShader>				myPixelShaderEmissive = nullptr;
 	CComPtr<ID3D11PixelShader>				myPixelShaderTransparentRejector = nullptr;
 	CComPtr<ID3D11PixelShader>				myPixelShaderAO = nullptr;
-	CComPtr<ID3D11PixelShader>				myPixelShaderSpecEmissive = nullptr;
 
 	//All Geometry Shaders
 	CComPtr<ID3D11GeometryShader>			myGeometryShaderPoint = nullptr;
@@ -110,7 +109,6 @@ class LetsDrawSomeStuff
 	D3DObject*		plant;
 
 	D3DObject*		humvee;
-	D3DObject*		closedSack;
 	D3DObject*		desert_house1;
 	D3DObject*		desert_house2;
 	D3DObject*		desert_palmtree1;
@@ -265,8 +263,6 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 				myPixelShader, nullGeometryShader, myConstantBuffer, "Humvee_Albedo",
 				"Humvee_Occlusion", AMBIENTOCCULUSION);
 
-			closedSack = new D3DObject("Closed_Sack", 1 / 50.0f, myDevice, myContext, myVertexShader,
-				myPixelShader, nullGeometryShader, myConstantBuffer, "Closed_Sack_Albedo");
 
 			desert_house1 = new D3DObject("House", 1 / 10.0f, myDevice, myContext, myVertexShaderInstance,
 				myPixelShader, nullGeometryShader, myConstantBuffer, "House_Albedo");
@@ -489,7 +485,6 @@ LetsDrawSomeStuff::~LetsDrawSomeStuff()
 	delete plant;
 
 	delete humvee;
-	delete closedSack;
 	delete desert_house1;
 	delete desert_house2;
 	delete desert_palmtree1;
@@ -701,10 +696,6 @@ void LetsDrawSomeStuff::Render()
 			humvee->SetLocalRotation(XMVECTOR{ 8,3,0 }, cb, myConstantBuffer, XMConvertToRadians(180.0f));
 			humvee->RenderIndexedWithAO();
 
-
-			closedSack->SetPosition(XMVECTOR{ 0,10,0.2f }, cb, myConstantBuffer);
-			//closedSack->RenderIndexed();
-
 			textureRenderer->MoveCamera(cb, myConstantBuffer, myContext);
 			textureRenderer->Clear(myContext, nullptr, XMFLOAT4(1, 1, 1, 1));
 			textureRenderer->BeginRender(myContext, mainTextureRenderer->pRenderTargetView);
@@ -781,38 +772,38 @@ void LetsDrawSomeStuff::Render()
 			space_Sun->RenderIndexedEmissive();
 
 			space_planetMercury->SetPosition(XMMatrixTranspose(MakeWorldMatrix(0, 0, 7.0f, 0, (float)xTimer.TotalTime() * 80, 0))
-				*XMMatrixRotationY(-xTimer.TotalTime() * 0.47f), cb, myConstantBuffer);
+				*XMMatrixRotationY((float)-xTimer.TotalTime() * 0.47f), cb, myConstantBuffer);
 			space_planetMercury->RenderIndexed();
 
 			space_planetVenus->SetPosition(XMMatrixTranspose(MakeWorldMatrix(0, 0, 12.0f, 0, (float)xTimer.TotalTime() * 80, 0))
-				*XMMatrixRotationY(-xTimer.TotalTime() * 0.32f), cb, myConstantBuffer);
+				*XMMatrixRotationY((float)-xTimer.TotalTime() * 0.32f), cb, myConstantBuffer);
 			space_planetVenus->RenderIndexed();
 
 			space_planetEarth->SetPosition(XMMatrixTranspose(MakeWorldMatrix(0, 0, 18, 0, (float)xTimer.TotalTime() * 50, 0))
-				*XMMatrixRotationY(-xTimer.TotalTime() * 0.3f), cb, myConstantBuffer);
+				*XMMatrixRotationY((float)-xTimer.TotalTime() * 0.3f), cb, myConstantBuffer);
 			space_planetEarth->RenderIndexedEmissiveSpec();
 
 			space_planetMars->SetPosition(XMMatrixTranspose(MakeWorldMatrix(0, 0, 25.0f, 0, (float)xTimer.TotalTime() * 80, 0))
-				*XMMatrixRotationY(-xTimer.TotalTime() * 0.24f), cb, myConstantBuffer);
+				*XMMatrixRotationY((float)-xTimer.TotalTime() * 0.24f), cb, myConstantBuffer);
 			space_planetMars->RenderIndexed();
 
 			space_planetJupiter->SetPosition(XMMatrixTranspose(MakeWorldMatrix(0, 0, 32.0f, 0, (float)xTimer.TotalTime() * 80, 0))
-				*XMMatrixRotationY(-xTimer.TotalTime() * 0.13f), cb, myConstantBuffer);
+				*XMMatrixRotationY((float)-xTimer.TotalTime() * 0.13f), cb, myConstantBuffer);
 			space_planetJupiter->RenderIndexed();
 
 			space_planetSaturn->SetPosition(XMMatrixTranspose(MakeWorldMatrix(0, 0, 39.0f, 0, (float)xTimer.TotalTime() * 80, 0))
-				*XMMatrixRotationY(-xTimer.TotalTime() * 0.1f), cb, myConstantBuffer);
+				*XMMatrixRotationY((float)-xTimer.TotalTime() * 0.1f), cb, myConstantBuffer);
 			space_planetSaturn->RenderIndexed();
 
 			space_planetSaturnRing->SetPosition(space_planetSaturn->GetPosition(), cb, myConstantBuffer);
 			space_planetSaturnRing->RenderIndexed();
 
 			space_planetUranus->SetPosition(XMMatrixTranspose(MakeWorldMatrix(0, 0, 46.0f, 0, (float)xTimer.TotalTime() * 80, 0))
-				*XMMatrixRotationY(-xTimer.TotalTime() * 0.07f), cb, myConstantBuffer);
+				*XMMatrixRotationY((float)-xTimer.TotalTime() * 0.07f), cb, myConstantBuffer);
 			space_planetUranus->RenderIndexed();
 
 			space_planetNeptune->SetPosition(XMMatrixTranspose(MakeWorldMatrix(0, 0, 55.0f, 0, (float)xTimer.TotalTime() * 80, 0))
-				*XMMatrixRotationY(-xTimer.TotalTime() * 0.05f), cb, myConstantBuffer);
+				*XMMatrixRotationY((float)-xTimer.TotalTime() * 0.05f), cb, myConstantBuffer);
 			space_planetNeptune->RenderIndexed();
 
 
@@ -1132,7 +1123,6 @@ void LetsDrawSomeStuff::CreateShaders()
 	hr = myDevice->CreatePixelShader(PS_Emissive, sizeof(PS_Emissive), nullptr, &myPixelShaderEmissive);
 	hr = myDevice->CreatePixelShader(PS_TransparentRejector, sizeof(PS_TransparentRejector), nullptr, &myPixelShaderTransparentRejector);
 	hr = myDevice->CreatePixelShader(PS_AmbientOcculusion, sizeof(PS_AmbientOcculusion), nullptr, &myPixelShaderAO);
-	hr = myDevice->CreatePixelShader(PS_SpecularEmissive, sizeof(PS_SpecularEmissive), nullptr, &myPixelShaderSpecEmissive);
 
 	hr = myDevice->CreateGeometryShader(GS_PointToQuad, sizeof(GS_PointToQuad), nullptr, &myGeometryShaderPoint);
 	hr = myDevice->CreateGeometryShader(GS_Instancer, sizeof(GS_Instancer), nullptr, &myGeometryShaderTriangle);
