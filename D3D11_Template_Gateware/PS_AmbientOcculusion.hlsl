@@ -50,7 +50,7 @@ float4 main(PS_INPUT input) : SV_Target
 	{
 		if (lights[i].Position.w == 0)
 		{
-			finalColor += saturate(mul(1 - aoTexture.r,mul(lights[i].Color, lights[i].Direction.x)*baseTexture));
+			finalColor += saturate(mul(aoTexture.r,mul(lights[i].Color, lights[i].Direction.x)*baseTexture));
 		}
 		else if (lights[i].Position.w == 1)
 		{

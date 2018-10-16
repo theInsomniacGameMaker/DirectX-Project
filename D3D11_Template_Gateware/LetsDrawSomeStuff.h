@@ -320,10 +320,10 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			positions[2] = XMFLOAT3(-1, 0, 0);
 			positions[3] = XMFLOAT3(0, 0, 0);
 
-			/*	positions[0] = XMFLOAT3(-1, 1, 0);
-				positions[1] = XMFLOAT3(1, 1, 0);
-				positions[2] = XMFLOAT3(-1, -1, 0);
-				positions[3] = XMFLOAT3(1, -1, 0);*/
+			positions[0] = XMFLOAT3(-1, 1, 0);
+			positions[1] = XMFLOAT3(1, 1, 0);
+			positions[2] = XMFLOAT3(-1, -1, 0);
+			positions[3] = XMFLOAT3(1, -1, 0);
 
 			screenQuad = new ScreenQuad(myDevice, myContext, myVertexShaderScreenSpace, myPixelShaderNoLighting, nullGeometryShader, positions);
 
@@ -336,16 +336,16 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			positions[2] = XMFLOAT3(0, 0, 0);
 			positions[3] = XMFLOAT3(1, 0, 0);
 
-			positions[0] = XMFLOAT3(-1, 1, 0);
-			positions[1] = XMFLOAT3(1, 1, 0);
-			positions[2] = XMFLOAT3(-1, -1, 0);
-			positions[3] = XMFLOAT3(1, -1, 0);
+			//positions[0] = XMFLOAT3(-1, 1, 0);
+			//positions[1] = XMFLOAT3(1, 1, 0);
+			//positions[2] = XMFLOAT3(-1, -1, 0);
+			//positions[3] = XMFLOAT3(1, -1, 0);
 
-			screenQuadRightTop = new ScreenQuad(myDevice, myContext, myVertexShaderScreenSpace, myPixelShaderPostProcessing, nullGeometryShader, positions);
+			screenQuadRightTop = new ScreenQuad(myDevice, myContext, myVertexShaderScreenSpace, myPixelShaderNoLighting, nullGeometryShader, positions);
 
 			myContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-			//CreateBlendState();
+			CreateBlendState();
 
 			CreateConstantBuffers();
 
@@ -439,7 +439,6 @@ LetsDrawSomeStuff::~LetsDrawSomeStuff()
 	delete desert_containerGreen;
 	delete desert_well;
 	delete desert_barrel;
-	//delete desert_largeRock;
 	delete desert_light;
 	delete desert_tireWall;
 	delete desert_pressureTank;
@@ -569,28 +568,29 @@ void LetsDrawSomeStuff::Render()
 
 			//Render opaque objects//
 
+			skyBox->UpdateTexture("OutputCube");
 			skyBox->SetPosition(Eye, cb, myConstantBuffer);
 			skyBox->RenderIndexed();
 			mainTextureRenderer->ClearDPV(myContext);
 
 			feraligtr->SetLocalRotation(XMVECTOR{ 5,0,2,0 }, cb, myConstantBuffer, (float)xTimer.TotalTime());
-			//feraligtr->RenderIndexed();
+			feraligtr->RenderIndexed();
 
 			ground->SetPosition(XMVECTOR{ 0,-0.5,0,0 }, cb, myConstantBuffer);
-			//ground->RenderIndexed();
+			ground->RenderIndexed();
 
 			box->SetPosition(XMVECTOR{ -5,0,0,1 }, cb, myConstantBuffer);
 			box->UpdateVS(myVertexShader);
 			box->UpdatePS(myPixelShaderMultitexturing);
-			//box->RenderIndexedMulitexture(myTextureRVPMT);
+			box->RenderIndexedMulitexture(myTextureRVPMT);
 
 			reflectiveTeapot->SetLocalRotation(XMVECTOR{ 0,5.0f,0.0f,0 }, cb, myConstantBuffer, (float)xTimer.TotalTime() / 2.0f, (float)xTimer.TotalTime() / 2.0f);
-			//reflectiveTeapot->RenderIndexed();
+			reflectiveTeapot->RenderIndexed();
 
 			box->SetPosition(XMVECTOR{ -5,2,0,0 }, cb, myConstantBuffer);
 			box->UpdateVS(myVertexShaderPassThrough);
 			box->UpdateGS(myGeometryShaderTriangle);
-			//box->RenderIndexedWithGS(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+			box->RenderIndexedWithGS(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 			box->UpdateGS(nullGeometryShader);
 
 #if DIRECTIONAL_LIGHT_ON
@@ -605,10 +605,10 @@ void LetsDrawSomeStuff::Render()
 			box->RenderIndexed();
 #endif 
 			cubeGS->SetPosition(XMVECTOR{ 3, 0, 0, 0 }, cb, myConstantBuffer);
-			//cubeGS->RenderIndexedWithGS(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
+			cubeGS->RenderIndexedWithGS(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
 
 			bulb->SetPosition(XMVECTOR{ lCb.lights[2].Position.x, lCb.lights[2].Position.y, lCb.lights[2].Position.z, 1 }, cb, myConstantBuffer);
-			//bulb->RenderIndexed();
+			bulb->RenderIndexed();
 
 			myContext->UpdateSubresource(myInstanceConstantBuffer, 0, nullptr, &iCb, 0, 0);
 			box->UpdateVS(myVertexShaderInstance);
@@ -616,18 +616,21 @@ void LetsDrawSomeStuff::Render()
 			//box->RenderInstanced(10, myInstanceConstantBuffer);
 
 			emissiveTeapot->SetLocalRotation(XMVECTOR{ -2,-1,0,1 }, cb, myConstantBuffer, (float)xTimer.TotalTime());
-			//emissiveTeapot->RenderIndexedEmissive(myTextureEmissive);
+			emissiveTeapot->RenderIndexedEmissive(myTextureEmissive);
 
 			plant->SetPosition(XMVECTOR{ 3,0,-3,0 }, cb, myConstantBuffer);
 			//plant->RenderIndexed();
 
-			choppedWood->SetLocalRotation(XMVECTOR{ -3,0,0 }, cb, myConstantBuffer, XMConvertToRadians(180.0f));
-			//choppedWood->RenderIndexed();
-			choppedWood->SetLocalRotation(XMVECTOR{ 3,0,0 }, cb, myConstantBuffer, XMConvertToRadians(180.0f));
-			//choppedWood->RenderIndexedWithAO();
+			choppedWood->SetLocalRotation(XMVECTOR{ -8,3,0 }, cb, myConstantBuffer, XMConvertToRadians(180.0f));
+			choppedWood->UpdatePS(myPixelShader);
+			choppedWood->RenderIndexed();
+
+			choppedWood->UpdatePS(myPixelShaderAO);
+			choppedWood->SetLocalRotation(XMVECTOR{ 8,3,0 }, cb, myConstantBuffer, XMConvertToRadians(180.0f));
+			choppedWood->RenderIndexedWithAO();
 
 
-			closedSack->SetPosition(XMVECTOR{ 0,0,0.2f }, cb, myConstantBuffer);
+			closedSack->SetPosition(XMVECTOR{ 0,10,0.2f }, cb, myConstantBuffer);
 			//closedSack->RenderIndexed();
 
 			textureRenderer->MoveCamera(cb, myConstantBuffer, myContext);
@@ -637,7 +640,7 @@ void LetsDrawSomeStuff::Render()
 			spaceShip->SetLocalRotation(XMVECTOR{ 100,0,0,0 }, cb, myConstantBuffer, (float)xTimer.TotalTime(), (float)xTimer.TotalTime());
 			spaceShip->RenderIndexed();
 #endif 
-			textureRenderer->EndRender(myContext, myRenderTargetView, myDepthStencilView);
+			textureRenderer->EndRender(myContext, myRenderTargetView, mainTextureRenderer->depthStencilView );
 
 			UpdateCamera();
 
@@ -648,12 +651,12 @@ void LetsDrawSomeStuff::Render()
 
 			myContext->OMSetBlendState(transparencyBlendState, blendFactor, 0xffffffff);
 
-			//transparentObjects[0]->SetLocalRotation(XMVECTOR{ 2.5,-1.5,0 }, cb, myConstantBuffer, (float)sin(xTimer.TotalTime()));
-			//transparentObjects[1]->SetLocalRotation(XMVECTOR{ 0,-1.5,0 }, cb, myConstantBuffer, (float)sin(xTimer.TotalTime()));
-			//transparentObjects[2]->SetLocalRotation(XMVECTOR{ -2.5,-1.5,3 }, cb, myConstantBuffer, (float)sin(xTimer.TotalTime()));
+			transparentObjects[0]->SetLocalRotation(XMVECTOR{ 2.5,-1.5,0 }, cb, myConstantBuffer, (float)sin(xTimer.TotalTime()));
+			transparentObjects[1]->SetLocalRotation(XMVECTOR{ 0,-1.5,0 }, cb, myConstantBuffer, (float)sin(xTimer.TotalTime()));
+			transparentObjects[2]->SetLocalRotation(XMVECTOR{ -2.5,-1.5,3 }, cb, myConstantBuffer, (float)sin(xTimer.TotalTime()));
 
 
-			//RenderTransparentObjects();
+			RenderTransparentObjects();
 			myContext->OMSetBlendState(0, 0, 0xffffffff);
 
 			mainTextureRenderer->EndRender(myContext, myRenderTargetView, myDepthStencilView);
@@ -777,16 +780,6 @@ void LetsDrawSomeStuff::Render()
 			desert_barrel->SetLocalRotation(XMVECTOR{ 1.32f - 2, 1.5f + 7.5f,-18.034f + 6 }, cb, myConstantBuffer, 90.0f);
 			desert_barrel->RenderIndexed();
 
-			//iCb.worldArray[0] = MakeWorldMatrix(14.06f-0.44f, 0.79f+1.32, -7.41f+1.33f, -90, 0, 17.0f);
-			//iCb.worldArray[1] = MakeWorldMatrix(4.5f, 0-0.87f, 7.0f, 0, -66.519f, 0);
-			//iCb.worldArray[2] = MakeWorldMatrix(10.0f, 0.29-0.83f, 1.9, 0, 0, 0);
-			//iCb.worldArray[3] = MakeWorldMatrix(12.0f, 0.29-1.34f, -25.33, 0, 0, 0);
-			//iCb.worldArray[4] = MakeWorldMatrix(-12.69f, 0-0.588f, -24, 0, 0, 0);
-			//iCb.worldArray[5] = MakeWorldMatrix(-11.47f, 1-1.94f, -24.21, 0, 0, 0);
-			//iCb.worldArray[6] = MakeWorldMatrix(12.67f, 0.4-1.836f, -12.57, 0, -54.939, 17.591);
-			//myContext->UpdateSubresource(myInstanceConstantBuffer, 0, nullptr, &iCb, 0, 0);
-			//desert_largeRock->RenderInstanced(7, myInstanceConstantBuffer);
-
 			iCb.worldArray[0] = MakeWorldMatrix(-0.8471255f, 0, -1.361888f, 0, -95.97501f, 0);
 			//iCb.worldArray[0] = MakeWorldMatrix(sin(xTimer.TotalTime()), 0, -1.361888f, 0, -95.97501f, 0);
 			//may have to change orientation of the one below
@@ -831,7 +824,7 @@ void LetsDrawSomeStuff::Render()
 			rightTopRTT->EndRender(myContext, myRenderTargetView, myDepthStencilView);
 
 			screenQuadRightTop->UpdateTexture(rightTopRTT->pCTexture);
-			screenQuadRightTop->Render();
+			//screenQuadRightTop->Render();
 			rightTopRTT->pResView = { nullptr };
 			myContext->PSSetShaderResources(0, 1, &mainTextureRenderer->pResView.p);
 
@@ -1067,7 +1060,7 @@ void LetsDrawSomeStuff::UpdateLightBuffer()
 
 	lCb.lights[5].Position.w = 0;
 	lCb.lights[5].Color = XMFLOAT4(1, 1, 1, 1);
-	lCb.lights[5].Direction.x = 0.275f;
+	lCb.lights[5].Direction.x = 0.375f;
 
 
 	// Rotate the a matrix
@@ -1224,15 +1217,15 @@ void LetsDrawSomeStuff::CreateBlendState()
 
 void LetsDrawSomeStuff::RenderTransparentObjects()
 {
-	//for (int i = 0; i < transparentObjects.size(); i++)
-	//{
-	//	transparentObjects[i]->GetDistanceFromCamera(Eye);
-	//}
-	////TODO: Sort using custome algorathim
-	////sort(transparentObjects.begin(), transparentObjects.end(), wayToSort);
-	//for (int i = 0; i < transparentObjects.size(); i++)
-	//{
-	//	transparentObjects[i]->SetLocalRotation(transparentObjects[i]->GetPosition(), cb, myConstantBuffer, (float)sin(xTimer.TotalTime()));
-	//	transparentObjects[i]->RenderIndexedTransparent();
-	//}
+	for (int i = 0; i < transparentObjects.size(); i++)
+	{
+		transparentObjects[i]->GetDistanceFromCamera(Eye);
+	}
+	//TODO: Sort using custome algorathim
+	//stable_sort(transparentObjects.begin(), transparentObjects.end(), wayToSort);
+	for (int i = 0; i < transparentObjects.size(); i++)
+	{
+		transparentObjects[i]->SetLocalRotation(transparentObjects[i]->GetPosition(), cb, myConstantBuffer, (float)sin(xTimer.TotalTime()));
+		transparentObjects[i]->RenderIndexedTransparent();
+	}
 }
