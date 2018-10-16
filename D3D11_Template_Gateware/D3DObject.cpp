@@ -268,6 +268,36 @@ void D3DObject::RenderIndexed()
 	m_Context->DrawIndexed(m_Mesh.GetNumberOfIndices(), 0, 0);
 }
 
+void D3DObject::ImmediatePositionRenderingIndexed(XMMATRIX worldMatrix, ConstantBuffer constantBuffer, CComPtr < ID3D11Buffer> &perObjectBuffer)
+{
+	m_Context->VSSetShader(m_VertexShader, nullptr, 0);
+	m_Context->PSSetShader(m_PixelShader, nullptr, 0);
+	m_Context->GSSetShader(m_GeometryShader, nullptr, 0);
+	m_Context->PSSetShaderResources(0, 1, &m_TextureRV.p);
+
+	constantBuffer.mWorld = worldMatrix;
+	m_Context->UpdateSubresource(perObjectBuffer, 0, nullptr, &constantBuffer, 0, 0);
+	m_Position = XMMatrixTranspose(constantBuffer.mWorld).r[3];
+
+	m_Context->IASetVertexBuffers(0, 1, &m_VertexBuffer.p, stride, offset);
+	m_Context->IASetIndexBuffer(m_IndexBuffer, DXGI_FORMAT_R32_UINT, 0);
+	m_Context->DrawIndexed(m_Mesh.GetNumberOfIndices(), 0, 0);
+}
+
+void D3DObject::PositionRenderingIndexed(ConstantBuffer constantBuffer, CComPtr < ID3D11Buffer> &perObjectBuffer)
+{
+	m_Context->VSSetShader(m_VertexShader, nullptr, 0);
+	m_Context->PSSetShader(m_PixelShader, nullptr, 0);
+	m_Context->GSSetShader(m_GeometryShader, nullptr, 0);
+	m_Context->PSSetShaderResources(0, 1, &m_TextureRV.p);
+
+	SetPosition(m_Position, constantBuffer, perObjectBuffer);
+
+	m_Context->IASetVertexBuffers(0, 1, &m_VertexBuffer.p, stride, offset);
+	m_Context->IASetIndexBuffer(m_IndexBuffer, DXGI_FORMAT_R32_UINT, 0);
+	m_Context->DrawIndexed(m_Mesh.GetNumberOfIndices(), 0, 0);
+}
+
 void D3DObject::RenderIndexedWithGS(D3D_PRIMITIVE_TOPOLOGY topology)
 {
 	m_Context->IASetPrimitiveTopology(topology);
@@ -344,7 +374,6 @@ void D3DObject::RenderIndexedEmissiveInstanced(int numberOfInstances, CComPtr<ID
 	m_Context->DrawIndexedInstanced(m_Mesh.GetNumberOfIndices(), numberOfInstances, 0, 0, 0);
 }
 
-
 void D3DObject::RenderIndexedEmissive(CComPtr<ID3D11ShaderResourceView> emissiveRV)
 {
 	m_Context->VSSetShader(m_VertexShader, nullptr, 0);
@@ -373,6 +402,24 @@ void D3DObject::RenderIndexedTransparent()
 	m_Context->DrawIndexed(m_Mesh.GetNumberOfIndices(), 0, 0);
 
 }
+
+void D3DObject::PositionRenderIndexedTransparent(ConstantBuffer constantBuffer, CComPtr < ID3D11Buffer> &perObjectBuffer)
+{
+	m_Context->VSSetShader(m_VertexShader, nullptr, 0);
+	m_Context->PSSetShader(m_PixelShader, nullptr, 0);
+	m_Context->GSSetShader(m_GeometryShader, nullptr, 0);
+	m_Context->PSSetShaderResources(0, 1, &m_TextureRV.p);
+	SetPosition(m_Position, constantBuffer, perObjectBuffer);
+	m_Context->IASetVertexBuffers(0, 1, &m_VertexBuffer.p, stride, offset);
+	m_Context->IASetIndexBuffer(m_IndexBuffer, DXGI_FORMAT_R32_UINT, 0);
+	//render back faces first
+	m_Context->RSSetState(CCWcullMode);
+	m_Context->DrawIndexed(m_Mesh.GetNumberOfIndices(), 0, 0);
+	//now render the forwad faces
+	m_Context->RSSetState(CWcullMode);
+	m_Context->DrawIndexed(m_Mesh.GetNumberOfIndices(), 0, 0);
+}
+
 
 void D3DObject::RenderIndexedWithAO()
 {
@@ -432,7 +479,6 @@ void D3DObject::Scale(float scaleX, float scaleY, float scaleZ, ConstantBuffer &
 	m_Context->UpdateSubresource(perObjectBuffer, 0, nullptr, &constantBuffer, 0, 0);
 	m_Position = XMMatrixTranspose(constantBuffer.mWorld).r[3];
 }
-
 
 //Will set the position of the object
 void D3DObject::SetPosition(XMVECTOR position, ConstantBuffer &constantBuffer, CComPtr < ID3D11Buffer> &perObjectBuffer)

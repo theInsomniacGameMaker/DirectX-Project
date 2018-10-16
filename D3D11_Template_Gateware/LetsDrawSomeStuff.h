@@ -106,7 +106,7 @@ class LetsDrawSomeStuff
 	D3DObject*		secondaryScreen;
 	D3DObject*		plant;
 
-	D3DObject*		choppedWood;
+	D3DObject*		humvee;
 	D3DObject*		closedSack;
 	D3DObject*		desert_house1;
 	D3DObject*		desert_house2;
@@ -246,7 +246,7 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 				myPixelShaderEmissive, nullGeometryShader, myConstantBuffer);
 			emissiveTeapot->UpdateTexture("Lava");
 
-			choppedWood = new D3DObject("Humvee", 1 / 50.0f, myDevice, myContext, myVertexShader,
+			humvee = new D3DObject("Humvee", 1 / 50.0f, myDevice, myContext, myVertexShader,
 				myPixelShader, nullGeometryShader, myConstantBuffer, "Humvee_Albedo",
 				"Humvee_Occlusion", AMBIENTOCCULUSION);
 
@@ -428,7 +428,7 @@ LetsDrawSomeStuff::~LetsDrawSomeStuff()
 	delete secondaryScreen;
 	delete plant;
 
-	delete choppedWood;
+	delete humvee;
 	delete closedSack;
 	delete desert_house1;
 	delete desert_house2;
@@ -619,15 +619,15 @@ void LetsDrawSomeStuff::Render()
 			emissiveTeapot->RenderIndexedEmissive(myTextureEmissive);
 
 			plant->SetPosition(XMVECTOR{ 3,0,-3,0 }, cb, myConstantBuffer);
-			//plant->RenderIndexed();
+			plant->RenderIndexed();
 
-			choppedWood->SetLocalRotation(XMVECTOR{ -8,3,0 }, cb, myConstantBuffer, XMConvertToRadians(180.0f));
-			choppedWood->UpdatePS(myPixelShader);
-			choppedWood->RenderIndexed();
+			humvee->SetLocalRotation(XMVECTOR{ -8,3,0 }, cb, myConstantBuffer, XMConvertToRadians(180.0f));
+			humvee->UpdatePS(myPixelShader);
+			humvee->RenderIndexed();
 
-			choppedWood->UpdatePS(myPixelShaderAO);
-			choppedWood->SetLocalRotation(XMVECTOR{ 8,3,0 }, cb, myConstantBuffer, XMConvertToRadians(180.0f));
-			choppedWood->RenderIndexedWithAO();
+			humvee->UpdatePS(myPixelShaderAO);
+			humvee->SetLocalRotation(XMVECTOR{ 8,3,0 }, cb, myConstantBuffer, XMConvertToRadians(180.0f));
+			humvee->RenderIndexedWithAO();
 
 
 			closedSack->SetPosition(XMVECTOR{ 0,10,0.2f }, cb, myConstantBuffer);
@@ -1221,11 +1221,37 @@ void LetsDrawSomeStuff::RenderTransparentObjects()
 	{
 		transparentObjects[i]->GetDistanceFromCamera(Eye);
 	}
-	//TODO: Sort using custome algorathim
-	//stable_sort(transparentObjects.begin(), transparentObjects.end(), wayToSort);
+
+	vector<float> distances(transparentObjects.size());
+	vector<int> indices(transparentObjects.size());
+
+	for (int i = 0; i < distances.size(); i++)
+	{
+		distances[i] = transparentObjects[i]->m_DistanceFromCamera;
+		indices[i] = i;
+	}
+
+	for (int i = 0; i < distances.size() - 1; i++)
+	{
+		// Last i elements are already in place    
+		for (int j = 0; j < distances.size() - i - 1; j++)
+		{
+			if (distances[j] < distances[j + 1])
+			{
+				float tempF = distances[j];
+				distances[j] = distances[j + 1];
+				distances[j + 1] = tempF;
+
+				float tempI = indices[j];
+				indices[j] = indices[j + 1];
+				indices[j + 1] = tempI;
+			}
+		}
+	}
+
 	for (int i = 0; i < transparentObjects.size(); i++)
 	{
-		transparentObjects[i]->SetLocalRotation(transparentObjects[i]->GetPosition(), cb, myConstantBuffer, (float)sin(xTimer.TotalTime()));
-		transparentObjects[i]->RenderIndexedTransparent();
+		//transparentObjects[indices[i]]->SetLocalRotation(transparentObjects[i]->GetPosition(), cb, myConstantBuffer, (float)sin(xTimer.TotalTime()));
+		transparentObjects[indices[i]]->PositionRenderIndexedTransparent(cb,myConstantBuffer);
 	}
 }

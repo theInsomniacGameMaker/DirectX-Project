@@ -36,6 +36,8 @@ public:
 		CComPtr < ID3D11GeometryShader> &geoShader, CComPtr < ID3D11Buffer> &perObjectBuffer, string AOfileName, TEXTURE_TYPE textureType);
 	D3DObject(string fileName, float scale, CComPtr<ID3D11Device>& myDevice, CComPtr<ID3D11DeviceContext>& myContext, CComPtr<ID3D11VertexShader>& vertexShader, CComPtr<ID3D11PixelShader>& pixelShader, CComPtr<ID3D11GeometryShader>& geoShader, CComPtr<ID3D11Buffer>& perObjectBuffer, string explicitTexture, string specialTexFileName, TEXTURE_TYPE textureType);
 	void RenderIndexed();
+	void ImmediatePositionRenderingIndexed(XMMATRIX worldMatrix, ConstantBuffer constantBuffer, CComPtr<ID3D11Buffer>& perObjectBuffer);
+	void PositionRenderingIndexed(ConstantBuffer constantBuffer, CComPtr<ID3D11Buffer>& perObjectBuffer);
 	void RenderIndexedWithGS(D3D_PRIMITIVE_TOPOLOGY topology);
 	void RenderIndexedWithDynamicSRV(CComPtr < ID3D11ShaderResourceView> &textureRV);
 	void RenderInstanced(int numberOfInstances, CComPtr < ID3D11Buffer> &perInstanceBuffer);
@@ -44,6 +46,7 @@ public:
 	void RenderIndexedEmissiveInstanced(int numberOfInstances, CComPtr<ID3D11Buffer>& perInstanceBuffer);
 	void RenderIndexedEmissive(CComPtr < ID3D11ShaderResourceView > emissiveRV);
 	void RenderIndexedTransparent();
+	void PositionRenderIndexedTransparent(ConstantBuffer constantBuffer, CComPtr<ID3D11Buffer>& perObjectBuffer);
 	void RenderIndexedWithAO();
 	void UpdateVS(CComPtr < ID3D11VertexShader > vertexShader);
 	void UpdatePS(CComPtr < ID3D11PixelShader> pixelShader);

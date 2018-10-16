@@ -60,7 +60,7 @@ float4 main(PS_INPUT input) : SV_Target
 			float4 viewDir = normalize(camPos - input.wPos);
 			float3 rVec = normalize(reflect(-ligthDir, normalize(input.Norm)));
 			float dotResult = saturate(dot(rVec, viewDir));
-			float spec = pow(dotResult, 128);
+			float spec = pow(dotResult, 64);
 			/*float3 halfVector = normalize(ligthDir + viewDir);
 			float intensity = max(pow(saturate(dot(input.Norm, halfVector)), 32), 0);*/
 			float4 reflectedLight = lights[i].Color * spec;
@@ -80,7 +80,7 @@ float4 main(PS_INPUT input) : SV_Target
 			float4 viewDir = normalize(camPos - input.wPos);
 			float3 rVec = normalize(reflect(-ligthDir, normalize(input.Norm)));
 			float dotResult = saturate(dot(rVec, viewDir));
-			float spec = pow(dotResult, 128);
+			float spec = pow(dotResult, 64);
 			/*float3 halfVector = normalize(ligthDir + viewDir);
 			float intensity = max(pow(saturate(dot(input.Norm, halfVector)), 32), 0);*/
 			float4 reflectedLight = lights[i].Color * spec;
@@ -103,7 +103,7 @@ float4 main(PS_INPUT input) : SV_Target
 			float4 viewDir = normalize(camPos - input.wPos);
 			float3 rVec = normalize(reflect(-ligthDir, normalize(input.Norm)));
 			float dotResult = saturate(dot(rVec, viewDir));
-			float spec = pow(dotResult, 128);
+			float spec = pow(dotResult, 64);
 			/*float3 halfVector = normalize(ligthDir + viewDir);
 			float intensity = max(pow(saturate(dot(input.Norm, halfVector)), 32), 0);*/
 			float4 reflectedLight = lights[i].Color * spec;
