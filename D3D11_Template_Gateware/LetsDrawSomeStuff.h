@@ -172,6 +172,8 @@ public:
 	void Render();
 	//Camera Movement
 	void CameraMovement();
+	//Reset Camera
+	void ResetCamera();
 	//Create the constant buffers
 	void CreateConstantBuffers();
 	//Update the Light Buffers
@@ -348,7 +350,7 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			space_moon = new D3DObject("Planet", 1 / 150.0f, myDevice, myContext, myVertexShader, myPixelShader,
 				nullGeometryShader, myConstantBuffer, "moon_Diffuse");
 
-			space_satellite = new D3DObject("Satellite", 1 / 220.0f, myDevice, myContext, myVertexShader, myPixelShader,
+			space_satellite = new D3DObject("Satellite", 1 / 220.0f, myDevice, myContext, myVertexShader, myPixelShaderSpecular,
 				nullGeometryShader, myConstantBuffer, "RT_2D_Station_Diffuse");
 
 			space_Sun = new D3DObject("Planet", 1 / 10.f, myDevice, myContext, myVertexShader, myPixelShaderEmissive,
@@ -567,7 +569,7 @@ void LetsDrawSomeStuff::Render()
 			// Clear the screen to dark green
 			const float d_green[] = { 0, 0.5f, 0, 1 };
 			myContext->ClearRenderTargetView(myRenderTargetView, d_green);
-
+			ResetCamera();
 			CameraMovement();
 
 			UpdateConstantBuffer();
@@ -932,6 +934,24 @@ void LetsDrawSomeStuff::CameraMovement()
 	projectionMatrix = XMMatrixPerspectiveFovLH(XMConvertToRadians(fov), width / (FLOAT)height, nearPlane, farPlane);
 
 	//viewMatrix = XMMatrixLookAtLH(Eye, At, Up);
+}
+
+inline void LetsDrawSomeStuff::ResetCamera()
+{
+	if (GetAsyncKeyState('R'))
+	{
+		// Initialize the view matrix
+		Eye = XMVectorSet(0.0f, 1.0f, -10.0f, 0.0f);
+		At = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+		Up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+		viewMatrix = XMMatrixLookAtLH(Eye, At, Up);
+
+		fov = 60;
+		nearPlane = 0.1f;
+		farPlane = 150.0f;
+		// Initialize the projection matrix
+		projectionMatrix = XMMatrixPerspectiveFovLH(XMConvertToRadians(fov), width / (FLOAT)height, nearPlane, farPlane);
+	}
 }
 
 void LetsDrawSomeStuff::CreateConstantBuffers()
