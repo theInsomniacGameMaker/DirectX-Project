@@ -511,7 +511,6 @@ void D3DObject::PositionRenderIndexedTransparent(ConstantBuffer constantBuffer, 
 	m_Context->DrawIndexed(m_Mesh.GetNumberOfIndices(), 0, 0);
 }
 
-
 void D3DObject::RenderIndexedWithAO()
 {
 	m_Context->VSSetShader(m_VertexShader, nullptr, 0);
@@ -571,7 +570,6 @@ void D3DObject::Scale(float scaleX, float scaleY, float scaleZ, ConstantBuffer &
 	m_Position = XMMatrixTranspose(constantBuffer.mWorld).r[3];
 }
 
-//Will set the position of the object
 void D3DObject::SetPosition(XMVECTOR position, ConstantBuffer &constantBuffer, CComPtr < ID3D11Buffer> &perObjectBuffer)
 {
 	if (XMVector3Equal(position, XMVECTOR{ 0,0,0,0 }))
@@ -673,6 +671,28 @@ D3DObject::~D3DObject()
 		m_TextureRV.Release();
 		m_TextureRV = 0;
 	}
-	
+
+	if (m_SpecialTexture)
+	{
+		m_SpecialTexture.Release();
+		m_SpecialTexture = 0;
+	}
+
+	if (m_SpecTexture)
+	{
+		m_SpecTexture.Release();
+		m_SpecTexture = 0;
+	}
+
+	if (m_TextureRV)
+	{
+		m_EmissiveTexture.Release();
+		m_EmissiveTexture = 0;
+	}
+
+	m_VertexShader.Release();
+	m_PixelShader.Release();
+	m_GeometryShader.Release();
+
 	m_Mesh.LateDestructor();
 }

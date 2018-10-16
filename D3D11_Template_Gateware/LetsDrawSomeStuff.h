@@ -155,7 +155,7 @@ class LetsDrawSomeStuff
 	float camYaw, camPitch, camRoll;
 	float moveX, moveY, moveZ;
 	float fov = 60;
-	float nearPlane = 0.01f, farPlane = 100.0f;
+	float nearPlane = 0.01f, farPlane = 150.0f;
 	unsigned int width, height;
 
 #if DEBUGGER
@@ -323,8 +323,8 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			space_planetVenus = new D3DObject("Planet", 1 / 55.0f, myDevice, myContext, myVertexShader, myPixelShader,
 				nullGeometryShader, myConstantBuffer, "venusmap");
 
-			space_planetEarth = new D3DObject("Planet", 1/50.f, myDevice, myContext, myVertexShader, myPixelShaderSpecEmissive,
-				nullGeometryShader, myConstantBuffer, "earthmap1k","earthspec1k" ,"earthlights1k");
+			space_planetEarth = new D3DObject("Planet", 1/50.f, myDevice, myContext, myVertexShader, myPixelShader,
+				nullGeometryShader, myConstantBuffer, "earthmap1k");
 
 			space_planetMars = new D3DObject("Planet", 1 / 45.0f, myDevice, myContext, myVertexShader, myPixelShader,
 				nullGeometryShader, myConstantBuffer, "marsmap");
@@ -469,9 +469,11 @@ LetsDrawSomeStuff::~LetsDrawSomeStuff()
 	delete textureRenderer;
 	delete mainTextureRenderer;
 	delete rightTopRTT;
+	delete rightBottomRTT;
 
 	delete screenQuad;
 	delete screenQuadRightTop;
+	delete screenQuadRightBottom;
 
 	delete feraligtr;
 	delete skyBox;
@@ -504,6 +506,17 @@ LetsDrawSomeStuff::~LetsDrawSomeStuff()
 	delete desert_crate;
 	delete desert_ground;
 	delete desert_humvee;
+
+	delete space_Sun;
+	delete space_planetMercury;
+	delete space_planetVenus;
+	delete space_planetEarth;
+	delete space_planetMars;
+	delete space_planetJupiter;
+	delete space_planetSaturnRing;
+	delete space_planetSaturn;
+	delete space_planetUranus;
+	delete space_planetNeptune;
 
 	for (int i = 0; i < transparentObjects.size(); i++)
 	{
@@ -801,9 +814,6 @@ void LetsDrawSomeStuff::Render()
 			space_planetNeptune->SetPosition(XMMatrixTranspose(MakeWorldMatrix(0, 0, 55.0f, 0, (float)xTimer.TotalTime() * 80, 0))
 				*XMMatrixRotationY(-xTimer.TotalTime() * 0.05f), cb, myConstantBuffer);
 			space_planetNeptune->RenderIndexed();
-
-
-
 
 
 			rightBottomRTT->EndRender(myContext, myRenderTargetView, myDepthStencilView);
