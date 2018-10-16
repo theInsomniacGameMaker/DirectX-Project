@@ -10,12 +10,12 @@ public:
 	CComPtr<ID3D11ShaderResourceView> pCTexture;
 	CComPtr<ID3D11ShaderResourceView>pResView;
 	CComPtr<ID3D11RenderTargetView>pRenderTargetView;
+	CComPtr<ID3D11DepthStencilView> depthStencilView;
 
 private:
 	CComPtr<ID3D11ShaderResourceView>nullResView = nullptr;
 	CComPtr<ID3D11Texture2D >pTexture;
 	CComPtr<ID3D11RenderTargetView >pTarget;
-	CComPtr<ID3D11DepthStencilView> depthStencilView;
 	CComPtr<ID3D11Texture2D> depthStencilBuffer;
 	XMVECTOR rttEye;
 	XMVECTOR rttAt;
