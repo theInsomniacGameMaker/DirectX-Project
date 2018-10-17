@@ -23,6 +23,10 @@ class LetsDrawSomeStuff
 
 	D3D_DRIVER_TYPE							myDriverType = D3D_DRIVER_TYPE_NULL;
 	D3D_FEATURE_LEVEL						myFeatureLevel = D3D_FEATURE_LEVEL_11_0;
+
+	CURRENT_RENDERING currentRendering;
+	int currentRenderingIndex=1;
+
 	CComPtr < ID3D11RenderTargetView>		myRenderTargetView = nullptr;
 
 	//All vertex shaders
@@ -142,7 +146,10 @@ class LetsDrawSomeStuff
 	D3DObject*		pokemon_xerneas;
 	D3DObject*		pokemon_metagross;
 	D3DObject*		pokemon_darkrai;
+	D3DObject*		pokemon_kyurem;
 	D3DObject*		pokemon_ground;
+	D3DObject*		pokemon_gogoat;
+	D3DObject*		med_table;
 
 	//Constant Buffers
 	InstanceConstantBuffer	iCb;
@@ -162,7 +169,6 @@ class LetsDrawSomeStuff
 	float fov = 60;
 	float nearPlane = 0.01f, farPlane = 150.0f;
 	unsigned int width, height;
-	bool showPlayGroundScene = false;
 #if DEBUGGER
 	ID3D11Debug *DebugDevice;
 #endif
@@ -207,6 +213,8 @@ public:
 	void RenderDesertScene();
 	//Space Scene
 	void RenderSpaceScene();
+	//Pokemon Scene
+	void RenderPokemonScene();
 	//Key Input
 	void GetKeyInput();
 
@@ -238,6 +246,7 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			CreateDDSTextureFromFile(myDevice, L"Assets\\Brick.dds", nullptr, &myTextureRVPMT[1]);
 
 			HRESULT hr = CreateDDSTextureFromFile(myDevice, L"Assets\\Lave_EMISSIVEMAP.dds", nullptr, &myTextureEmissive);
+			currentRendering = (CURRENT_RENDERING)(currentRenderingIndex % 5);
 
 			CreateInputLayout();
 #pragma region SANDBOX_INIT
@@ -343,8 +352,9 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 				myPixelShaderNormalMapping, nullGeometryShader, myConstantBuffer, "WoodenCrate2_Albedo", "WoodenCrate2_Normal", NORMALMAP);
 			desert_crate->ComputeNormalMapping();
 
-			desert_ground = new D3DObject("Ground", 100.0f, myDevice, myContext, myVertexShader,
-				myPixelShader, nullGeometryShader, myConstantBuffer, "Ground_Albedo");
+			desert_ground = new D3DObject("Ground", 100.0f, myDevice, myContext, myVertexShaderTBN,
+				myPixelShaderNormalMapping, nullGeometryShader, myConstantBuffer, "Ground_Albedo", "Ground_Normal", NORMALMAP);
+			desert_ground->SetHardTangents();
 
 			desert_humvee = new D3DObject("Humvee", 1 / 45.0f, myDevice, myContext, myVertexShader,
 				myPixelShaderAO, nullGeometryShader, myConstantBuffer, "Humvee_Albedo",
@@ -391,6 +401,7 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 #pragma endregion
 
 
+#pragma region POKEMON_INIT
 			pokemon_xerneas = new D3DObject("Xerneas", 1 / 70.0f, myDevice, myContext, myVertexShader, myPixelShaderSpecular,
 				nullGeometryShader, myConstantBuffer, "Xerneas_TX");
 
@@ -400,17 +411,24 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			pokemon_darkrai = new D3DObject("Darkrai", 1 / 15.0f, myDevice, myContext, myVertexShader, myPixelShaderSpecular,
 				nullGeometryShader, myConstantBuffer, "Darkrai_TX");
 
-			pokemon_ground = new D3DObject("Ground", 10.0f, myDevice, myContext, myVertexShaderTBN,
-				myPixelShaderNormalMapping, nullGeometryShader, myConstantBuffer, "pokemon_plane","243-normal", NORMALMAP);
-			pokemon_ground->SetHardTangents();
-			//pokemon_ground->ComputeNormalMapping();
+			pokemon_kyurem = new D3DObject("Kyurem", 1 / 35.0f, myDevice, myContext, myVertexShader, myPixelShaderSpecular,
+				nullGeometryShader, myConstantBuffer, "KyuremTX");
 
-			
+			pokemon_gogoat = new D3DObject("Gogoat", 1 / 35.0f, myDevice, myContext, myVertexShader, myPixelShaderSpecular,
+				nullGeometryShader, myConstantBuffer, "GogoatTx");
+
+			pokemon_ground = new D3DObject("Ground", 20.0f, myDevice, myContext, myVertexShaderTBN,
+				myPixelShaderNormalMapping, nullGeometryShader, myConstantBuffer, "pokemon_plane", "243-normal", NORMALMAP);
+			pokemon_ground->SetHardTangents();
+
+
+#pragma endregion
+
+
+
 
 			textureRenderer = new TextureRenderer(myDevice, myContext, width, height);
-			//rightTopRTT = new TextureRenderer(myDevice, myContext, width, height);
-			leftTopRTT = new TextureRenderer(myDevice, myContext, (int)(width/2.0f), (int)(height/2.0f));
-			//bottomRTT = new TextureRenderer(myDevice, myContext, width, height);
+			leftTopRTT = new TextureRenderer(myDevice, myContext, (int)(width / 2.0f), (int)(height / 2.0f));
 
 			XMFLOAT3 positions[4];
 			positions[0] = XMFLOAT3(-1, 1, 0);
@@ -418,7 +436,7 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			positions[2] = XMFLOAT3(-1, -1, 0);
 			positions[3] = XMFLOAT3(1, -1, 0);
 
-			screenQuadLeftTop = new ScreenQuad(myDevice, myContext, myVertexShaderScreenSpace, /*myPixelShaderPostProcessing*/myPixelShaderNoLighting, nullGeometryShader, positions);
+			screenQuadLeftTop = new ScreenQuad(myDevice, myContext, myVertexShaderScreenSpace, myPixelShaderPostProcessing, nullGeometryShader, positions);
 
 
 			myContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -539,6 +557,8 @@ LetsDrawSomeStuff::~LetsDrawSomeStuff()
 	delete pokemon_xerneas;
 	delete pokemon_metagross;
 	delete pokemon_darkrai;
+	delete pokemon_gogoat;
+	delete pokemon_kyurem;
 	delete pokemon_ground;
 
 	for (int i = 0; i < transparentObjects.size(); i++)
@@ -583,6 +603,7 @@ void LetsDrawSomeStuff::Render(GW::SYSTEM::GWindow* attatchPoint)
 			UpdateConstantBuffer();
 			UpdateLightBuffer();
 
+#if DEBUGGER
 #pragma region DEBUG_CONTROLS
 			if (GetAsyncKeyState('T'))
 			{
@@ -637,6 +658,7 @@ void LetsDrawSomeStuff::Render(GW::SYSTEM::GWindow* attatchPoint)
 			cout << "Current value of C: " << C << endl;
 			cout << "Current value of D: " << D << endl;
 #pragma endregion
+#endif
 
 
 			myContext->VSSetShader(myVertexShader, nullptr, 0);
@@ -649,9 +671,7 @@ void LetsDrawSomeStuff::Render(GW::SYSTEM::GWindow* attatchPoint)
 			myContext->GSSetShader(myGeometryShaderPoint, nullptr, 0);
 			myContext->GSSetConstantBuffers(0, 1, &myConstantBuffer.p);
 
-
 			GetKeyInput();
-
 
 			//changing blending factor
 			float blendFactor[] = { 0.75f, 0.75f, 0.75f, 1.0f };
@@ -659,7 +679,7 @@ void LetsDrawSomeStuff::Render(GW::SYSTEM::GWindow* attatchPoint)
 			//Set the default blend state (no blending) for opaque objects
 			myContext->OMSetBlendState(0, 0, 0xffffffff);
 
-			if (showPlayGroundScene)
+			if (currentRendering == SANDBOX)
 			{
 				D3D11_VIEWPORT fullscreen;
 				attatchPoint->GetClientWidth(width);
@@ -778,7 +798,7 @@ void LetsDrawSomeStuff::Render(GW::SYSTEM::GWindow* attatchPoint)
 				myContext->OMSetBlendState(0, 0, 0xffffffff);
 
 			}
-			else
+			else if (currentRendering == MULTIPORT)
 			{
 				D3D11_VIEWPORT vpTopRight;
 				attatchPoint->GetClientWidth(width);
@@ -818,10 +838,10 @@ void LetsDrawSomeStuff::Render(GW::SYSTEM::GWindow* attatchPoint)
 
 				skyBox->UpdateTexture("StarField");
 				skyBox->SetPosition(Eye, cb, myConstantBuffer);
-				//skyBox->RenderIndexed();
+				skyBox->RenderIndexed();
 				myContext->ClearDepthStencilView(myDepthStencilView, D3D11_CLEAR_DEPTH, 1, 0); // clear it to Z exponential Far.
 
-				//RenderSpaceScene();
+				RenderSpaceScene();
 
 				D3D11_VIEWPORT vpTopLeft;
 				attatchPoint->GetClientWidth(width);
@@ -833,61 +853,107 @@ void LetsDrawSomeStuff::Render(GW::SYSTEM::GWindow* attatchPoint)
 				vpTopLeft.TopLeftX = 0;
 				vpTopLeft.TopLeftY = 0;
 
-
 				myContext->RSSetViewports(1, &vpTopLeft);
 
 				projectionMatrix = XMMatrixPerspectiveFovLH(XMConvertToRadians(fov), vpTopLeft.Width / vpTopLeft.Height, nearPlane, farPlane);
 				cb.mProjection = XMMatrixTranspose(projectionMatrix);
 				myContext->UpdateSubresource(myConstantBuffer, 0, nullptr, &cb, 0, 0);
 
-				lCb.lights[0].Color = XMFLOAT4(0, 0, 0, 1);
-				lCb.lights[1].Color = XMFLOAT4(0, 0, 0, 1);
-				lCb.lights[2].Color = XMFLOAT4(0, 0, 0, 1);
-				lCb.lights[3].Color = XMFLOAT4(0, 0, 0, 1);
-				lCb.lights[4].Color = XMFLOAT4(0, 0, 0, 1);
-				lCb.lights[5].Color = XMFLOAT4(0, 0, 0, 1);
-
-				lCb.lights[0].Position = XMFLOAT4((float)sin((float)xTimer.TotalTime()), 1, cos(xTimer.TotalTime()), 2);
-				lCb.lights[0].Color = XMFLOAT4(1, 0, 1, 1);
-				lCb.lights[0].Range.x = 3.0f;
-
-				lCb.lights[1].Position = XMFLOAT4((float)-sin((float)xTimer.TotalTime()), 1, -cos(xTimer.TotalTime()), 2);
-				lCb.lights[1].Color = XMFLOAT4(1, 0, 1, 1);
-				lCb.lights[1].Range.x = 10.0f;
-
-				myContext->UpdateSubresource(myLightConstantBuffer, 0, nullptr, &lCb, 0, 0);
-
-
 				leftTopRTT->Clear(myContext, myDepthStencilView, XMFLOAT4(1, 1, 0, 0));
 				leftTopRTT->BeginRender(myContext, myDevice, vpTopLeft.Width, vpTopLeft.Height);
 
-				skyBox->UpdateTexture("Pokemon_SkyBox");
-				skyBox->SetPosition(Eye, cb, myConstantBuffer);
-				skyBox->RenderIndexed();
-				leftTopRTT->ClearDPV(myContext);
-
-				pokemon_xerneas->SetLocalRotation(XMVECTOR{ 0,0,0 }, cb, myConstantBuffer, XMConvertToRadians(180.0f));
-				pokemon_xerneas->RenderIndexed();
-
-				pokemon_metagross->SetLocalRotation(XMVECTOR{ 2,0,0 }, cb, myConstantBuffer, XMConvertToRadians(210.0f));
-				pokemon_metagross->RenderIndexed();
-
-				pokemon_darkrai->SetLocalRotation(XMVECTOR{ -2,0,0 }, cb, myConstantBuffer, XMConvertToRadians(-210.0f));
-				pokemon_darkrai->RenderIndexed();
-
-				pokemon_ground->SetLocalRotation(XMVECTOR{ 0,0,0 }, cb, myConstantBuffer, XMConvertToRadians(0));
-				pokemon_ground->RenderIndexedNormal();
-
+				RenderPokemonScene();
 
 				leftTopRTT->EndRender();
 				myContext->OMSetRenderTargets(1, &myRenderTargetView.p, myDepthStencilView);
+
 
 				screenQuadLeftTop->UpdateTexture(leftTopRTT->pCTexture);
 				screenQuadLeftTop->Render();
 				leftTopRTT->pResView = { nullptr };
 				myContext->PSSetShaderResources(0, 1, &leftTopRTT->pResView.p);
-
 			}
+			else if (currentRendering == FPS)
+			{
+				D3D11_VIEWPORT fullscreen;
+				attatchPoint->GetClientWidth(width);
+				attatchPoint->GetClientHeight(height);
+				fullscreen.Width = (FLOAT)width;
+				fullscreen.Height = (FLOAT)height;
+				fullscreen.MinDepth = 0.0f;
+				fullscreen.MaxDepth = 1.0f;
+				fullscreen.TopLeftX = 0;
+				fullscreen.TopLeftY = 0;
+				myContext->RSSetViewports(1, &fullscreen);
+
+				projectionMatrix = XMMatrixPerspectiveFovLH(XMConvertToRadians(fov), fullscreen.Width / fullscreen.Height, nearPlane, farPlane);
+				cb.mProjection = XMMatrixTranspose(projectionMatrix);
+				myContext->UpdateSubresource(myConstantBuffer, 0, nullptr, &cb, 0, 0);
+
+				skyBox->UpdateTexture("DesertSkyBox");
+				skyBox->SetPosition(Eye, cb, myConstantBuffer);
+				skyBox->RenderIndexed();
+				myContext->ClearDepthStencilView(myDepthStencilView, D3D11_CLEAR_DEPTH, 1, 0); // clear it to Z exponential Far.
+
+				RenderDesertScene();
+			}
+			else if (currentRendering == SPACE)
+			{
+				D3D11_VIEWPORT fullscreen;
+				attatchPoint->GetClientWidth(width);
+				attatchPoint->GetClientHeight(height);
+				fullscreen.Width = (FLOAT)width;
+				fullscreen.Height = (FLOAT)height;
+				fullscreen.MinDepth = 0.0f;
+				fullscreen.MaxDepth = 1.0f;
+				fullscreen.TopLeftX = 0;
+				fullscreen.TopLeftY = 0;
+				myContext->RSSetViewports(1, &fullscreen);
+
+				projectionMatrix = XMMatrixPerspectiveFovLH(XMConvertToRadians(fov), fullscreen.Width / fullscreen.Height, nearPlane, farPlane);
+				cb.mProjection = XMMatrixTranspose(projectionMatrix);
+				myContext->UpdateSubresource(myConstantBuffer, 0, nullptr, &cb, 0, 0);
+
+				skyBox->UpdateTexture("StarField");
+				skyBox->SetPosition(Eye, cb, myConstantBuffer);
+				skyBox->RenderIndexed();
+				myContext->ClearDepthStencilView(myDepthStencilView, D3D11_CLEAR_DEPTH, 1, 0); // clear it to Z exponential Far.
+
+				RenderSpaceScene();
+			}
+			else if (currentRendering == POKEMON)
+			{
+
+				D3D11_VIEWPORT fullscreen;
+				attatchPoint->GetClientWidth(width);
+				attatchPoint->GetClientHeight(height);
+				fullscreen.Width = (FLOAT)width;
+				fullscreen.Height = (FLOAT)height;
+				fullscreen.MinDepth = 0.0f;
+				fullscreen.MaxDepth = 1.0f;
+				fullscreen.TopLeftX = 0;
+				fullscreen.TopLeftY = 0;
+				myContext->RSSetViewports(1, &fullscreen);
+
+				projectionMatrix = XMMatrixPerspectiveFovLH(XMConvertToRadians(fov), fullscreen.Width / fullscreen.Height, nearPlane, farPlane);
+				cb.mProjection = XMMatrixTranspose(projectionMatrix);
+				myContext->UpdateSubresource(myConstantBuffer, 0, nullptr, &cb, 0, 0);
+
+				leftTopRTT->Clear(myContext, myDepthStencilView, XMFLOAT4(1, 1, 0, 0));
+				leftTopRTT->BeginRender(myContext, myDevice, fullscreen.Width, fullscreen.Height);
+
+				RenderPokemonScene();
+
+				leftTopRTT->EndRender();
+				myContext->OMSetRenderTargets(1, &myRenderTargetView.p, myDepthStencilView);
+
+
+				screenQuadLeftTop->UpdateTexture(leftTopRTT->pCTexture);
+				screenQuadLeftTop->Render();
+				leftTopRTT->pResView = { nullptr };
+				myContext->PSSetShaderResources(0, 1, &leftTopRTT->pResView.p);
+			}
+
 
 			// Present Backbuffer using Swapchain object
 			// Framerate is currently unlocked, we suggest "MSI Afterburner" to track your current FPS and memory usage.
@@ -1092,7 +1158,7 @@ void LetsDrawSomeStuff::CreateConstantBuffers()
 void LetsDrawSomeStuff::UpdateLightBuffer()
 {
 	lCb.lights[0].Position = XMFLOAT4(0, 0, 0, 1);
-	lCb.lights[0].Direction = XMFLOAT4(-0.577f, -0.577f, -0.577f, 1.0f);
+	lCb.lights[0].Direction = XMFLOAT4(0.577f, -0.577f, -0.577f, 1.0f);
 
 #if DIRECTIONAL_LIGHT_ON
 	lCb.lights[0].Color = XMFLOAT4(0.5f, 0.5f, 0.5f, 1.0f);
@@ -1104,6 +1170,7 @@ void LetsDrawSomeStuff::UpdateLightBuffer()
 	lCb.lights[1].Direction = XMFLOAT4(0.0f, 0.0f, -1.0f, 1.0f);
 #if DIRECTIONAL_LIGHT_ON
 	lCb.lights[1].Color = XMFLOAT4(0.5f, 0.0f, 0.0f, 1.0f);
+	lCb.lights[1].Color = XMFLOAT4(0, 0, 0, 0);
 #else
 	lCb.lights[1].Color = XMFLOAT4(0, 0, 0, 0);
 #endif 
@@ -1367,7 +1434,7 @@ inline void LetsDrawSomeStuff::RenderDesertScene()
 	//myContext->ClearDepthStencilView(myDepthStencilView, D3D11_CLEAR_DEPTH, 1, 0); // clear it to Z exponential Far.
 
 	desert_ground->SetPosition(XMVECTOR{ 0,0,0,0 }, cb, myConstantBuffer);
-	desert_ground->RenderIndexed();
+	desert_ground->RenderIndexedNormal();
 
 	iCb.worldArray[0] = MakeWorldMatrix(-3.46f - 31.8729f + 19.3f, 0.0f, 5.7f + 33.86f + 1.88f, 0, -90.0f + 39.0f, 0);
 	iCb.worldArray[1] = MakeWorldMatrix(-17.0f, 0, -3.1f, 0, 72.0f, 0);
@@ -1562,10 +1629,74 @@ inline void LetsDrawSomeStuff::RenderSpaceScene()
 
 }
 
+inline void LetsDrawSomeStuff::RenderPokemonScene()
+{
+
+	lCb.lights[0].Color = XMFLOAT4(0, 0, 0, 1);
+	lCb.lights[1].Color = XMFLOAT4(0, 0, 0, 1);
+	lCb.lights[2].Color = XMFLOAT4(0, 0, 0, 1);
+	lCb.lights[3].Color = XMFLOAT4(0, 0, 0, 1);
+	lCb.lights[4].Color = XMFLOAT4(0, 0, 0, 1);
+	lCb.lights[5].Color = XMFLOAT4(0, 0, 0, 1);
+
+	lCb.lights[0].Position = XMFLOAT4(sin((float)xTimer.TotalTime()) * 5, 2, cos((float)xTimer.TotalTime()) * 5, 2);
+	lCb.lights[0].Color = XMFLOAT4(1, 0, 1, 1);
+	lCb.lights[0].Range.x = 2.7f + A;
+
+	lCb.lights[1].Position = XMFLOAT4(sin((float)xTimer.TotalTime()) * 3, 5, -cos((float)xTimer.TotalTime()) * 3, 3);
+	lCb.lights[1].Direction = XMFLOAT4(0, -1, 0, 0);
+	lCb.lights[1].Range.x = 0.9f;
+	lCb.lights[1].Range.y = 0.8f;
+	lCb.lights[1].Range.z = 10;
+	lCb.lights[1].Color = XMFLOAT4(0.47f, 0.1944f, 0.33f, 1);
+
+	lCb.lights[2].Position = XMFLOAT4(-sin((float)xTimer.TotalTime()) * 4, 2, -cos((float)xTimer.TotalTime()) * 4, 2);
+	lCb.lights[2].Color = XMFLOAT4(0, 1, 1, 1);
+	lCb.lights[2].Range.x = 2.7f + A;
+
+	lCb.lights[3].Position = XMFLOAT4((float)sin((float)xTimer.TotalTime())*0.5f, 2, cos((float)xTimer.TotalTime())*0.5f, 2);
+	lCb.lights[3].Color = XMFLOAT4(1, 1, 0, 1);
+	lCb.lights[3].Range.x = 2.7f + A;
+
+	myContext->UpdateSubresource(myLightConstantBuffer, 0, nullptr, &lCb, 0, 0);
+
+
+
+
+	skyBox->UpdateTexture("Pokemon_SkyBox");
+	skyBox->SetPosition(Eye, cb, myConstantBuffer);
+	skyBox->RenderIndexed();
+	leftTopRTT->ClearDPV(myContext);
+
+	pokemon_xerneas->SetLocalRotation(XMVECTOR{ 0,0,0 }, cb, myConstantBuffer, XMConvertToRadians(180.0f));
+	pokemon_xerneas->RenderIndexed();
+
+	pokemon_metagross->SetLocalRotation(XMVECTOR{ 2,0,0 }, cb, myConstantBuffer, XMConvertToRadians(210.0f));
+	pokemon_metagross->RenderIndexed();
+
+	pokemon_darkrai->SetLocalRotation(XMVECTOR{ -2,0,0 }, cb, myConstantBuffer, XMConvertToRadians(-210.0f));
+	pokemon_darkrai->RenderIndexed();
+
+	pokemon_kyurem->SetLocalRotation(XMVECTOR{ -4.5f,0,0 }, cb, myConstantBuffer, XMConvertToRadians(-230.0f));
+	pokemon_kyurem->RenderIndexed();
+
+	pokemon_gogoat->SetLocalRotation(XMVECTOR{ 4.5f,0,0 }, cb, myConstantBuffer, XMConvertToRadians(230.0f));
+	pokemon_gogoat->RenderIndexed();
+
+
+	pokemon_ground->SetLocalRotation(XMVECTOR{ 0,0,0 }, cb, myConstantBuffer, XMConvertToRadians(0));
+	pokemon_ground->RenderIndexedNormal();
+
+
+
+
+}
+
 inline void LetsDrawSomeStuff::GetKeyInput()
 {
 	if (GetAsyncKeyState('P') & 0x1)
 	{
-		showPlayGroundScene = !showPlayGroundScene;
+		currentRenderingIndex++;
+		currentRendering = (CURRENT_RENDERING)(currentRenderingIndex % 5);
 	}
 }

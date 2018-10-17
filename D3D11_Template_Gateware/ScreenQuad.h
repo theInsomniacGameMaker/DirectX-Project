@@ -21,6 +21,7 @@ public:
 		CComPtr < ID3D11GeometryShader> &geoShader, XMFLOAT3 positions[]);
 	void Render();
 	void UpdateTexture(CComPtr < ID3D11ShaderResourceView> &textureRV);
+	void UpdatePS(CComPtr < ID3D11PixelShader> pixelShader);
 	~ScreenQuad();
 };
 

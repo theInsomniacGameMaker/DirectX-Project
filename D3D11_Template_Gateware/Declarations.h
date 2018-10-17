@@ -40,7 +40,7 @@ using namespace std;
 #include "PS_NormalMapping.csh"
 #include "PS_SpecularEmissive.csh"
 #include "GS_PointToQuad.csh"
-#include "GS_Instancer.csh"
+#include "GS_Instancer.csh" 
 
 #define CHARIZARD_MESH 0
 #define BOX_MESH 1
@@ -53,7 +53,7 @@ static const XMVECTOR RIGHT = { 1,0,0,0 };
 static const XMVECTOR FORWARD = { 0,0,1,0 };
 
 enum TEXTURE_TYPE { NORMALMAP, AMBIENTOCCULUSION, EMISSIVE, MULTITEXTURE };
-
+enum CURRENT_RENDERING {SANDBOX, MULTIPORT, FPS, SPACE, POKEMON};
 struct SimpleVertex
 {
 	XMFLOAT3 Pos;

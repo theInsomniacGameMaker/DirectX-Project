@@ -64,6 +64,11 @@ void ScreenQuad::UpdateTexture(CComPtr<ID3D11ShaderResourceView>& textureRV)
 	m_TextureRV = textureRV;
 }
 
+void ScreenQuad::UpdatePS(CComPtr<ID3D11PixelShader> pixelShader)
+{
+	m_PixelShader = pixelShader;
+}
+
 
 ScreenQuad::~ScreenQuad()
 {

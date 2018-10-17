@@ -82,10 +82,9 @@ float4 main(PS_INPUT input) : SV_Target
 			float spec = pow(dotResult, 128);
 
 			float4 reflectedLight = lights[i].Color * spec*howMuchLight;
-			pointLightColor += reflectedLight;
-
 			pointLightColor *= (1.0 - saturate(length(lights[i].Position - input.wPos) / lights[i].Range.x));
 
+			pointLightColor += reflectedLight;
 			finalColor += saturate(pointLightColor);
 		}
 		else if (lights[i].Position.w == 3)

@@ -7,3 +7,5 @@ Up and Down keys to change zoom in and out respectively.
 
 R will reset the camera position.
 P will switch the scenes. 
+
+Second custom theme added "Pokemon".
