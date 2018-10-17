@@ -84,15 +84,11 @@ class LetsDrawSomeStuff
 	XMVECTOR Up;
 
 	//Quad that is on a screen to appl Post Processing
-	ScreenQuad*		screenQuad;
-	ScreenQuad*		screenQuadRightTop;
-	ScreenQuad*		screenQuadRightBottom;
+	ScreenQuad*		screenQuadLeftTop;
 
 	//RTT variables
 	TextureRenderer*	textureRenderer;
-	TextureRenderer*	mainTextureRenderer;
-	TextureRenderer*	rightTopRTT;
-	TextureRenderer*	rightBottomRTT;
+	TextureRenderer*	leftTopRTT;
 
 	//All 3D Objects 
 	D3DObject*		feraligtr;
@@ -139,6 +135,11 @@ class LetsDrawSomeStuff
 	D3DObject*		space_planetNeptune;
 	D3DObject*		space_satellite;
 
+	D3DObject*		pokemon_xerneas;
+	D3DObject*		pokemon_metagross;
+	D3DObject*		pokemon_darkrai;
+	D3DObject*		pokemon_ground;
+
 	//Constant Buffers
 	InstanceConstantBuffer	iCb;
 	LightConstantBuffer		lCb;
@@ -157,7 +158,7 @@ class LetsDrawSomeStuff
 	float fov = 60;
 	float nearPlane = 0.01f, farPlane = 150.0f;
 	unsigned int width, height;
-
+	bool showPlayGroundScene = false;
 #if DEBUGGER
 	ID3D11Debug *DebugDevice;
 #endif
@@ -169,7 +170,7 @@ public:
 	// Shutdown
 	~LetsDrawSomeStuff();
 	// Draw
-	void Render();
+	void Render(GW::SYSTEM::GWindow* attatchPoint);
 	//Camera Movement
 	void CameraMovement();
 	//Reset Camera
@@ -202,6 +203,8 @@ public:
 	void RenderDesertScene();
 	//Space Scene
 	void RenderSpaceScene();
+	//Key Input
+	void GetKeyInput();
 
 
 };
@@ -219,6 +222,7 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			mySurface->GetDevice((void**)&myDevice.p);
 			mySurface->GetSwapchain((void**)&mySwapChain.p);
 			mySurface->GetContext((void**)&myContext.p);
+
 
 			//SetupRenderTargetView();
 
@@ -326,8 +330,8 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			space_planetVenus = new D3DObject("Planet", 1 / 55.0f, myDevice, myContext, myVertexShader, myPixelShader,
 				nullGeometryShader, myConstantBuffer, "venusmap");
 
-			space_planetEarth = new D3DObject("Planet", 1/50.f, myDevice, myContext, myVertexShader, myPixelShader,
-				nullGeometryShader, myConstantBuffer, "earthmap1k", "earthlights1k",EMISSIVE);
+			space_planetEarth = new D3DObject("Planet", 1 / 50.f, myDevice, myContext, myVertexShader, myPixelShader,
+				nullGeometryShader, myConstantBuffer, "earthmap1k", "earthlights1k", EMISSIVE);
 
 			space_planetMars = new D3DObject("Planet", 1 / 45.0f, myDevice, myContext, myVertexShader, myPixelShader,
 				nullGeometryShader, myConstantBuffer, "marsmap");
@@ -348,18 +352,27 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 				nullGeometryShader, myConstantBuffer, "neptunemap");
 
 			space_moon = new D3DObject("Planet", 1 / 150.0f, myDevice, myContext, myVertexShader, myPixelShader,
-				nullGeometryShader, myConstantBuffer, "moon_Diffuse");
+				nullGeometryShader, myConstantBuffer, "MoonTexture1","MoonTexture2",MULTITEXTURE);
 
 			space_satellite = new D3DObject("Satellite", 1 / 220.0f, myDevice, myContext, myVertexShader, myPixelShaderSpecular,
 				nullGeometryShader, myConstantBuffer, "RT_2D_Station_Diffuse");
 
 			space_Sun = new D3DObject("Planet", 1 / 10.f, myDevice, myContext, myVertexShader, myPixelShaderEmissive,
-				nullGeometryShader, myConstantBuffer, "8k_sun", "8k_sun",EMISSIVE);
+				nullGeometryShader, myConstantBuffer, "8k_sun", "8k_sun", EMISSIVE);
 
+			pokemon_xerneas = new D3DObject("Xerneas", 1 / 70.0f, myDevice, myContext, myVertexShader, myPixelShaderSpecular,
+				nullGeometryShader, myConstantBuffer, "Xerneas_TX");
 
+			pokemon_metagross = new D3DObject("Metagross", 1 / 30.0f, myDevice, myContext, myVertexShader, myPixelShaderSpecular,
+				nullGeometryShader, myConstantBuffer, "Metagross_TX");
 
+			pokemon_darkrai = new D3DObject("Darkrai", 1 / 15.0f, myDevice, myContext, myVertexShader, myPixelShaderSpecular,
+				nullGeometryShader, myConstantBuffer, "Darkrai_TX");
 
-			plant = new D3DObject("Parviflora", 1.0f / 15.0f, myDevice, myContext, myVertexShader, myPixelShaderTransparentRejector, nullGeometryShader, myConstantBuffer);
+			pokemon_ground = new D3DObject("Ground", 10.0f, myDevice, myContext, myVertexShader,
+				myPixelShaderSpecular, nullGeometryShader, myConstantBuffer, "pokemon_plane");
+
+			plant = new D3DObject("Parviflora", 1.0f / 20.0f, myDevice, myContext, myVertexShader, myPixelShaderTransparentRejector, nullGeometryShader, myConstantBuffer);
 			plant->UpdateTexture("Parviflora_diffuse");
 
 			transparentObjects[0] = new D3DObject("cube", 1 / 50.0f, myDevice, myContext, myVertexShader, myPixelShaderTransparent, nullGeometryShader, myConstantBuffer);
@@ -370,10 +383,10 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			transparentObjects[1]->UpdateTexture("Energy1");
 			transparentObjects[2]->UpdateTexture("Energy");
 
-			textureRenderer = new TextureRenderer(myDevice, width, height);
-			mainTextureRenderer = new TextureRenderer(myDevice, width, height);
-			rightTopRTT = new TextureRenderer(myDevice, width, height);
-			rightBottomRTT = new TextureRenderer(myDevice, width, height);
+			textureRenderer = new TextureRenderer(myDevice, myContext, width, height);
+			//rightTopRTT = new TextureRenderer(myDevice, myContext, width, height);
+			leftTopRTT = new TextureRenderer(myDevice, myContext, (int)(width/2.0f), (int)(height/2.0f));
+			//bottomRTT = new TextureRenderer(myDevice, myContext, width, height);
 
 			XMFLOAT3 positions[4];
 			positions[0] = XMFLOAT3(-1, 1, 0);
@@ -386,7 +399,7 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			positions[2] = XMFLOAT3(-1, -1, 0);
 			positions[3] = XMFLOAT3(1, -1, 0);
 
-			screenQuad = new ScreenQuad(myDevice, myContext, myVertexShaderScreenSpace, myPixelShaderNoLighting, nullGeometryShader, positions);
+			//screenQuad = new ScreenQuad(myDevice, myContext, myVertexShaderScreenSpace, myPixelShaderNoLighting, nullGeometryShader, positions);
 
 
 			positions[0] = XMFLOAT3(0, 1, 0);
@@ -394,24 +407,37 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			positions[2] = XMFLOAT3(0, 0, 0);
 			positions[3] = XMFLOAT3(1, 0, 0);
 
-			//positions[0] = XMFLOAT3(-1, 1, 0);
-			//positions[1] = XMFLOAT3(1, 1, 0);
-			//positions[2] = XMFLOAT3(-1, -1, 0);
-			//positions[3] = XMFLOAT3(1, -1, 0);
+			positions[0] = XMFLOAT3(-1, 1, 0);
+			positions[1] = XMFLOAT3(1, 1, 0);
+			positions[2] = XMFLOAT3(-1, -1, 0);
+			positions[3] = XMFLOAT3(1, -1, 0);
 
-			screenQuadRightTop = new ScreenQuad(myDevice, myContext, myVertexShaderScreenSpace, myPixelShaderNoLighting, nullGeometryShader, positions);
+			//screenQuadRightTop = new ScreenQuad(myDevice, myContext, myVertexShaderScreenSpace, myPixelShaderNoLighting, nullGeometryShader, positions);
 
-			positions[0] = XMFLOAT3(0, 1-1, 0);
-			positions[1] = XMFLOAT3(1, 1-1, 0);
-			positions[2] = XMFLOAT3(0, 0-1, 0);
-			positions[3] = XMFLOAT3(1, 0-1, 0);
+			positions[0] = XMFLOAT3(0, 1 - 1, 0);
+			positions[1] = XMFLOAT3(1, 1 - 1, 0);
+			positions[2] = XMFLOAT3(0, 0 - 1, 0);
+			positions[3] = XMFLOAT3(1, 0 - 1, 0);
 
 			positions[0] = XMFLOAT3(-1, 1, 0);
 			positions[1] = XMFLOAT3(1, 1, 0);
 			positions[2] = XMFLOAT3(-1, -1, 0);
 			positions[3] = XMFLOAT3(1, -1, 0);
 
-			screenQuadRightBottom = new ScreenQuad(myDevice, myContext, myVertexShaderScreenSpace, myPixelShaderNoLighting, nullGeometryShader, positions);
+			//screenQuadBottom = new ScreenQuad(myDevice, myContext, myVertexShaderScreenSpace, myPixelShaderNoLighting, nullGeometryShader, positions);
+
+			positions[0] = XMFLOAT3(0 - 1, 1, 0);
+			positions[1] = XMFLOAT3(1 - 1, 1, 0);
+			positions[2] = XMFLOAT3(0 - 1, 0, 0);
+			positions[3] = XMFLOAT3(1 - 1, 0, 0);
+
+			positions[0] = XMFLOAT3(-1, 1, 0);
+			positions[1] = XMFLOAT3(1, 1, 0);
+			positions[2] = XMFLOAT3(-1, -1, 0);
+			positions[3] = XMFLOAT3(1, -1, 0);
+
+			screenQuadLeftTop = new ScreenQuad(myDevice, myContext, myVertexShaderScreenSpace, myPixelShaderNoLighting, nullGeometryShader, positions);
+
 
 			myContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
@@ -478,14 +504,10 @@ LetsDrawSomeStuff::~LetsDrawSomeStuff()
 #endif
 
 
+	delete leftTopRTT;
 	delete textureRenderer;
-	delete mainTextureRenderer;
-	delete rightTopRTT;
-	delete rightBottomRTT;
 
-	delete screenQuad;
-	delete screenQuadRightTop;
-	delete screenQuadRightBottom;
+	delete screenQuadLeftTop;
 
 	delete feraligtr;
 	delete skyBox;
@@ -529,7 +551,12 @@ LetsDrawSomeStuff::~LetsDrawSomeStuff()
 	delete space_planetUranus;
 	delete space_planetNeptune;
 	delete space_moon;
-	delete space_satellite; 
+	delete space_satellite;
+
+	delete pokemon_xerneas;
+	delete pokemon_metagross;
+	delete pokemon_darkrai;
+	delete pokemon_ground;
 
 	for (int i = 0; i < transparentObjects.size(); i++)
 	{
@@ -544,7 +571,7 @@ LetsDrawSomeStuff::~LetsDrawSomeStuff()
 }
 
 // Draw
-void LetsDrawSomeStuff::Render()
+void LetsDrawSomeStuff::Render(GW::SYSTEM::GWindow* attatchPoint)
 {
 	if (mySurface) // valid?
 	{
@@ -558,8 +585,6 @@ void LetsDrawSomeStuff::Render()
 			if (G_SUCCESS(mySurface->GetDepthStencilView((void**)&myDepthStencilView)))
 			{
 				myContext->ClearDepthStencilView(myDepthStencilView, D3D11_CLEAR_DEPTH, 1, 0); // clear it to Z exponential Far.
-
-				myDepthStencilView.Release();
 			}
 
 			// Set active target for drawing, all array based D3D11 functions should use a syntax similar to below
@@ -641,8 +666,8 @@ void LetsDrawSomeStuff::Render()
 			myContext->GSSetShader(myGeometryShaderPoint, nullptr, 0);
 			myContext->GSSetConstantBuffers(0, 1, &myConstantBuffer.p);
 
-			mainTextureRenderer->Clear(myContext, myDepthStencilView, XMFLOAT4(0, 0, 0, 0));
-			mainTextureRenderer->BeginRender(myContext, myRenderTargetView);
+
+			GetKeyInput();
 
 
 			//changing blending factor
@@ -651,135 +676,231 @@ void LetsDrawSomeStuff::Render()
 			//Set the default blend state (no blending) for opaque objects
 			myContext->OMSetBlendState(0, 0, 0xffffffff);
 
-			//Render opaque objects//
+			if (showPlayGroundScene)
+			{
+				D3D11_VIEWPORT fullscreen;
+				attatchPoint->GetClientWidth(width);
+				attatchPoint->GetClientHeight(height);
+				fullscreen.Width = (FLOAT)width;
+				fullscreen.Height = (FLOAT)height;
+				fullscreen.MinDepth = 0.0f;
+				fullscreen.MaxDepth = 1.0f;
+				fullscreen.TopLeftX = 0;
+				fullscreen.TopLeftY = 0;
+				myContext->RSSetViewports(1, &fullscreen);
 
-			skyBox->UpdateTexture("OutputCube");
-			skyBox->SetPosition(Eye, cb, myConstantBuffer);
-			skyBox->RenderIndexed();
-			mainTextureRenderer->ClearDPV(myContext);
 
-			feraligtr->SetLocalRotation(XMVECTOR{ 5,0,2,0 }, cb, myConstantBuffer, (float)xTimer.TotalTime());
-			feraligtr->RenderIndexed();
+				projectionMatrix = XMMatrixPerspectiveFovLH(XMConvertToRadians(fov), fullscreen.Width / fullscreen.Height, nearPlane, farPlane);
+				cb.mProjection = XMMatrixTranspose(projectionMatrix);
+				myContext->UpdateSubresource(myConstantBuffer, 0, nullptr, &cb, 0, 0);
 
-			ground->SetPosition(XMVECTOR{ 0,-0.5,0,0 }, cb, myConstantBuffer);
-			ground->RenderIndexed();
+				//Render opaque objects//
+				skyBox->UpdateTexture("OutputCube");
+				skyBox->SetPosition(Eye, cb, myConstantBuffer);
+				skyBox->RenderIndexed();
+				myContext->ClearDepthStencilView(myDepthStencilView, D3D11_CLEAR_DEPTH, 1, 0); // clear it to Z exponential Far.
 
-			box->SetPosition(XMVECTOR{ -5,0,0,1 }, cb, myConstantBuffer);
-			box->UpdateVS(myVertexShader);
-			box->UpdatePS(myPixelShaderMultitexturing);
-			box->RenderIndexedMulitexture(myTextureRVPMT);
 
-			reflectiveTeapot->SetLocalRotation(XMVECTOR{ 0,5.0f,0.0f,0 }, cb, myConstantBuffer, (float)xTimer.TotalTime() / 2.0f, (float)xTimer.TotalTime() / 2.0f);
-			reflectiveTeapot->RenderIndexed();
+				feraligtr->SetLocalRotation(XMVECTOR{ 5,0,2,0 }, cb, myConstantBuffer, (float)xTimer.TotalTime());
+				feraligtr->RenderIndexed();
 
-			box->SetPosition(XMVECTOR{ -5,2,0,0 }, cb, myConstantBuffer);
-			box->UpdateVS(myVertexShaderPassThrough);
-			box->UpdateGS(myGeometryShaderTriangle);
-			box->RenderIndexedWithGS(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-			box->UpdateGS(nullGeometryShader);
+				ground->SetPosition(XMVECTOR{ 0,-0.5,0,0 }, cb, myConstantBuffer);
+				ground->RenderIndexed();
+
+				box->SetPosition(XMVECTOR{ -5,0,0,1 }, cb, myConstantBuffer);
+				box->UpdateVS(myVertexShader);
+				box->UpdatePS(myPixelShaderMultitexturing);
+				box->RenderIndexedMulitexture(myTextureRVPMT);
+
+				reflectiveTeapot->SetLocalRotation(XMVECTOR{ 0,5.0f,0.0f,0 }, cb, myConstantBuffer, (float)xTimer.TotalTime() / 2.0f, (float)xTimer.TotalTime() / 2.0f);
+				reflectiveTeapot->RenderIndexed();
+
+				box->SetPosition(XMVECTOR{ -5,2,0,0 }, cb, myConstantBuffer);
+				box->UpdateVS(myVertexShaderPassThrough);
+				box->UpdateGS(myGeometryShaderTriangle);
+				box->RenderIndexedWithGS(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+				box->UpdateGS(nullGeometryShader);
 
 #if DIRECTIONAL_LIGHT_ON
-			box->UpdatePS(myPixelShaderSolid);
-			box->UpdateVS(myVertexShader);
-			XMMATRIX mLight = XMMatrixTranslationFromVector(5.0f * XMLoadFloat4(&lCb.lights[1].Direction));
-			XMMATRIX mLightScale = XMMatrixScaling(0.2f, 0.2f, 0.2f);
-			mLight = mLightScale * mLight;
-			box->SetPosition(mLight, cb, myConstantBuffer);
-			cb.vOutputColor = lCb.lights[1].Color;
-			myContext->UpdateSubresource(myConstantBuffer, 0, nullptr, &cb, 0, 0);
-			box->RenderIndexed();
+				box->UpdatePS(myPixelShaderSolid);
+				box->UpdateVS(myVertexShader);
+				XMMATRIX mLight = XMMatrixTranslationFromVector(5.0f * XMLoadFloat4(&lCb.lights[1].Direction));
+				XMMATRIX mLightScale = XMMatrixScaling(0.2f, 0.2f, 0.2f);
+				mLight = mLightScale * mLight;
+				box->SetPosition(mLight, cb, myConstantBuffer);
+				cb.vOutputColor = lCb.lights[1].Color;
+				myContext->UpdateSubresource(myConstantBuffer, 0, nullptr, &cb, 0, 0);
+				box->RenderIndexed();
 #endif 
-			cubeGS->SetPosition(XMVECTOR{ 3, 0, 0, 0 }, cb, myConstantBuffer);
-			cubeGS->RenderIndexedWithGS(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
+				cubeGS->SetPosition(XMVECTOR{ 3, 0, 0, 0 }, cb, myConstantBuffer);
+				cubeGS->RenderIndexedWithGS(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
 
-			bulb->SetPosition(XMVECTOR{ lCb.lights[2].Position.x, lCb.lights[2].Position.y, lCb.lights[2].Position.z, 1 }, cb, myConstantBuffer);
-			bulb->RenderIndexed();
+				bulb->SetPosition(XMVECTOR{ lCb.lights[2].Position.x, lCb.lights[2].Position.y, lCb.lights[2].Position.z, 1 }, cb, myConstantBuffer);
+				bulb->RenderIndexed();
 
-			myContext->UpdateSubresource(myInstanceConstantBuffer, 0, nullptr, &iCb, 0, 0);
-			box->UpdateVS(myVertexShaderInstance);
-			box->UpdatePS(myPixelShaderMultitexturing);
-			//box->RenderInstanced(10, myInstanceConstantBuffer);
+				myContext->UpdateSubresource(myInstanceConstantBuffer, 0, nullptr, &iCb, 0, 0);
+				box->UpdateVS(myVertexShaderInstance);
+				box->UpdatePS(myPixelShaderMultitexturing);
+				//box->RenderInstanced(10, myInstanceConstantBuffer);
 
-			emissiveTeapot->SetLocalRotation(XMVECTOR{ -2,-1,0,1 }, cb, myConstantBuffer, (float)xTimer.TotalTime());
-			emissiveTeapot->RenderIndexedEmissive(myTextureEmissive);
+				emissiveTeapot->SetLocalRotation(XMVECTOR{ -2,-1,0,1 }, cb, myConstantBuffer, (float)xTimer.TotalTime());
+				emissiveTeapot->RenderIndexedEmissive(myTextureEmissive);
 
-			plant->SetPosition(XMVECTOR{ 3,0,-3,0 }, cb, myConstantBuffer);
-			plant->RenderIndexed();
+				plant->SetPosition(XMVECTOR{ 3,0,-3,0 }, cb, myConstantBuffer);
+				plant->RenderIndexed();
 
-			humvee->SetLocalRotation(XMVECTOR{ -8,3,0 }, cb, myConstantBuffer, XMConvertToRadians(180.0f));
-			humvee->UpdatePS(myPixelShader);
-			humvee->RenderIndexed();
+				humvee->SetLocalRotation(XMVECTOR{ -8,3,0 }, cb, myConstantBuffer, XMConvertToRadians(180.0f));
+				humvee->UpdatePS(myPixelShader);
+				humvee->RenderIndexed();
 
-			humvee->UpdatePS(myPixelShaderAO);
-			humvee->SetLocalRotation(XMVECTOR{ 8,3,0 }, cb, myConstantBuffer, XMConvertToRadians(180.0f));
-			humvee->RenderIndexedWithAO();
+				humvee->UpdatePS(myPixelShaderAO);
+				humvee->SetLocalRotation(XMVECTOR{ 8,3,0 }, cb, myConstantBuffer, XMConvertToRadians(180.0f));
+				humvee->RenderIndexedWithAO();
 
-			textureRenderer->MoveCamera(cb, myConstantBuffer, myContext);
-			textureRenderer->Clear(myContext, nullptr, XMFLOAT4(1, 1, 1, 1));
-			textureRenderer->BeginRender(myContext, mainTextureRenderer->pRenderTargetView);
+				textureRenderer->MoveCamera(cb, myConstantBuffer, myContext);
+				textureRenderer->Clear(myContext, nullptr, XMFLOAT4(1, 1, 1, 1));
+				textureRenderer->BeginRender(myContext, myDevice, (float)width, (float)height);
 #if SPACESHIP
-			spaceShip->SetLocalRotation(XMVECTOR{ 100,0,0,0 }, cb, myConstantBuffer, (float)xTimer.TotalTime(), (float)xTimer.TotalTime());
-			spaceShip->RenderIndexed();
+				spaceShip->SetLocalRotation(XMVECTOR{ 100,0,0,0 }, cb, myConstantBuffer, (float)xTimer.TotalTime(), (float)xTimer.TotalTime());
+				spaceShip->RenderIndexed();
 #endif 
-			textureRenderer->EndRender(myContext, myRenderTargetView, mainTextureRenderer->depthStencilView );
+				textureRenderer->EndRender();
+				myContext->OMSetRenderTargets(1, &myRenderTargetView.p, myDepthStencilView);
 
-			UpdateCamera();
+				UpdateCamera();
 
-			spaceShipRTT->UpdateTexture(textureRenderer->pCTexture);
-			spaceShipRTT->SetPosition(XMVECTOR{ 5, 2, -3, 1 }, cb, myConstantBuffer);
-			spaceShipRTT->RenderIndexedWithDynamicSRV(textureRenderer->pCTexture);
-
-
-			myContext->OMSetBlendState(transparencyBlendState, blendFactor, 0xffffffff);
-
-			transparentObjects[0]->SetLocalRotation(XMVECTOR{ 2.5,-1.5,0 }, cb, myConstantBuffer, (float)sin(xTimer.TotalTime()));
-			transparentObjects[1]->SetLocalRotation(XMVECTOR{ 0,-1.5,0 }, cb, myConstantBuffer, (float)sin(xTimer.TotalTime()));
-			transparentObjects[2]->SetLocalRotation(XMVECTOR{ -2.5,-1.5,3 }, cb, myConstantBuffer, (float)sin(xTimer.TotalTime()));
+				spaceShipRTT->UpdateTexture(textureRenderer->pCTexture);
+				spaceShipRTT->SetPosition(XMVECTOR{ 5, 2, -3, 1 }, cb, myConstantBuffer);
+				spaceShipRTT->RenderIndexedWithDynamicSRV(textureRenderer->pCTexture);
 
 
-			RenderTransparentObjects();
-			myContext->OMSetBlendState(0, 0, 0xffffffff);
+				myContext->OMSetBlendState(transparencyBlendState, blendFactor, 0xffffffff);
 
-			mainTextureRenderer->EndRender(myContext, myRenderTargetView, myDepthStencilView);
-
-			screenQuad->UpdateTexture(mainTextureRenderer->pCTexture);
-			screenQuad->Render();
+				transparentObjects[0]->SetLocalRotation(XMVECTOR{ 2.5,-1.5,0 }, cb, myConstantBuffer, (float)sin(xTimer.TotalTime()));
+				transparentObjects[1]->SetLocalRotation(XMVECTOR{ 0,-1.5,0 }, cb, myConstantBuffer, (float)sin(xTimer.TotalTime()));
+				transparentObjects[2]->SetLocalRotation(XMVECTOR{ -2.5,-1.5,3 }, cb, myConstantBuffer, (float)sin(xTimer.TotalTime()));
 
 
-			mainTextureRenderer->pResView = { nullptr };
-			myContext->PSSetShaderResources(0, 1, &mainTextureRenderer->pResView.p);
+				RenderTransparentObjects();
+				myContext->OMSetBlendState(0, 0, 0xffffffff);
 
-			////Start rendering the right top of the screen
-			rightTopRTT->Clear(myContext, myDepthStencilView, XMFLOAT4(0, 0, 0, 1));
-			rightTopRTT->BeginRender(myContext, myRenderTargetView);
+			}
+			else
+			{
+				D3D11_VIEWPORT vpTopRight;
+				attatchPoint->GetClientWidth(width);
+				attatchPoint->GetClientHeight(height);
+				vpTopRight.Width = (FLOAT)width / 2.0f;
+				vpTopRight.Height = (FLOAT)height / 2.0f;
+				vpTopRight.MinDepth = 0.0f;
+				vpTopRight.MaxDepth = 1.0f;
+				vpTopRight.TopLeftX = (FLOAT)width / 2.0f;
+				vpTopRight.TopLeftY = 0;
+				myContext->RSSetViewports(1, &vpTopRight);
 
-			RenderDesertScene();
+				skyBox->UpdateTexture("DesertSkyBox");
+				skyBox->SetPosition(Eye, cb, myConstantBuffer);
+				skyBox->RenderIndexed();
+				myContext->ClearDepthStencilView(myDepthStencilView, D3D11_CLEAR_DEPTH, 1, 0); // clear it to Z exponential Far.
 
-			rightTopRTT->EndRender(myContext, myRenderTargetView, myDepthStencilView);
-
-			screenQuadRightTop->UpdateTexture(rightTopRTT->pCTexture);
-			screenQuadRightTop->Render();
-
-			rightTopRTT->pResView = { nullptr };
-			myContext->PSSetShaderResources(0, 1, &mainTextureRenderer->pResView.p);
+				RenderDesertScene();
 
 
-			rightBottomRTT->Clear(myContext, myDepthStencilView, XMFLOAT4(1, 0, 1, 0));
-			rightBottomRTT->BeginRender(myContext, myRenderTargetView);
-			RenderSpaceScene();
-			rightBottomRTT->EndRender(myContext, myRenderTargetView, myDepthStencilView);
+				D3D11_VIEWPORT vpBottom;
+				attatchPoint->GetClientWidth(width);
+				attatchPoint->GetClientHeight(height);
+				vpBottom.Width = (FLOAT)width;
+				vpBottom.Height = (FLOAT)height / 2.0f;
+				vpBottom.MinDepth = 0.0f;
+				vpBottom.MaxDepth = 1.0f;
+				vpBottom.TopLeftX = 0;
+				vpBottom.TopLeftY = (FLOAT)height / 2.0f;
+				myContext->RSSetViewports(1, &vpBottom);
 
-			screenQuadRightBottom->UpdateTexture(rightBottomRTT->pCTexture);
-			screenQuadRightBottom->Render();
 
-			rightBottomRTT->pResView = { nullptr };
-			myContext->PSSetShaderResources(0, 1, &mainTextureRenderer->pResView.p);
+				projectionMatrix = XMMatrixPerspectiveFovLH(XMConvertToRadians(fov), vpBottom.Width / vpBottom.Height, nearPlane, farPlane);
+				cb.mProjection = XMMatrixTranspose(projectionMatrix);
+				myContext->UpdateSubresource(myConstantBuffer, 0, nullptr, &cb, 0, 0);
 
+
+				skyBox->UpdateTexture("StarField");
+				skyBox->SetPosition(Eye, cb, myConstantBuffer);
+				skyBox->RenderIndexed();
+				myContext->ClearDepthStencilView(myDepthStencilView, D3D11_CLEAR_DEPTH, 1, 0); // clear it to Z exponential Far.
+
+				RenderSpaceScene();
+
+				D3D11_VIEWPORT vpTopLeft;
+				attatchPoint->GetClientWidth(width);
+				attatchPoint->GetClientHeight(height);
+				vpTopLeft.Width = (FLOAT)width / 2.0f;
+				vpTopLeft.Height = (FLOAT)height / 2.0f;
+				vpTopLeft.MinDepth = 0.0f;
+				vpTopLeft.MaxDepth = 1.0f;
+				vpTopLeft.TopLeftX = 0;
+				vpTopLeft.TopLeftY = 0;
+
+
+				myContext->RSSetViewports(1, &vpTopLeft);
+
+				projectionMatrix = XMMatrixPerspectiveFovLH(XMConvertToRadians(fov), vpTopLeft.Width / vpTopLeft.Height, nearPlane, farPlane);
+				cb.mProjection = XMMatrixTranspose(projectionMatrix);
+				myContext->UpdateSubresource(myConstantBuffer, 0, nullptr, &cb, 0, 0);
+
+				lCb.lights[0].Color = XMFLOAT4(0, 0, 0, 1);
+				lCb.lights[1].Color = XMFLOAT4(0, 0, 0, 1);
+				lCb.lights[2].Color = XMFLOAT4(0, 0, 0, 1);
+				lCb.lights[3].Color = XMFLOAT4(0, 0, 0, 1);
+				lCb.lights[4].Color = XMFLOAT4(0, 0, 0, 1);
+				lCb.lights[5].Color = XMFLOAT4(0, 0, 0, 1);
+
+				lCb.lights[0].Position = XMFLOAT4((float)sin((float)xTimer.TotalTime()), 1, cos(xTimer.TotalTime()), 2);
+				lCb.lights[0].Color = XMFLOAT4(1, 0, 1, 1);
+				lCb.lights[0].Range.x = 3.0f;
+
+				lCb.lights[1].Position = XMFLOAT4((float)-sin((float)xTimer.TotalTime()), 1, -cos(xTimer.TotalTime()), 2);
+				lCb.lights[1].Color = XMFLOAT4(1, 0, 1, 1);
+				lCb.lights[1].Range.x = 3.0f;
+
+				myContext->UpdateSubresource(myLightConstantBuffer, 0, nullptr, &lCb, 0, 0);
+
+
+				leftTopRTT->Clear(myContext, myDepthStencilView, XMFLOAT4(1, 1, 0, 0));
+				leftTopRTT->BeginRender(myContext, myDevice, vpTopLeft.Width, vpTopLeft.Height);
+
+				skyBox->UpdateTexture("Pokemon_SkyBox");
+				skyBox->SetPosition(Eye, cb, myConstantBuffer);
+				skyBox->RenderIndexed();
+				leftTopRTT->ClearDPV(myContext);
+
+				pokemon_xerneas->SetLocalRotation(XMVECTOR{ 0,0,0 }, cb, myConstantBuffer, XMConvertToRadians(180.0f));
+				pokemon_xerneas->RenderIndexed();
+
+				pokemon_metagross->SetLocalRotation(XMVECTOR{ 2,0,0 }, cb, myConstantBuffer, XMConvertToRadians(210.0f));
+				pokemon_metagross->RenderIndexed();
+
+				pokemon_darkrai->SetLocalRotation(XMVECTOR{ -2,0,0 }, cb, myConstantBuffer, XMConvertToRadians(-210.0f));
+				pokemon_darkrai->RenderIndexed();
+
+				pokemon_ground->SetLocalRotation(XMVECTOR{ 0,0,0 }, cb, myConstantBuffer, XMConvertToRadians(0));
+				pokemon_ground->RenderIndexed();
+
+
+				leftTopRTT->EndRender();
+				myContext->OMSetRenderTargets(1, &myRenderTargetView.p, myDepthStencilView);
+
+				screenQuadLeftTop->UpdateTexture(leftTopRTT->pCTexture);
+				screenQuadLeftTop->Render();
+				leftTopRTT->pResView = { nullptr };
+				myContext->PSSetShaderResources(0, 1, &leftTopRTT->pResView.p);
+
+			}
 
 			// Present Backbuffer using Swapchain object
 			// Framerate is currently unlocked, we suggest "MSI Afterburner" to track your current FPS and memory usage.
 			mySwapChain->Present(0, 0); // set first argument to 1 to enable vertical refresh sync with display
 			myRenderTargetView.Release(); // Free any temp DX handles aquired this frame  
+			myDepthStencilView.Release();
 
 		}
 	}
@@ -863,27 +984,35 @@ void LetsDrawSomeStuff::CameraMovement()
 
 	if (GetAsyncKeyState('N'))
 	{
-		if (nearPlane > 0.1f)
+		if (GetAsyncKeyState(VK_LSHIFT))
 		{
-			nearPlane -= (float)xTimer.Delta();
+			if (nearPlane > 0.1f)
+			{
+				nearPlane -= (float)xTimer.Delta();
+			}
 		}
-	}
-	else if (GetAsyncKeyState('M'))
-	{
-		nearPlane += (float)xTimer.Delta();
+		else
+		{
+			nearPlane += (float)xTimer.Delta();
+		}
 	}
 
-	if (GetAsyncKeyState('C'))
+
+	if (GetAsyncKeyState('F'))
 	{
-		if (farPlane > 0.1f)
+		if (GetAsyncKeyState(VK_LSHIFT))
 		{
-			farPlane -= (float)xTimer.Delta()*10.0f;
+			if (farPlane > 1.0f)
+			{
+				farPlane -= (float)xTimer.Delta()*10.0f;
+			}
+		}
+		else
+		{
+			farPlane += (float)xTimer.Delta()*10.0f;
 		}
 	}
-	else if (GetAsyncKeyState('V'))
-	{
-		farPlane += (float)xTimer.Delta()*10.0f;
-	}
+
 
 	viewMatrix = XMMatrixInverse(0, viewMatrix);
 	viewMatrix = XMMatrixTranslationFromVector(XMVECTOR{ 0,0,moveZ })*viewMatrix;
@@ -903,25 +1032,6 @@ void LetsDrawSomeStuff::CameraMovement()
 
 	viewMatrix = XMMatrixInverse(0, viewMatrix);
 
-	/////Old Code/////
-
-	//XMMATRIX camRotationMatrix = XMMatrixTranspose(XMMatrixRotationRollPitchYaw(camPitch, camYaw, 0));
-	//At = XMVector3TransformCoord(FORWARD, camRotationMatrix);
-	//At = XMVector3Normalize(At);
-
-	//XMMATRIX tempRotationMatrix = XMMatrixRotationY(camYaw);
-
-
-	//XMVECTOR camRight = XMVector3TransformCoord(RIGHT, tempRotationMatrix);
-	//Up = XMVector3TransformCoord(Up, tempRotationMatrix);
-	//XMVECTOR camForward = XMVector3TransformCoord(FORWARD, tempRotationMatrix);
-
-	//Eye += moveX * camRight;
-	//Eye += moveZ * camForward;
-	//Eye += moveY * Up;
-
-	///////Old Code//////////
-
 	moveX = 0.0f;
 	moveZ = 0.0f;
 	moveY = 0;
@@ -933,7 +1043,6 @@ void LetsDrawSomeStuff::CameraMovement()
 	mySurface->GetAspectRatio(aspectRatio);
 	projectionMatrix = XMMatrixPerspectiveFovLH(XMConvertToRadians(fov), width / (FLOAT)height, nearPlane, farPlane);
 
-	//viewMatrix = XMMatrixLookAtLH(Eye, At, Up);
 }
 
 inline void LetsDrawSomeStuff::ResetCamera()
@@ -1026,7 +1135,7 @@ void LetsDrawSomeStuff::UpdateLightBuffer()
 
 	lCb.lights[5].Position.w = 0;
 	lCb.lights[5].Color = XMFLOAT4(1, 1, 1, 1);
-	lCb.lights[5].Direction.x = 0.375f;
+	lCb.lights[5].Direction.x = 0.25f;
 
 
 	// Rotate the a matrix
@@ -1218,7 +1327,7 @@ void LetsDrawSomeStuff::RenderTransparentObjects()
 	for (int i = 0; i < transparentObjects.size(); i++)
 	{
 		//transparentObjects[indices[i]]->SetLocalRotation(transparentObjects[i]->GetPosition(), cb, myConstantBuffer, (float)sin(xTimer.TotalTime()));
-		transparentObjects[indices[i]]->PositionRenderIndexedTransparent(cb,myConstantBuffer);
+		transparentObjects[indices[i]]->PositionRenderIndexedTransparent(cb, myConstantBuffer);
 	}
 }
 
@@ -1258,11 +1367,6 @@ inline void LetsDrawSomeStuff::RenderDesertScene()
 
 	myContext->UpdateSubresource(myLightConstantBuffer, 0, nullptr, &lCb, 0, 0);
 
-
-	skyBox->UpdateTexture("DesertSkyBox");
-	skyBox->SetPosition(Eye, cb, myConstantBuffer);
-	skyBox->RenderIndexed();
-	rightTopRTT->ClearDPV(myContext);
 
 	//myContext->ClearDepthStencilView(myDepthStencilView, D3D11_CLEAR_DEPTH, 1, 0); // clear it to Z exponential Far.
 
@@ -1392,11 +1496,6 @@ inline void LetsDrawSomeStuff::RenderSpaceScene()
 
 
 
-	skyBox->UpdateTexture("StarField");
-	skyBox->SetPosition(Eye, cb, myConstantBuffer);
-	skyBox->RenderIndexed();
-	rightBottomRTT->ClearDPV(myContext);
-
 	space_Sun->SetPosition(XMMatrixTranspose(MakeWorldMatrix(0, 0, 0, 0, (float)xTimer.TotalTime(), 0)),
 		cb, myConstantBuffer);
 	space_Sun->RenderIndexedEmissive();
@@ -1412,6 +1511,20 @@ inline void LetsDrawSomeStuff::RenderSpaceScene()
 	space_planetEarth->SetPosition(XMMatrixTranspose(MakeWorldMatrix(0, 0, 18, 0, (float)xTimer.TotalTime() * 50, 0))
 		*XMMatrixRotationY((float)-xTimer.TotalTime() * 0.3f), cb, myConstantBuffer);
 	space_planetEarth->RenderIndexedEmissive();
+
+
+	XMMATRIX moonWorldMatrix = XMMatrixIdentity();
+	moonWorldMatrix = XMMatrixRotationY((float)xTimer.TotalTime()) *moonWorldMatrix;
+	moonWorldMatrix = moonWorldMatrix * XMMatrixTranslation(space_planetEarth->GetPosition().m128_f32[0],
+		space_planetEarth->GetPosition().m128_f32[1],
+		space_planetEarth->GetPosition().m128_f32[2]);
+
+	moonWorldMatrix = XMMatrixTranslation(0, 0, 2.5)*moonWorldMatrix;
+	moonWorldMatrix = XMMatrixRotationY((float)xTimer.TotalTime() / 10.0f) *moonWorldMatrix;
+
+	space_moon->SetPosition(moonWorldMatrix, cb, myConstantBuffer);
+	space_moon->RenderIndexedMulitexture();
+
 
 	space_planetMars->SetPosition(XMMatrixTranspose(MakeWorldMatrix(0, 0, 25.0f, 0, (float)xTimer.TotalTime() * 80, 0))
 		*XMMatrixRotationY((float)-xTimer.TotalTime() * 0.24f), cb, myConstantBuffer);
@@ -1436,21 +1549,10 @@ inline void LetsDrawSomeStuff::RenderSpaceScene()
 		*XMMatrixRotationY((float)-xTimer.TotalTime() * 0.05f), cb, myConstantBuffer);
 	space_planetNeptune->RenderIndexed();
 
-	XMMATRIX moonWorldMatrix = XMMatrixIdentity();
-	moonWorldMatrix = XMMatrixRotationY(xTimer.TotalTime()) *moonWorldMatrix;
-	moonWorldMatrix = moonWorldMatrix * XMMatrixTranslation(space_planetEarth->GetPosition().m128_f32[0],
-		space_planetEarth->GetPosition().m128_f32[1],
-		space_planetEarth->GetPosition().m128_f32[2]);
-
-	moonWorldMatrix = XMMatrixTranslation(0, 0, 2.5)*moonWorldMatrix;
-	moonWorldMatrix = XMMatrixRotationY((float)xTimer.TotalTime() / 10.0f) *moonWorldMatrix;
-
-	space_moon->SetPosition(moonWorldMatrix, cb, myConstantBuffer);
-	space_moon->RenderIndexed();
 
 
 	XMMATRIX satelliteWorldMatrix = XMMatrixIdentity();
-	satelliteWorldMatrix = XMMatrixRotationY(xTimer.TotalTime()) *satelliteWorldMatrix;
+	satelliteWorldMatrix = XMMatrixRotationY((float)xTimer.TotalTime()) *satelliteWorldMatrix;
 	satelliteWorldMatrix = satelliteWorldMatrix * XMMatrixTranslation(space_planetEarth->GetPosition().m128_f32[0],
 		space_planetEarth->GetPosition().m128_f32[1],
 		space_planetEarth->GetPosition().m128_f32[2]);
@@ -1462,4 +1564,12 @@ inline void LetsDrawSomeStuff::RenderSpaceScene()
 	space_satellite->SetPosition(satelliteWorldMatrix, cb, myConstantBuffer);
 	space_satellite->RenderIndexed();
 
+}
+
+inline void LetsDrawSomeStuff::GetKeyInput()
+{
+	if (GetAsyncKeyState('P') & 0x1)
+	{
+		showPlayGroundScene = !showPlayGroundScene;
+	}
 }

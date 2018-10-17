@@ -59,7 +59,7 @@ float4 main(PS_INPUT input) : SV_Target
 			float4 camPos = float4(View._m30, View._m31, View._m32, View._m33);
 			float4 viewDir = normalize(camPos - input.wPos);
 			float3 rVec = normalize(reflect(-ligthDir, normalize(input.Norm)));
-			float dotResult = saturate(dot(rVec, viewDir));
+			float dotResult = (float)saturate(dot(rVec, viewDir));
 			float spec = pow(dotResult, 128);
 
 			float4 reflectedLight = lights[i].Color * spec;
@@ -68,7 +68,7 @@ float4 main(PS_INPUT input) : SV_Target
 		}
 		else if (lights[i].Position.w == 2)
 		{
-			float3 lightToPixelVec = lights[i].Position - input.wPos;
+			float3 lightToPixelVec = (float3)(lights[i].Position - input.wPos);
 
 			ligthDir = normalize(lightToPixelVec);
 
@@ -78,7 +78,7 @@ float4 main(PS_INPUT input) : SV_Target
 			float4 camPos = float4(View._m30, View._m31, View._m32, View._m33);
 			float4 viewDir = normalize(camPos - input.wPos);
 			float3 rVec = normalize(reflect(-ligthDir, normalize(input.Norm)));
-			float dotResult = saturate(dot(rVec, viewDir));
+			float dotResult = (float)saturate(dot(rVec, viewDir));
 			float spec = pow(dotResult, 128);
 
 			float4 reflectedLight = lights[i].Color * spec*howMuchLight;

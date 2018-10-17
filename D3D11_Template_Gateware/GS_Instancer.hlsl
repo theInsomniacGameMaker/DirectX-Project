@@ -59,7 +59,7 @@ void main(triangle GSInput input[3], inout TriangleStream< GSOutput > output)
 
 		oldVerts[i].Pos = verts[i].Pos;
 		oldVerts[i].wPos = verts[i].wPos;
-		oldVerts[i].Norm = (float3)mul(input[i].Norm, World);
+		oldVerts[i].Norm = (float3)(mul(input[i].Norm, World));
 		oldVerts[i].Tex = input[i].Tex;
 
 		oldVerts[i].Pos.x *= -1;
@@ -71,7 +71,7 @@ void main(triangle GSInput input[3], inout TriangleStream< GSOutput > output)
 
 		verts[i].Pos = mul(verts[i].Pos, View);
 		verts[i].Pos = mul(verts[i].Pos, Projection);
-		verts[i].Norm = (float3)mul(input[i].Norm,World);
+		verts[i].Norm = (float3)(mul(input[i].Norm,World));
 		verts[i].Tex = input[i].Tex;
 
 	}

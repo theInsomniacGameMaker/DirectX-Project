@@ -43,6 +43,7 @@ public:
 	void RenderInstanced(int numberOfInstances, CComPtr < ID3D11Buffer> &perInstanceBuffer);
 	void RenderIndexedMulitexture(CComPtr < ID3D11ShaderResourceView > textureRVs[]);
 	void RenderIndexedEmissive();
+	void RenderIndexedMulitexture();
 	void RenderIndexedEmissiveInstanced(int numberOfInstances, CComPtr<ID3D11Buffer>& perInstanceBuffer);
 	void RenderIndexedEmissive(CComPtr < ID3D11ShaderResourceView > emissiveRV);
 	void RenderIndexedTransparent();

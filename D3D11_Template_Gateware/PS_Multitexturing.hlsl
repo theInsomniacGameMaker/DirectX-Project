@@ -62,7 +62,7 @@ float4 main(PS_INPUT input) : SV_Target
 		}
 		else if (lights[i].Position.w == 2)
 		{
-			float3 lightToPixelVec = lights[i].Position - input.wPos;
+			float3 lightToPixelVec = (float3)(lights[i].Position - input.wPos);
 			float howMuchLight = saturate(dot(normalize(lightToPixelVec), input.Norm));
 			pointLightColor = howMuchLight * baseTexture* lights[i].Color;
 			pointLightColor *= (1.0 - saturate(length(lights[i].Position - input.wPos) / lights[i].Range.x));
