@@ -60,9 +60,8 @@ float4 main(PS_INPUT input) : SV_Target
 			float4 viewDir = normalize(camPos - input.wPos);
 			float3 rVec = normalize(reflect(-ligthDir, normalize(input.Norm)));
 			float dotResult = saturate(dot(rVec, viewDir));
-			float spec = pow(dotResult, 64);
-			/*float3 halfVector = normalize(ligthDir + viewDir);
-			float intensity = max(pow(saturate(dot(input.Norm, halfVector)), 32), 0);*/
+			float spec = pow(dotResult, 128);
+
 			float4 reflectedLight = lights[i].Color * spec;
 
 			finalColor += saturate(reflectedLight + directionalLight);
@@ -71,22 +70,23 @@ float4 main(PS_INPUT input) : SV_Target
 		{
 			float3 lightToPixelVec = lights[i].Position - input.wPos;
 
-			ligthDir = lightToPixelVec;
+			ligthDir = normalize(lightToPixelVec);
 
-			float howMuchLight = saturate(dot(normalize(lightToPixelVec), input.Norm));
+			float howMuchLight = saturate(dot(normalize(lightToPixelVec), normalize(input.Norm)));
 			pointLightColor = howMuchLight * baseTexture* lights[i].Color;
 
 			float4 camPos = float4(View._m30, View._m31, View._m32, View._m33);
 			float4 viewDir = normalize(camPos - input.wPos);
 			float3 rVec = normalize(reflect(-ligthDir, normalize(input.Norm)));
 			float dotResult = saturate(dot(rVec, viewDir));
-			float spec = pow(dotResult, 64);
-			/*float3 halfVector = normalize(ligthDir + viewDir);
-			float intensity = max(pow(saturate(dot(input.Norm, halfVector)), 32), 0);*/
-			float4 reflectedLight = lights[i].Color * spec;
+			float spec = pow(dotResult, 128);
+
+			float4 reflectedLight = lights[i].Color * spec*howMuchLight;
+			pointLightColor += reflectedLight;
 
 			pointLightColor *= (1.0 - saturate(length(lights[i].Position - input.wPos) / lights[i].Range.x));
-			finalColor += saturate(pointLightColor+ reflectedLight);
+
+			finalColor += saturate(pointLightColor);
 		}
 		else if (lights[i].Position.w == 3)
 		{
@@ -96,17 +96,17 @@ float4 main(PS_INPUT input) : SV_Target
 
 			float surfaceRatio = saturate(dot(-lightToPixelVec, float3(lights[i].Direction.x, lights[i].Direction.y, lights[i].Direction.z)));
 			float spotFactor = (surfaceRatio > lights[i].Range.y) ? 1 : 0;
-			float lightRatio = saturate(dot(lightToPixelVec, input.Norm));
+			float lightRatio = saturate(dot(lightToPixelVec, normalize(input.Norm)));
 			float3 spotLightColor = spotFactor * lightRatio*lights[i].Color*baseTexture;
 
 			float4 camPos = float4(View._m30, View._m31, View._m32, View._m33);
 			float4 viewDir = normalize(camPos - input.wPos);
 			float3 rVec = normalize(reflect(-ligthDir, normalize(input.Norm)));
 			float dotResult = saturate(dot(rVec, viewDir));
-			float spec = pow(dotResult, 64);
+			float spec = pow(dotResult, 128);
 			/*float3 halfVector = normalize(ligthDir + viewDir);
 			float intensity = max(pow(saturate(dot(input.Norm, halfVector)), 32), 0);*/
-			float4 reflectedLight = lights[i].Color * spec;
+			float4 reflectedLight = lights[i].Color * spec*lightRatio;
 
 			spotLightColor *= (1.0 - saturate(length(lights[i].Position - input.wPos) / lights[i].Range.z));
 			spotLightColor *= (1.0 - saturate((lights[i].Range.x - surfaceRatio) / (lights[i].Range.x - lights[i].Range.y)));
