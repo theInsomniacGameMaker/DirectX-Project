@@ -30,6 +30,8 @@ struct VS_OUTPUT
 	float3 Norm : NORMAL;
 	float2 Tex : TEXCOORD1;
 	float4 wPos : POSITION;
+	float4 tangent: TANGENT;
+	float4 binormal: BINORMALS;
 };
 
 VS_OUTPUT main(VS_INPUT input, uint instanceID : SV_InstanceID)
@@ -39,6 +41,9 @@ VS_OUTPUT main(VS_INPUT input, uint instanceID : SV_InstanceID)
 	output.wPos = output.Pos;
 	output.Pos = mul(output.Pos, View);
 	output.Pos = mul(output.Pos, Projection);
+	output.Norm = mul(float4(input.Norm, 0), worldArray[instanceID]).xyz;
+	output.tangent = mul(float4(input.Tan.xyz*input.Tan.w, 0.0f), worldArray[instanceID]);
+	output.binormal = mul(float4(cross(input.Norm.xyz, input.Tan.xyz), 0.0f), worldArray[instanceID]);
 	output.Norm = mul(float4(input.Norm, 0), worldArray[instanceID]).xyz;
 	output.Tex = input.Tex;
 	return output;

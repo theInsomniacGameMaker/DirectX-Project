@@ -35,6 +35,7 @@ class LetsDrawSomeStuff
 	CComPtr<ID3D11VertexShader>				myVertexShaderReflective = nullptr;
 	CComPtr<ID3D11VertexShader>				myVertexShaderScreenSpace = nullptr;
 	CComPtr<ID3D11VertexShader>				myVertexShaderTBN = nullptr;
+	CComPtr<ID3D11VertexShader>				myVertexShaderInstanceTBN = nullptr;
 
 	//All Pixel Shaders
 	CComPtr<ID3D11PixelShader>				myPixelShader = nullptr;
@@ -94,6 +95,7 @@ class LetsDrawSomeStuff
 
 	//All 3D Objects 
 	D3DObject*		feraligtr;
+	D3DObject*		well;
 	D3DObject*		skyBox;
 	D3DObject*		ground;
 	D3DObject*		box;
@@ -238,8 +240,13 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			HRESULT hr = CreateDDSTextureFromFile(myDevice, L"Assets\\Lave_EMISSIVEMAP.dds", nullptr, &myTextureEmissive);
 
 			CreateInputLayout();
+#pragma region SANDBOX_INIT
 
 			transparentObjects.resize(3);
+
+			well = new D3DObject("Well", 1 / 65.0f, myDevice, myContext, myVertexShader/*TBN*/, myPixelShader/*NormalMapping*/, nullGeometryShader,
+				myConstantBuffer, "Well_Albedo", "Well_Normal", NORMALMAP);
+			well->ComputeNormalMapping();
 
 			feraligtr = new D3DObject("Charizard", 5.0f, myDevice, myContext, myVertexShader, myPixelShaderSpecular, nullGeometryShader,
 				myConstantBuffer);
@@ -248,7 +255,8 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 				myConstantBuffer);
 			skyBox->UpdateTexture("OutputCube");
 
-			ground = new D3DObject("Ground", 10.0f, myDevice, myContext, myVertexShaderWave, myPixelShader, nullGeometryShader, myConstantBuffer);
+			ground = new D3DObject("Ground", 10.0f, myDevice, myContext, myVertexShaderWave, myPixelShader, nullGeometryShader,
+				myConstantBuffer);
 
 			box = new D3DObject("cube", 1 / 50.0f, myDevice, myContext, myVertexShader, myPixelShaderMultitexturing, nullGeometryShader,
 				myConstantBuffer);
@@ -276,6 +284,20 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 				myPixelShader, nullGeometryShader, myConstantBuffer, "Humvee_Albedo",
 				"Humvee_Occlusion", AMBIENTOCCULUSION);
 
+			plant = new D3DObject("Parviflora", 1.0f / 20.0f, myDevice, myContext, myVertexShader, myPixelShaderTransparentRejector, nullGeometryShader, myConstantBuffer);
+			plant->UpdateTexture("Parviflora_diffuse");
+
+			transparentObjects[0] = new D3DObject("cube", 1 / 50.0f, myDevice, myContext, myVertexShader, myPixelShaderTransparent, nullGeometryShader, myConstantBuffer);
+			transparentObjects[1] = new D3DObject("cube", 1 / 50.0f, myDevice, myContext, myVertexShader, myPixelShaderTransparent, nullGeometryShader, myConstantBuffer);
+			transparentObjects[2] = new D3DObject("cube", 1 / 50.0f, myDevice, myContext, myVertexShader, myPixelShaderTransparent, nullGeometryShader, myConstantBuffer);
+
+			transparentObjects[0]->UpdateTexture("Energy");
+			transparentObjects[1]->UpdateTexture("Energy1");
+			transparentObjects[2]->UpdateTexture("Energy");
+
+#pragma endregion
+
+#pragma region DESERT_INIT
 
 			desert_house1 = new D3DObject("House", 1 / 10.0f, myDevice, myContext, myVertexShaderInstance,
 				myPixelShader, nullGeometryShader, myConstantBuffer, "House_Albedo");
@@ -317,8 +339,9 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			desert_barrier = new D3DObject("ConcreteBarrier", 1 / 65.0f, myDevice, myContext, myVertexShaderInstance,
 				myPixelShader, nullGeometryShader, myConstantBuffer, "Barrier_Albedo_BulletHoles");
 
-			desert_crate = new D3DObject("WoodenCrate", 1 / 65.0f, myDevice, myContext, myVertexShaderInstance,
-				myPixelShader, nullGeometryShader, myConstantBuffer, "WoodenCrate2_Albedo");
+			desert_crate = new D3DObject("WoodenCrate", 1 / 65.0f, myDevice, myContext, myVertexShaderInstanceTBN,
+				myPixelShaderNormalMapping, nullGeometryShader, myConstantBuffer, "WoodenCrate2_Albedo", "WoodenCrate2_Normal", NORMALMAP);
+			desert_crate->ComputeNormalMapping();
 
 			desert_ground = new D3DObject("Ground", 100.0f, myDevice, myContext, myVertexShader,
 				myPixelShader, nullGeometryShader, myConstantBuffer, "Ground_Albedo");
@@ -327,6 +350,9 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 				myPixelShaderAO, nullGeometryShader, myConstantBuffer, "Humvee_Albedo",
 				"Humvee_Occlusion", AMBIENTOCCULUSION);
 
+#pragma endregion
+
+#pragma region SPACE_INIT
 			space_planetMercury = new D3DObject("Planet", 1 / 70.f, myDevice, myContext, myVertexShader, myPixelShader,
 				nullGeometryShader, myConstantBuffer, "mercurymap");
 
@@ -355,13 +381,15 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 				nullGeometryShader, myConstantBuffer, "neptunemap");
 
 			space_moon = new D3DObject("Planet", 1 / 150.0f, myDevice, myContext, myVertexShader, myPixelShader,
-				nullGeometryShader, myConstantBuffer, "MoonTexture1","MoonTexture2",MULTITEXTURE);
+				nullGeometryShader, myConstantBuffer, "MoonTexture1", "MoonTexture2", MULTITEXTURE);
 
 			space_satellite = new D3DObject("Satellite", 1 / 220.0f, myDevice, myContext, myVertexShader, myPixelShaderSpecular,
 				nullGeometryShader, myConstantBuffer, "RT_2D_Station_Diffuse");
 
 			space_Sun = new D3DObject("Planet", 1 / 10.f, myDevice, myContext, myVertexShader, myPixelShaderEmissive,
 				nullGeometryShader, myConstantBuffer, "8k_sun", "8k_sun", EMISSIVE);
+#pragma endregion
+
 
 			pokemon_xerneas = new D3DObject("Xerneas", 1 / 70.0f, myDevice, myContext, myVertexShader, myPixelShaderSpecular,
 				nullGeometryShader, myConstantBuffer, "Xerneas_TX");
@@ -377,16 +405,7 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			pokemon_ground->SetHardTangents();
 			//pokemon_ground->ComputeNormalMapping();
 
-			plant = new D3DObject("Parviflora", 1.0f / 20.0f, myDevice, myContext, myVertexShader, myPixelShaderTransparentRejector, nullGeometryShader, myConstantBuffer);
-			plant->UpdateTexture("Parviflora_diffuse");
-
-			transparentObjects[0] = new D3DObject("cube", 1 / 50.0f, myDevice, myContext, myVertexShader, myPixelShaderTransparent, nullGeometryShader, myConstantBuffer);
-			transparentObjects[1] = new D3DObject("cube", 1 / 50.0f, myDevice, myContext, myVertexShader, myPixelShaderTransparent, nullGeometryShader, myConstantBuffer);
-			transparentObjects[2] = new D3DObject("cube", 1 / 50.0f, myDevice, myContext, myVertexShader, myPixelShaderTransparent, nullGeometryShader, myConstantBuffer);
-
-			transparentObjects[0]->UpdateTexture("Energy");
-			transparentObjects[1]->UpdateTexture("Energy1");
-			transparentObjects[2]->UpdateTexture("Energy");
+			
 
 			textureRenderer = new TextureRenderer(myDevice, myContext, width, height);
 			//rightTopRTT = new TextureRenderer(myDevice, myContext, width, height);
@@ -472,6 +491,7 @@ LetsDrawSomeStuff::~LetsDrawSomeStuff()
 
 	delete screenQuadLeftTop;
 
+	delete well;
 	delete feraligtr;
 	delete skyBox;
 	delete ground;
@@ -711,6 +731,16 @@ void LetsDrawSomeStuff::Render(GW::SYSTEM::GWindow* attatchPoint)
 
 				plant->SetPosition(XMVECTOR{ 3,0,-3,0 }, cb, myConstantBuffer);
 				plant->RenderIndexed();
+
+				well->UpdatePS(myPixelShader);
+				well->UpdateVS(myVertexShader);
+				well->SetPosition(XMVECTOR{ -2,2,0 }, cb, myConstantBuffer);
+				well->RenderIndexed();
+
+				well->UpdatePS(myPixelShaderNormalMapping);
+				well->UpdateVS(myVertexShaderTBN);
+				well->SetPosition(XMVECTOR{ 2,2,0 }, cb, myConstantBuffer);
+				well->RenderIndexedNormal();
 
 				humvee->SetLocalRotation(XMVECTOR{ -8,3,0 }, cb, myConstantBuffer, XMConvertToRadians(180.0f));
 				humvee->UpdatePS(myPixelShader);
@@ -1098,7 +1128,7 @@ void LetsDrawSomeStuff::UpdateLightBuffer()
 
 	lCb.lights[5].Position.w = 0;
 	lCb.lights[5].Color = XMFLOAT4(1, 1, 1, 1);
-	lCb.lights[5].Direction.x = 0.25f;
+	lCb.lights[5].Direction.x = 0.2f;
 
 
 	// Rotate the a matrix
@@ -1161,6 +1191,7 @@ void LetsDrawSomeStuff::CreateShaders()
 	hr = myDevice->CreateVertexShader(VS_Reflective, sizeof(VS_Reflective), nullptr, &myVertexShaderReflective);
 	hr = myDevice->CreateVertexShader(VS_ScreenSpace, sizeof(VS_ScreenSpace), nullptr, &myVertexShaderScreenSpace);
 	hr = myDevice->CreateVertexShader(VS_TBN, sizeof(VS_TBN), nullptr, &myVertexShaderTBN);
+	hr = myDevice->CreateVertexShader(VS_InstanceTBN, sizeof(VS_InstanceTBN), nullptr, &myVertexShaderInstanceTBN);
 
 	hr = myDevice->CreatePixelShader(PS_Main, sizeof(PS_Main), nullptr, &myPixelShader);
 	hr = myDevice->CreatePixelShader(PS_SolidColor, sizeof(PS_SolidColor), nullptr, &myPixelShaderSolid);
@@ -1386,10 +1417,6 @@ inline void LetsDrawSomeStuff::RenderDesertScene()
 	desert_containerGreen->RenderIndexed();
 
 	desert_well->SetLocalRotation(XMVECTOR{ -6.112831f + 5.8945f,0,-11.38f - 17.792f }, cb, myConstantBuffer, 0, 90, 0);
-	desert_well->RenderIndexed();
-	
-	//desert_well->SetLocalRotation(XMVECTOR{ -3.112831f + 5.8945f,0,-11.38f - 17.792f }, cb, myConstantBuffer, 0, 90, 0);
-	desert_well->SetPosition (XMMatrixTranspose( (MakeWorldMatrix(-2.112831f + 5.8945f, 0, -11.38f - 17.792f, 0 , (xTimer.TotalTime()*10),0))),cb,myConstantBuffer);
 	desert_well->RenderIndexedNormal();
 
 	desert_barrel->SetPosition(XMVECTOR{ -11.70f,1.5f,-17.49f }, cb, myConstantBuffer);
@@ -1441,7 +1468,7 @@ inline void LetsDrawSomeStuff::RenderDesertScene()
 	iCb.worldArray[2] = MakeWorldMatrix(6.4f + 0.6190f, 0 + 1.57f, 23.5f - 0.24f, 0, 32.5f, 0);
 	iCb.worldArray[3] = MakeWorldMatrix(-5.189f, 0, -11.42f, 0, 18.028f, 0);
 	myContext->UpdateSubresource(myInstanceConstantBuffer, 0, nullptr, &iCb, 0, 0);
-	desert_crate->RenderInstanced(4, myInstanceConstantBuffer);
+	desert_crate->RenderIndexedInstancedNormal(4, myInstanceConstantBuffer);
 
 	desert_humvee->SetLocalRotation(XMVECTOR{ -1.79f,0,36.59f }, cb, myConstantBuffer, 9.73f);
 	desert_humvee->RenderIndexedWithAO();
