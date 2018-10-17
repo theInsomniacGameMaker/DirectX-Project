@@ -34,6 +34,7 @@ class LetsDrawSomeStuff
 	CComPtr<ID3D11VertexShader>				myVertexShaderPassThrough = nullptr;
 	CComPtr<ID3D11VertexShader>				myVertexShaderReflective = nullptr;
 	CComPtr<ID3D11VertexShader>				myVertexShaderScreenSpace = nullptr;
+	CComPtr<ID3D11VertexShader>				myVertexShaderTBN = nullptr;
 
 	//All Pixel Shaders
 	CComPtr<ID3D11PixelShader>				myPixelShader = nullptr;
@@ -48,6 +49,7 @@ class LetsDrawSomeStuff
 	CComPtr<ID3D11PixelShader>				myPixelShaderEmissive = nullptr;
 	CComPtr<ID3D11PixelShader>				myPixelShaderTransparentRejector = nullptr;
 	CComPtr<ID3D11PixelShader>				myPixelShaderAO = nullptr;
+	CComPtr<ID3D11PixelShader>				myPixelShaderNormalMapping = nullptr;
 
 	//All Geometry Shaders
 	CComPtr<ID3D11GeometryShader>			myGeometryShaderPoint = nullptr;
@@ -296,8 +298,9 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			desert_containerGreen = new D3DObject("Container", 1 / 35.0f, myDevice, myContext, myVertexShader,
 				myPixelShader, nullGeometryShader, myConstantBuffer, "GreenContainer_Albedo");
 
-			desert_well = new D3DObject("Well", 1 / 35.0f, myDevice, myContext, myVertexShader,
-				myPixelShader, nullGeometryShader, myConstantBuffer, "Well_Albedo");
+			desert_well = new D3DObject("Well", 1 / 35.0f, myDevice, myContext, myVertexShaderTBN,
+				myPixelShaderNormalMapping, nullGeometryShader, myConstantBuffer, "Well_Albedo", "Well_Normal", NORMALMAP);
+			desert_well->ComputeNormalMapping();
 
 			desert_barrel = new D3DObject("Barrel", 1, myDevice, myContext, myVertexShader,
 				myPixelShaderSpecular, nullGeometryShader, myConstantBuffer, "BlueBarrel_Albedo");
@@ -369,8 +372,10 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			pokemon_darkrai = new D3DObject("Darkrai", 1 / 15.0f, myDevice, myContext, myVertexShader, myPixelShaderSpecular,
 				nullGeometryShader, myConstantBuffer, "Darkrai_TX");
 
-			pokemon_ground = new D3DObject("Ground", 10.0f, myDevice, myContext, myVertexShader,
-				myPixelShaderSpecular, nullGeometryShader, myConstantBuffer, "pokemon_plane");
+			pokemon_ground = new D3DObject("Ground", 10.0f, myDevice, myContext, myVertexShaderTBN,
+				myPixelShaderNormalMapping, nullGeometryShader, myConstantBuffer, "pokemon_plane","243-normal", NORMALMAP);
+			pokemon_ground->SetHardTangents();
+			//pokemon_ground->ComputeNormalMapping();
 
 			plant = new D3DObject("Parviflora", 1.0f / 20.0f, myDevice, myContext, myVertexShader, myPixelShaderTransparentRejector, nullGeometryShader, myConstantBuffer);
 			plant->UpdateTexture("Parviflora_diffuse");
@@ -390,53 +395,11 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 
 			XMFLOAT3 positions[4];
 			positions[0] = XMFLOAT3(-1, 1, 0);
-			positions[1] = XMFLOAT3(0, 1, 0);
-			positions[2] = XMFLOAT3(-1, 0, 0);
-			positions[3] = XMFLOAT3(0, 0, 0);
-
-			positions[0] = XMFLOAT3(-1, 1, 0);
 			positions[1] = XMFLOAT3(1, 1, 0);
 			positions[2] = XMFLOAT3(-1, -1, 0);
 			positions[3] = XMFLOAT3(1, -1, 0);
 
-			//screenQuad = new ScreenQuad(myDevice, myContext, myVertexShaderScreenSpace, myPixelShaderNoLighting, nullGeometryShader, positions);
-
-
-			positions[0] = XMFLOAT3(0, 1, 0);
-			positions[1] = XMFLOAT3(1, 1, 0);
-			positions[2] = XMFLOAT3(0, 0, 0);
-			positions[3] = XMFLOAT3(1, 0, 0);
-
-			positions[0] = XMFLOAT3(-1, 1, 0);
-			positions[1] = XMFLOAT3(1, 1, 0);
-			positions[2] = XMFLOAT3(-1, -1, 0);
-			positions[3] = XMFLOAT3(1, -1, 0);
-
-			//screenQuadRightTop = new ScreenQuad(myDevice, myContext, myVertexShaderScreenSpace, myPixelShaderNoLighting, nullGeometryShader, positions);
-
-			positions[0] = XMFLOAT3(0, 1 - 1, 0);
-			positions[1] = XMFLOAT3(1, 1 - 1, 0);
-			positions[2] = XMFLOAT3(0, 0 - 1, 0);
-			positions[3] = XMFLOAT3(1, 0 - 1, 0);
-
-			positions[0] = XMFLOAT3(-1, 1, 0);
-			positions[1] = XMFLOAT3(1, 1, 0);
-			positions[2] = XMFLOAT3(-1, -1, 0);
-			positions[3] = XMFLOAT3(1, -1, 0);
-
-			//screenQuadBottom = new ScreenQuad(myDevice, myContext, myVertexShaderScreenSpace, myPixelShaderNoLighting, nullGeometryShader, positions);
-
-			positions[0] = XMFLOAT3(0 - 1, 1, 0);
-			positions[1] = XMFLOAT3(1 - 1, 1, 0);
-			positions[2] = XMFLOAT3(0 - 1, 0, 0);
-			positions[3] = XMFLOAT3(1 - 1, 0, 0);
-
-			positions[0] = XMFLOAT3(-1, 1, 0);
-			positions[1] = XMFLOAT3(1, 1, 0);
-			positions[2] = XMFLOAT3(-1, -1, 0);
-			positions[3] = XMFLOAT3(1, -1, 0);
-
-			screenQuadLeftTop = new ScreenQuad(myDevice, myContext, myVertexShaderScreenSpace, myPixelShaderNoLighting, nullGeometryShader, positions);
+			screenQuadLeftTop = new ScreenQuad(myDevice, myContext, myVertexShaderScreenSpace, /*myPixelShaderPostProcessing*/myPixelShaderNoLighting, nullGeometryShader, positions);
 
 
 			myContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -825,10 +788,10 @@ void LetsDrawSomeStuff::Render(GW::SYSTEM::GWindow* attatchPoint)
 
 				skyBox->UpdateTexture("StarField");
 				skyBox->SetPosition(Eye, cb, myConstantBuffer);
-				skyBox->RenderIndexed();
+				//skyBox->RenderIndexed();
 				myContext->ClearDepthStencilView(myDepthStencilView, D3D11_CLEAR_DEPTH, 1, 0); // clear it to Z exponential Far.
 
-				RenderSpaceScene();
+				//RenderSpaceScene();
 
 				D3D11_VIEWPORT vpTopLeft;
 				attatchPoint->GetClientWidth(width);
@@ -860,7 +823,7 @@ void LetsDrawSomeStuff::Render(GW::SYSTEM::GWindow* attatchPoint)
 
 				lCb.lights[1].Position = XMFLOAT4((float)-sin((float)xTimer.TotalTime()), 1, -cos(xTimer.TotalTime()), 2);
 				lCb.lights[1].Color = XMFLOAT4(1, 0, 1, 1);
-				lCb.lights[1].Range.x = 3.0f;
+				lCb.lights[1].Range.x = 10.0f;
 
 				myContext->UpdateSubresource(myLightConstantBuffer, 0, nullptr, &lCb, 0, 0);
 
@@ -883,7 +846,7 @@ void LetsDrawSomeStuff::Render(GW::SYSTEM::GWindow* attatchPoint)
 				pokemon_darkrai->RenderIndexed();
 
 				pokemon_ground->SetLocalRotation(XMVECTOR{ 0,0,0 }, cb, myConstantBuffer, XMConvertToRadians(0));
-				pokemon_ground->RenderIndexed();
+				pokemon_ground->RenderIndexedNormal();
 
 
 				leftTopRTT->EndRender();
@@ -1197,6 +1160,7 @@ void LetsDrawSomeStuff::CreateShaders()
 	hr = myDevice->CreateVertexShader(VS_PassThrough, sizeof(VS_PassThrough), nullptr, &myVertexShaderPassThrough);
 	hr = myDevice->CreateVertexShader(VS_Reflective, sizeof(VS_Reflective), nullptr, &myVertexShaderReflective);
 	hr = myDevice->CreateVertexShader(VS_ScreenSpace, sizeof(VS_ScreenSpace), nullptr, &myVertexShaderScreenSpace);
+	hr = myDevice->CreateVertexShader(VS_TBN, sizeof(VS_TBN), nullptr, &myVertexShaderTBN);
 
 	hr = myDevice->CreatePixelShader(PS_Main, sizeof(PS_Main), nullptr, &myPixelShader);
 	hr = myDevice->CreatePixelShader(PS_SolidColor, sizeof(PS_SolidColor), nullptr, &myPixelShaderSolid);
@@ -1210,6 +1174,7 @@ void LetsDrawSomeStuff::CreateShaders()
 	hr = myDevice->CreatePixelShader(PS_Emissive, sizeof(PS_Emissive), nullptr, &myPixelShaderEmissive);
 	hr = myDevice->CreatePixelShader(PS_TransparentRejector, sizeof(PS_TransparentRejector), nullptr, &myPixelShaderTransparentRejector);
 	hr = myDevice->CreatePixelShader(PS_AmbientOcculusion, sizeof(PS_AmbientOcculusion), nullptr, &myPixelShaderAO);
+	hr = myDevice->CreatePixelShader(PS_NormalMapping, sizeof(PS_NormalMapping), nullptr, &myPixelShaderNormalMapping);
 
 	hr = myDevice->CreateGeometryShader(GS_PointToQuad, sizeof(GS_PointToQuad), nullptr, &myGeometryShaderPoint);
 	hr = myDevice->CreateGeometryShader(GS_Instancer, sizeof(GS_Instancer), nullptr, &myGeometryShaderTriangle);
@@ -1422,6 +1387,10 @@ inline void LetsDrawSomeStuff::RenderDesertScene()
 
 	desert_well->SetLocalRotation(XMVECTOR{ -6.112831f + 5.8945f,0,-11.38f - 17.792f }, cb, myConstantBuffer, 0, 90, 0);
 	desert_well->RenderIndexed();
+	
+	//desert_well->SetLocalRotation(XMVECTOR{ -3.112831f + 5.8945f,0,-11.38f - 17.792f }, cb, myConstantBuffer, 0, 90, 0);
+	desert_well->SetPosition (XMMatrixTranspose( (MakeWorldMatrix(-2.112831f + 5.8945f, 0, -11.38f - 17.792f, 0 , (xTimer.TotalTime()*10),0))),cb,myConstantBuffer);
+	desert_well->RenderIndexedNormal();
 
 	desert_barrel->SetPosition(XMVECTOR{ -11.70f,1.5f,-17.49f }, cb, myConstantBuffer);
 	desert_barrel->RenderIndexed();

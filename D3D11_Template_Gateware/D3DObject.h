@@ -1,5 +1,6 @@
 #pragma once
 #include "Mesh.h"
+
 class D3DObject
 {
 	bool makeRotating = false;
@@ -43,6 +44,8 @@ public:
 	void RenderInstanced(int numberOfInstances, CComPtr < ID3D11Buffer> &perInstanceBuffer);
 	void RenderIndexedMulitexture(CComPtr < ID3D11ShaderResourceView > textureRVs[]);
 	void RenderIndexedEmissive();
+	void RenderIndexedNormal();
+	void RenderIndexedInstancedNormal(int numberOfInstances, CComPtr<ID3D11Buffer>& perInstanceBuffer);
 	void RenderIndexedMulitexture();
 	void RenderIndexedEmissiveInstanced(int numberOfInstances, CComPtr<ID3D11Buffer>& perInstanceBuffer);
 	void RenderIndexedEmissive(CComPtr < ID3D11ShaderResourceView > emissiveRV);
@@ -66,8 +69,18 @@ public:
 	void SetRotatingPosition(XMVECTOR position, ConstantBuffer & constantBuffer, CComPtr < ID3D11Buffer >& perObjectBuffer, float rotationMatrixYFactor, float rotationMatrixXFactor);
 	void Rotate(XMMATRIX rotationMatrix, ConstantBuffer & constantBuffer, CComPtr<ID3D11Buffer>& perObjectBuffer);
 	void RotateAndMove(XMMATRIX rotationMatrix, XMVECTOR position, ConstantBuffer & constantBuffer, CComPtr<ID3D11Buffer>& perObjectBuffer);
+	void ComputeNormalMapping();
+	void SetHardTangents();
 	XMVECTOR GetPosition();
 	float GetDistanceFromCamera(XMVECTOR objPosition);
+	XMFLOAT3 Normalize(XMFLOAT3 vector)
+	{
+		XMVECTOR vec = XMLoadFloat3(&vector);
+		vec = XMVector3Normalize(vec);
+		XMFLOAT3 returnValue;
+		XMStoreFloat3(&returnValue, vec);
+		return returnValue;
+	}
 	~D3DObject();
 
 };

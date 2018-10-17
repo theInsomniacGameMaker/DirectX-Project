@@ -361,6 +361,32 @@ void D3DObject::RenderIndexedEmissive()
 	m_Context->DrawIndexed(m_Mesh.GetNumberOfIndices(), 0, 0);
 }
 
+void D3DObject::RenderIndexedNormal()
+{
+	m_Context->VSSetShader(m_VertexShader, nullptr, 0);
+	m_Context->PSSetShader(m_PixelShader, nullptr, 0);
+	m_Context->GSSetShader(m_GeometryShader, nullptr, 0);
+	m_Context->PSSetShaderResources(0, 1, &m_TextureRV.p);
+	m_Context->PSSetShaderResources(1, 1, &m_SpecialTexture.p);
+	m_Context->IASetVertexBuffers(0, 1, &m_VertexBuffer.p, stride, offset);
+	m_Context->IASetIndexBuffer(m_IndexBuffer, DXGI_FORMAT_R32_UINT, 0);
+	m_Context->DrawIndexed(m_Mesh.GetNumberOfIndices(), 0, 0);
+}
+
+void D3DObject::RenderIndexedInstancedNormal(int numberOfInstances, CComPtr<ID3D11Buffer>& perInstanceBuffer)
+{
+	m_Context->VSSetShader(m_VertexShader, nullptr, 0);
+	m_Context->PSSetShader(m_PixelShader, nullptr, 0);
+	m_Context->GSSetShader(m_GeometryShader, nullptr, 0);
+	m_Context->PSSetShaderResources(0, 1, &m_TextureRV.p);
+	m_Context->PSSetShaderResources(1, 1, &m_SpecialTexture.p);
+	m_Context->IASetVertexBuffers(0, 1, &m_VertexBuffer.p, stride, offset);
+	m_Context->IASetIndexBuffer(m_IndexBuffer, DXGI_FORMAT_R32_UINT, 0);
+	m_Context->VSSetConstantBuffers(1, 1, &perInstanceBuffer.p);
+	m_Context->DrawIndexedInstanced(m_Mesh.GetNumberOfIndices(), numberOfInstances, 0, 0, 0);
+}
+
+
 void D3DObject::RenderIndexedMulitexture()
 {
 	m_Context->VSSetShader(m_VertexShader, nullptr, 0);
@@ -570,6 +596,106 @@ void D3DObject::RotateAndMove(XMMATRIX rotationMatrix, XMVECTOR position, Consta
 	constantBuffer.mWorld = XMMatrixTranspose(rotationMatrix*XMMatrixTranslationFromVector(position));
 	m_Context->UpdateSubresource(perObjectBuffer, 0, nullptr, &constantBuffer, 0, 0);
 	m_Position = XMMatrixTranspose(constantBuffer.mWorld).r[3];
+}
+
+void D3DObject::ComputeNormalMapping()
+{
+	XMFLOAT3 *tan1 = new XMFLOAT3[m_Mesh.GetNumberOfIndices()];
+	XMFLOAT3 *tan2 = new XMFLOAT3[m_Mesh.GetNumberOfIndices()];
+
+	for (int i = 0; i < m_Mesh.GetNumberOfIndices(); i += 3)
+	{
+		XMFLOAT3 vertEdge0;
+		vertEdge0.x = (m_Mesh.GetVertices()[m_Mesh.GetIndices()[i + 1]].Pos.x) - (m_Mesh.GetVertices()[m_Mesh.GetIndices()[i]].Pos.x);
+		vertEdge0.y = (m_Mesh.GetVertices()[m_Mesh.GetIndices()[i + 1]].Pos.y) - (m_Mesh.GetVertices()[m_Mesh.GetIndices()[i]].Pos.y);
+		vertEdge0.z = (m_Mesh.GetVertices()[m_Mesh.GetIndices()[i + 1]].Pos.z) - (m_Mesh.GetVertices()[m_Mesh.GetIndices()[i]].Pos.z);
+
+		XMFLOAT3 vertEdge1;
+		vertEdge1.x = (m_Mesh.GetVertices()[m_Mesh.GetIndices()[i + 2]].Pos.x) - (m_Mesh.GetVertices()[m_Mesh.GetIndices()[i]].Pos.x);
+		vertEdge1.y = (m_Mesh.GetVertices()[m_Mesh.GetIndices()[i + 2]].Pos.y) - (m_Mesh.GetVertices()[m_Mesh.GetIndices()[i]].Pos.y);
+		vertEdge1.z = (m_Mesh.GetVertices()[m_Mesh.GetIndices()[i + 2]].Pos.z) - (m_Mesh.GetVertices()[m_Mesh.GetIndices()[i]].Pos.z);
+
+		XMFLOAT2 texEdge0;
+		texEdge0.x = (m_Mesh.GetVertices()[m_Mesh.GetIndices()[i + 1]].Tex.x) - (m_Mesh.GetVertices()[m_Mesh.GetIndices()[i]].Tex.x);
+		texEdge0.y = (m_Mesh.GetVertices()[m_Mesh.GetIndices()[i + 1]].Tex.y) - (m_Mesh.GetVertices()[m_Mesh.GetIndices()[i]].Tex.y);
+
+		XMFLOAT2 texEdge1;
+		texEdge1.x = (m_Mesh.GetVertices()[m_Mesh.GetIndices()[i + 2]].Tex.x) - (m_Mesh.GetVertices()[m_Mesh.GetIndices()[i]].Tex.x);
+		texEdge1.y = (m_Mesh.GetVertices()[m_Mesh.GetIndices()[i + 2]].Tex.y) - (m_Mesh.GetVertices()[m_Mesh.GetIndices()[i]].Tex.y);
+
+		float ratio = 1.0f / (texEdge0.x*texEdge1.y - texEdge1.x*texEdge0.y);
+
+		XMFLOAT3 uDirection;
+		XMFLOAT3 vDirection;
+
+		uDirection = XMFLOAT3((texEdge1.y * vertEdge0.x - texEdge0.y * vertEdge1.x) * ratio,
+			(texEdge1.y * vertEdge0.y - texEdge0.y * vertEdge1.y) * ratio,
+			(texEdge1.y * vertEdge0.z - texEdge0.y * vertEdge1.z) * ratio);
+
+		vDirection = XMFLOAT3((texEdge0.x * vertEdge1.x - texEdge1.x * vertEdge0.x) * ratio,
+			(texEdge0.x * vertEdge1.y - texEdge1.x * vertEdge0.y) * ratio,
+			(texEdge0.x * vertEdge1.z - texEdge1.x * vertEdge0.z) * ratio);
+
+		tan1[i].x = uDirection.x;
+		tan1[i].y = uDirection.y;
+		tan1[i].z = uDirection.z;
+
+		tan1[i+1].x = uDirection.x;
+		tan1[i+1].y = uDirection.y;
+		tan1[i+1].z = uDirection.z;
+
+		tan1[i+2].x = uDirection.x;
+		tan1[i+2].y = uDirection.y;
+		tan1[i+2].z = uDirection.z;
+
+
+		tan2[i].x = vDirection.x;
+		tan2[i].y = vDirection.y;
+		tan2[i].z = vDirection.z;
+
+		tan2[i + 1].x = vDirection.x;
+		tan2[i + 1].y = vDirection.y;
+		tan2[i + 1].z = vDirection.z;   
+
+		tan2[i + 2].x = vDirection.x;
+		tan2[i + 2].y = vDirection.y;
+		tan2[i + 2].z = vDirection.z;
+		
+	}
+
+	for (int i = 0; i < m_Mesh.GetNumberOfIndices(); i++)
+	{
+		XMVECTOR normVec = XMLoadFloat3(&m_Mesh.GetVertices()[m_Mesh.GetIndices()[i]].Normal);
+		normVec = XMVector3Normalize(normVec);
+
+		XMVECTOR uDir = XMLoadFloat3(&tan1[i]);
+		uDir = XMVector3Normalize(uDir);
+
+		XMVECTOR dotResult = XMVector3Dot(normVec, uDir);
+		XMVECTOR tangent = XMVector3Normalize( uDir - normVec * dotResult.m128_f32[0]);
+		m_Mesh.GetVertices()[m_Mesh.GetIndices()[i]].Tangent.x = tangent.m128_f32[0];
+		m_Mesh.GetVertices()[m_Mesh.GetIndices()[i]].Tangent.y = tangent.m128_f32[1];
+		m_Mesh.GetVertices()[m_Mesh.GetIndices()[i]].Tangent.z = tangent.m128_f32[2];
+
+		XMVECTOR vDir = XMLoadFloat3(&tan2[i]);
+		vDir = XMVector3Normalize(vDir);
+
+		XMVECTOR crossProduct = XMVector3Cross(normVec, uDir);
+		XMVECTOR handness = vDir;
+		dotResult = XMVector3Dot(crossProduct, handness);
+		m_Mesh.GetVertices()[m_Mesh.GetIndices()[i]].Tangent.w = dotResult.m128_f32[0] < 0.0f ? -1.0f : 1.0f;
+	}
+
+	delete[] tan1;
+	delete[] tan2;
+}
+
+void D3DObject::SetHardTangents()
+{
+	for (int i = 0; i < m_Mesh.GetNumberOfVertices(); i++)
+	{
+		m_Mesh.GetVertices()[i].Tangent = XMFLOAT4(1, 0, 0, 1);
+	}
 }
 
 XMVECTOR D3DObject::GetPosition()
